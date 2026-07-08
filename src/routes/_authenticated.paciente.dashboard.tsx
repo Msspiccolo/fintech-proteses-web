@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getMyLoanApplications } from "@/lib/loans.functions";
@@ -8,7 +8,6 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { ProposalForm } from "@/components/proposal-form";
-import { queryClient } from "@/lib/query-client";
 
 export const Route = createFileRoute("/_authenticated/paciente/dashboard")({
   head: () => ({
