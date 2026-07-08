@@ -68,14 +68,24 @@ function PatientDashboard() {
             </Card>
           </div>
 
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold text-foreground">Minhas propostas</h2>
-            {isLoading ? (
-              <p className="mt-4 text-muted-foreground">Carregando...</p>
-            ) : applications.length === 0 ? (
-              <p className="mt-4 text-muted-foreground">Você ainda não tem propostas. Simule e solicite uma.</p>
-            ) : (
-              <div className="mt-4 space-y-4">
+          <div className="mt-12 grid gap-8 lg:grid-cols-2">
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">Nova proposta</h2>
+              <p className="mt-2 text-sm text-muted-foreground">Ajuste o valor e envie uma nova proposta de financiamento.</p>
+              <Card className="mt-4">
+                <CardContent className="p-6">
+                  <ProposalForm onSuccess={() => queryClient.invalidateQueries({ queryKey: ["my-loan-applications"] })} />
+                </CardContent>
+              </Card>
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">Minhas propostas</h2>
+              {isLoading ? (
+                <p className="mt-4 text-muted-foreground">Carregando...</p>
+              ) : applications.length === 0 ? (
+                <p className="mt-4 text-muted-foreground">Você ainda não tem propostas. Simule e solicite uma.</p>
+              ) : (
+                <div className="mt-4 space-y-4">
                 {applications.map((app) => (
                   <Card key={app.id}>
                     <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
