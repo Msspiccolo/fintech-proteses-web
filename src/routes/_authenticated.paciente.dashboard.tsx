@@ -7,6 +7,8 @@ import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { ProposalForm } from "@/components/proposal-form";
+import { queryClient } from "@/lib/query-client";
 
 export const Route = createFileRoute("/_authenticated/paciente/dashboard")({
   head: () => ({
