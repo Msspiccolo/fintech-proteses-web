@@ -119,7 +119,7 @@ export const getAllLoanApplications = createServerFn({ method: "GET" })
 
 export const updateLoanApplication = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data) => updateApplicationSchema.parse(data))
+  .validator((data) => updateApplicationSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { data: isAdmin, error: adminError } = await context.supabase.rpc("has_role", {
       _user_id: context.userId,
