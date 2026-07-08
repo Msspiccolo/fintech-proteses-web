@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SimularRouteImport } from './routes/simular'
 import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
 import { Route as ClinicasParceirasRouteImport } from './routes/clinicas-parceiras'
@@ -20,6 +21,11 @@ import { Route as AuthenticatedPacienteDashboardRouteImport } from './routes/_au
 import { Route as AuthenticatedClinicaDashboardRouteImport } from './routes/_authenticated.clinica.dashboard'
 import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated.admin.dashboard'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SimularRoute = SimularRouteImport.update({
   id: '/simular',
   path: '/simular',
@@ -79,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/clinicas-parceiras': typeof ClinicasParceirasRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/simular': typeof SimularRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/clinica/dashboard': typeof AuthenticatedClinicaDashboardRoute
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/clinicas-parceiras': typeof ClinicasParceirasRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/simular': typeof SimularRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/clinica/dashboard': typeof AuthenticatedClinicaDashboardRoute
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/clinicas-parceiras': typeof ClinicasParceirasRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/simular': typeof SimularRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/_authenticated/clinica/dashboard': typeof AuthenticatedClinicaDashboardRoute
@@ -116,6 +125,7 @@ export interface FileRouteTypes {
     | '/clinicas-parceiras'
     | '/como-funciona'
     | '/simular'
+    | '/sitemap.xml'
     | '/dashboard'
     | '/admin/dashboard'
     | '/clinica/dashboard'
@@ -127,6 +137,7 @@ export interface FileRouteTypes {
     | '/clinicas-parceiras'
     | '/como-funciona'
     | '/simular'
+    | '/sitemap.xml'
     | '/dashboard'
     | '/admin/dashboard'
     | '/clinica/dashboard'
@@ -139,6 +150,7 @@ export interface FileRouteTypes {
     | '/clinicas-parceiras'
     | '/como-funciona'
     | '/simular'
+    | '/sitemap.xml'
     | '/_authenticated/dashboard'
     | '/_authenticated/admin/dashboard'
     | '/_authenticated/clinica/dashboard'
@@ -152,10 +164,18 @@ export interface RootRouteChildren {
   ClinicasParceirasRoute: typeof ClinicasParceirasRoute
   ComoFuncionaRoute: typeof ComoFuncionaRoute
   SimularRoute: typeof SimularRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/simular': {
       id: '/simular'
       path: '/simular'
@@ -254,6 +274,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClinicasParceirasRoute: ClinicasParceirasRoute,
   ComoFuncionaRoute: ComoFuncionaRoute,
   SimularRoute: SimularRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
