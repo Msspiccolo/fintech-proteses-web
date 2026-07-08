@@ -19,7 +19,7 @@ const signInSchema = z.object({
 });
 
 export const signUp = createServerFn({ method: "POST" })
-  .inputValidator((data) => signUpSchema.parse(data))
+  .validator((data) => signUpSchema.parse(data))
   .handler(async ({ data }) => {
     const { createClient } = await import("@supabase/supabase-js");
     const supabasePublic = createClient<Database>(
