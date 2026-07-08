@@ -82,7 +82,7 @@ export const getClinicLoanApplications = createServerFn({ method: "GET" })
 
     const { data, error } = await context.supabase
       .from("loan_applications")
-      .select("*, clinics(name), profiles(full_name)")
+      .select("*, clinics(name), profiles!loan_applications_patient_id_fkey(full_name)")
       .in("clinic_id", clinicIds)
       .order("created_at", { ascending: false });
 
