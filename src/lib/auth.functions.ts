@@ -137,7 +137,7 @@ export const getCurrentUserProfile = createServerFn({ method: "GET" })
 
 export const updateProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data) =>
+  .validator((data) =>
     z
       .object({
         fullName: z.string().min(2).optional(),
