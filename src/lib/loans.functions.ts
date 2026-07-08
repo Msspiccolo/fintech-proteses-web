@@ -21,7 +21,7 @@ const updateApplicationSchema = z.object({
 
 export const createLoanApplication = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data) => createApplicationSchema.parse(data))
+  .validator((data) => createApplicationSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { data: application, error } = await context.supabase
       .from("loan_applications")
