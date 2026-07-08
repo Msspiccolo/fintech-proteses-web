@@ -39,4 +39,117 @@ function HomePage() {
                   <span>Crédito seguro para saúde</span>
                 </div>
                 <h1 className="text-4xl font-bold leading-tight text-foreground md:text-6xl">
-                  Financie sua prótese ortopédica com{
+                  Financie sua prótese ortopédica com parcelas que cabem no bolso
+                </h1>
+                <p className="text-lg text-muted-foreground">
+                  A PróteseCrédito conecta pacientes e clínicas parceiras a crédito rápido, transparente e sem burocracia para próteses de quadril, joelho, membros e mais.
+                </p>
+                <div className="flex flex-wrap gap-4">
+                  <Link to="/simular">
+                    <Button size="lg" className="gap-2">
+                      Simular agora <ArrowRight size={18} />
+                    </Button>
+                  </Link>
+                  <Link to="/como-funciona">
+                    <Button size="lg" variant="outline">
+                      Como funciona
+                    </Button>
+                  </Link>
+                </div>
+                <div className="flex flex-wrap gap-6 pt-4 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-2">
+                    <CheckCircle size={16} className="text-primary" /> Aprovação em minutos
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <CheckCircle size={16} className="text-primary" /> Sem consulta ao SPC/Serasa
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <CheckCircle size={16} className="text-primary" /> Até 48x
+                  </span>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-border bg-card p-2 shadow-xl">
+                <CreditSimulator
+                  amount={amount}
+                  setAmount={setAmount}
+                  downPayment={downPayment}
+                  setDownPayment={setDownPayment}
+                  installments={installments}
+                  setInstallments={setInstallments}
+                />
+                <div className="px-6 pb-6">
+                  <Link to="/auth">
+                    <Button className="w-full">Solicitar este crédito</Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Diferenciais */}
+        <section className="border-y border-border bg-secondary/30 px-4 py-20">
+          <div className="mx-auto max-w-7xl">
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-foreground md:text-4xl">Por que escolher a PróteseCrédito?</h2>
+              <p className="mt-4 text-muted-foreground">Tecnologia e cuidado para transformar tratamentos em realidade.</p>
+            </div>
+            <div className="mt-12 grid gap-6 md:grid-cols-3">
+              <div className="rounded-xl border border-border bg-card p-6">
+                <div className="mb-4 inline-flex rounded-lg bg-primary/10 p-3 text-primary">
+                  <Clock size={24} />
+                </div>
+                <h3 className="text-xl font-semibold text-foreground">Rápido</h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Simule em segundos e receba uma resposta de crédito em poucos minutos, direto no app.
+                </p>
+              </div>
+              <div className="rounded-xl border border-border bg-card p-6">
+                <div className="mb-4 inline-flex rounded-lg bg-primary/10 p-3 text-primary">
+                  <Shield size={24} />
+                </div>
+                <h3 className="text-xl font-semibold text-foreground">Seguro</h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Dados protegidos, transparência total nas taxas e sem surpresas no contrato.
+                </p>
+              </div>
+              <div className="rounded-xl border border-border bg-card p-6">
+                <div className="mb-4 inline-flex rounded-lg bg-primary/10 p-3 text-primary">
+                  <Stethoscope size={24} />
+                </div>
+                <h3 className="text-xl font-semibold text-foreground">Especializado</h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Focamos em próteses ortopédicas e clínicas parceiras, com condições pensadas para saúde.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA clínicas */}
+        <section className="px-4 py-20">
+          <div className="mx-auto max-w-5xl rounded-2xl border border-border bg-gradient-to-br from-secondary to-background p-8 md:p-12">
+            <div className="grid items-center gap-8 md:grid-cols-2">
+              <div>
+                <h2 className="text-3xl font-bold text-foreground">É uma clínica ou hospital?</h2>
+                <p className="mt-4 text-muted-foreground">
+                  Ofereça financiamento para seus pacientes e converta mais tratamentos. Cadastre sua clínica gratuitamente.
+                </p>
+              </div>
+              <div className="flex justify-start md:justify-end">
+                <Link to="/clinicas-parceiras">
+                  <Button size="lg" variant="outline" className="gap-2">
+                    <Activity size={18} /> Quero ser parceiro
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <Footer />
+    </div>
+  );
+}
