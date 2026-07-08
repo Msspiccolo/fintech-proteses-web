@@ -21,6 +21,7 @@ export const Route = createFileRoute("/_authenticated/paciente/dashboard")({
 
 function PatientDashboard() {
   const fetchApplications = useServerFn(getMyLoanApplications);
+  const queryClient = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["my-loan-applications"],
     queryFn: () => fetchApplications({ data: undefined }),
