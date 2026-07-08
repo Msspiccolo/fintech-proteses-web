@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SimularRouteImport } from './routes/simular'
 import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
+import { Route as ClinicasParceirasRouteImport } from './routes/clinicas-parceiras'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
@@ -27,6 +28,11 @@ const SimularRoute = SimularRouteImport.update({
 const ComoFuncionaRoute = ComoFuncionaRouteImport.update({
   id: '/como-funciona',
   path: '/como-funciona',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClinicasParceirasRoute = ClinicasParceirasRouteImport.update({
+  id: '/clinicas-parceiras',
+  path: '/clinicas-parceiras',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -70,6 +76,7 @@ const AuthenticatedAdminDashboardRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/clinicas-parceiras': typeof ClinicasParceirasRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/simular': typeof SimularRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -80,6 +87,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/clinicas-parceiras': typeof ClinicasParceirasRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/simular': typeof SimularRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -92,6 +100,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
+  '/clinicas-parceiras': typeof ClinicasParceirasRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/simular': typeof SimularRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -104,6 +113,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/clinicas-parceiras'
     | '/como-funciona'
     | '/simular'
     | '/dashboard'
@@ -114,6 +124,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/clinicas-parceiras'
     | '/como-funciona'
     | '/simular'
     | '/dashboard'
@@ -125,6 +136,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/clinicas-parceiras'
     | '/como-funciona'
     | '/simular'
     | '/_authenticated/dashboard'
@@ -137,6 +149,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ClinicasParceirasRoute: typeof ClinicasParceirasRoute
   ComoFuncionaRoute: typeof ComoFuncionaRoute
   SimularRoute: typeof SimularRoute
 }
@@ -155,6 +168,13 @@ declare module '@tanstack/react-router' {
       path: '/como-funciona'
       fullPath: '/como-funciona'
       preLoaderRoute: typeof ComoFuncionaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clinicas-parceiras': {
+      id: '/clinicas-parceiras'
+      path: '/clinicas-parceiras'
+      fullPath: '/clinicas-parceiras'
+      preLoaderRoute: typeof ClinicasParceirasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -231,6 +251,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AuthRoute: AuthRoute,
+  ClinicasParceirasRoute: ClinicasParceirasRoute,
   ComoFuncionaRoute: ComoFuncionaRoute,
   SimularRoute: SimularRoute,
 }
