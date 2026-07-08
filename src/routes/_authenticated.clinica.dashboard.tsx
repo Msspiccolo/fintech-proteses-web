@@ -80,7 +80,7 @@ function ClinicDashboard() {
                       <div>
                         <p className="text-sm text-muted-foreground">Paciente</p>
                         <p className="text-lg font-semibold text-foreground">
-                          {(app.profiles as { full_name: string | null } | null)?.full_name ?? "Não informado"}
+                          {((app.profiles as unknown) as { full_name: string | null } | null)?.full_name ?? "Não informado"}
                         </p>
                       </div>
                       <div>
