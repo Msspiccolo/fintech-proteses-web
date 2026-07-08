@@ -111,8 +111,9 @@ function PatientDashboard() {
                     </CardContent>
                   </Card>
                 ))}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </main>
