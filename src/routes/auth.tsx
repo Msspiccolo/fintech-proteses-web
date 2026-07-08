@@ -11,8 +11,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { signUp, signIn } from "@/lib/auth.functions";
 import { useServerFn } from "@tanstack/react-start";
+import { Chrome } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
