@@ -6,9 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
@@ -52,8 +50,8 @@ type RegisterForm = z.infer<typeof registerSchema>;
 
 function AuthPage() {
   const navigate = useNavigate();
+  const [mode, setMode] = useState<"login" | "register">("login");
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("login");
 
   const doSignUp = useServerFn(signUp);
   const doSignIn = useServerFn(signIn);
@@ -132,7 +130,7 @@ function AuthPage() {
       if (data.session) {
         navigate({ to: "/dashboard", replace: true });
       } else {
-        setActiveTab("login");
+        setMode("login");
         setError("Conta criada. Faça login para continuar.");
       }
     } catch (err) {
@@ -149,13 +147,27 @@ function AuthPage() {
             <CardDescription>Entre ou crie sua conta para continuar</CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Entrar</TabsTrigger>
-                <TabsTrigger value="register">Criar conta</TabsTrigger>
-              </TabsList>
+            <div className="grid grid-cols-2 gap-2 rounded-lg bg-muted p-1">
+              <Button
+                type="button"
+                variant={mode === "login" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setMode("login")}
+              >
+                Entrar
+              </Button>
+              <Button
+                type="button"
+                variant={mode === "register" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setMode("register")}
+              >
+                Criar conta
+              </Button>
+            </div>
 
-              <TabsContent value="login" className="space-y-4">
+            {mode === "login" ? (
+              <div className="mt-4 space-y-4">
                 <Button
                   type="button"
                   variant="outline"
@@ -206,9 +218,9 @@ function AuthPage() {
                     </Button>
                   </form>
                 </Form>
-              </TabsContent>
-
-              <TabsContent value="register" className="space-y-4">
+              </div>
+            ) : (
+              <div className="mt-4 space-y-4">
                 <Button
                   type="button"
                   variant="outline"
@@ -349,8 +361,8 @@ function AuthPage() {
                     </Button>
                   </form>
                 </Form>
-              </TabsContent>
-            </Tabs>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
