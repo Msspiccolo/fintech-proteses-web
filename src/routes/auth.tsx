@@ -79,6 +79,28 @@ function AuthPage() {
 
   const selectedRole = registerForm.watch("role");
 
+  async function onGoogleSignIn() {
+    setError(null);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+
+      if (result.error) {
+        setError(result.error instanceof Error ? result.error.message : "Erro ao entrar com Google");
+        return;
+      }
+
+      if (result.redirected) {
+        return;
+      }
+
+      navigate({ to: "/dashboard", replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao entrar com Google");
+    }
+  }
+
   async function onLogin(values: LoginForm) {
     setError(null);
     try {
