@@ -83,7 +83,7 @@ export const signUp = createServerFn({ method: "POST" })
   });
 
 export const signIn = createServerFn({ method: "POST" })
-  .inputValidator((data) => signInSchema.parse(data))
+  .validator((data) => signInSchema.parse(data))
   .handler(async ({ data }) => {
     const { createClient } = await import("@supabase/supabase-js");
     const supabasePublic = createClient<Database>(
