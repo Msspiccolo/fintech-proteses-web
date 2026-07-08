@@ -72,7 +72,7 @@ export const getClinicByUser = createServerFn({ method: "GET" })
 
 export const registerClinic = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data) => registerClinicSchema.parse(data))
+  .validator((data) => registerClinicSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { data: clinic, error } = await context.supabase
       .from("clinics")
