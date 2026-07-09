@@ -1,4 +1,4 @@
-import { Suspense, useMemo } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Environment, ContactShadows, Center } from "@react-three/drei";
 import * as THREE from "three";
@@ -231,6 +231,11 @@ interface Prosthesis3DPreviewProps {
 }
 
 export function Prosthesis3DPreview({ modelId, autoRotate = true, className }: Prosthesis3DPreviewProps) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) {
+    return <div className={className} style={{ background: "#0b1220" }} />;
+  }
   return (
     <div className={className}>
       <Canvas shadows dpr={[1, 2]} camera={{ position: [2.2, 1.4, 2.2], fov: 40 }}>
