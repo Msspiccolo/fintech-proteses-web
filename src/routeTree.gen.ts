@@ -9,38 +9,208 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SimularRouteImport } from './routes/simular'
+import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
+import { Route as ClinicasParceirasRouteImport } from './routes/clinicas-parceiras'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
+import { Route as AuthenticatedPacienteDashboardRouteImport } from './routes/_authenticated.paciente.dashboard'
+import { Route as AuthenticatedClinicaDashboardRouteImport } from './routes/_authenticated.clinica.dashboard'
+import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated.admin.dashboard'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SimularRoute = SimularRouteImport.update({
+  id: '/simular',
+  path: '/simular',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComoFuncionaRoute = ComoFuncionaRouteImport.update({
+  id: '/como-funciona',
+  path: '/como-funciona',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClinicasParceirasRoute = ClinicasParceirasRouteImport.update({
+  id: '/clinicas-parceiras',
+  path: '/clinicas-parceiras',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedPacienteDashboardRoute =
+  AuthenticatedPacienteDashboardRouteImport.update({
+    id: '/paciente/dashboard',
+    path: '/paciente/dashboard',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedClinicaDashboardRoute =
+  AuthenticatedClinicaDashboardRouteImport.update({
+    id: '/clinica/dashboard',
+    path: '/clinica/dashboard',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAdminDashboardRoute =
+  AuthenticatedAdminDashboardRouteImport.update({
+    id: '/admin/dashboard',
+    path: '/admin/dashboard',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/clinicas-parceiras': typeof ClinicasParceirasRoute
+  '/como-funciona': typeof ComoFuncionaRoute
+  '/simular': typeof SimularRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/clinica/dashboard': typeof AuthenticatedClinicaDashboardRoute
+  '/paciente/dashboard': typeof AuthenticatedPacienteDashboardRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/clinicas-parceiras': typeof ClinicasParceirasRoute
+  '/como-funciona': typeof ComoFuncionaRoute
+  '/simular': typeof SimularRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/clinica/dashboard': typeof AuthenticatedClinicaDashboardRoute
+  '/paciente/dashboard': typeof AuthenticatedPacienteDashboardRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/clinicas-parceiras': typeof ClinicasParceirasRoute
+  '/como-funciona': typeof ComoFuncionaRoute
+  '/simular': typeof SimularRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/_authenticated/clinica/dashboard': typeof AuthenticatedClinicaDashboardRoute
+  '/_authenticated/paciente/dashboard': typeof AuthenticatedPacienteDashboardRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/clinicas-parceiras'
+    | '/como-funciona'
+    | '/simular'
+    | '/sitemap.xml'
+    | '/dashboard'
+    | '/admin/dashboard'
+    | '/clinica/dashboard'
+    | '/paciente/dashboard'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/clinicas-parceiras'
+    | '/como-funciona'
+    | '/simular'
+    | '/sitemap.xml'
+    | '/dashboard'
+    | '/admin/dashboard'
+    | '/clinica/dashboard'
+    | '/paciente/dashboard'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/clinicas-parceiras'
+    | '/como-funciona'
+    | '/simular'
+    | '/sitemap.xml'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/admin/dashboard'
+    | '/_authenticated/clinica/dashboard'
+    | '/_authenticated/paciente/dashboard'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  ClinicasParceirasRoute: typeof ClinicasParceirasRoute
+  ComoFuncionaRoute: typeof ComoFuncionaRoute
+  SimularRoute: typeof SimularRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/simular': {
+      id: '/simular'
+      path: '/simular'
+      fullPath: '/simular'
+      preLoaderRoute: typeof SimularRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/como-funciona': {
+      id: '/como-funciona'
+      path: '/como-funciona'
+      fullPath: '/como-funciona'
+      preLoaderRoute: typeof ComoFuncionaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clinicas-parceiras': {
+      id: '/clinicas-parceiras'
+      path: '/clinicas-parceiras'
+      fullPath: '/clinicas-parceiras'
+      preLoaderRoute: typeof ClinicasParceirasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +218,63 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/paciente/dashboard': {
+      id: '/_authenticated/paciente/dashboard'
+      path: '/paciente/dashboard'
+      fullPath: '/paciente/dashboard'
+      preLoaderRoute: typeof AuthenticatedPacienteDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/clinica/dashboard': {
+      id: '/_authenticated/clinica/dashboard'
+      path: '/clinica/dashboard'
+      fullPath: '/clinica/dashboard'
+      preLoaderRoute: typeof AuthenticatedClinicaDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin/dashboard': {
+      id: '/_authenticated/admin/dashboard'
+      path: '/admin/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
+interface AuthenticatedRouteChildren {
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
+  AuthenticatedClinicaDashboardRoute: typeof AuthenticatedClinicaDashboardRoute
+  AuthenticatedPacienteDashboardRoute: typeof AuthenticatedPacienteDashboardRoute
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedAdminDashboardRoute: AuthenticatedAdminDashboardRoute,
+  AuthenticatedClinicaDashboardRoute: AuthenticatedClinicaDashboardRoute,
+  AuthenticatedPacienteDashboardRoute: AuthenticatedPacienteDashboardRoute,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  AuthRoute: AuthRoute,
+  ClinicasParceirasRoute: ClinicasParceirasRoute,
+  ComoFuncionaRoute: ComoFuncionaRoute,
+  SimularRoute: SimularRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
