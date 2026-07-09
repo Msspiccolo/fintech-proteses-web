@@ -12,6 +12,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Box, Loader2, Sparkles, Download } from "lucide-react";
 import { flushSync } from "react-dom";
 import { streamImage } from "@/lib/streamImage";
+import {
+  Prosthesis3DPreview,
+  PROSTHESIS_MODELS,
+  type ProsthesisModelId,
+} from "@/components/prosthesis-3d-preview";
 import { useServerFn } from "@tanstack/react-start";
 import { createLoanApplication } from "@/lib/loans.functions";
 import { getApprovedClinics } from "@/lib/clinics.functions";
@@ -48,6 +53,7 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
   const [downPayment, setDownPayment] = useState(3000);
   const [installments, setInstallments] = useState(24);
   const [include3D, setInclude3D] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<ProsthesisModelId | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewFinal, setPreviewFinal] = useState(false);
   const [generating, setGenerating] = useState(false);
