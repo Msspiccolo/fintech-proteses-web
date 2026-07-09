@@ -213,6 +213,61 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
         />
       </div>
 
+      <div className="space-y-3">
+        <div>
+          <Label>Modelos disponíveis</Label>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Escolha um modelo existente do nosso catálogo — visualize em 3D antes de solicitar.
+          </p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {PROSTHESIS_MODELS.map((model) => {
+            const active = selectedModel === model.id;
+            return (
+              <button
+                type="button"
+                key={model.id}
+                onClick={() => {
+                  setSelectedModel(active ? null : model.id);
+                  if (!active) {
+                    setAmount(model.basePrice);
+                    form.setValue("requestedAmount", model.basePrice);
+                    if (downPayment > model.basePrice) {
+                      setDownPayment(0);
+                      form.setValue("downPayment", 0);
+                    }
+                  }
+                }}
+                className={
+                  "group overflow-hidden rounded-lg border text-left transition-all " +
+                  (active
+                    ? "border-primary ring-2 ring-primary/40"
+                    : "border-border hover:border-primary/60")
+                }
+              >
+                <Prosthesis3DPreview
+                  modelId={model.id}
+                  autoRotate={active}
+                  className="aspect-square w-full"
+                />
+                <div className="space-y-1 p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold text-foreground">{model.name}</span>
+                    <span className="text-xs font-medium text-primary">
+                      {formatCurrency(model.basePrice)}
+                    </span>
+                  </div>
+                  <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                    {model.category}
+                  </p>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{model.description}</p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <Card className="border-primary/30 bg-primary/5">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
