@@ -17,9 +17,9 @@ import { Building2, Users, TrendingUp, CheckCircle } from "lucide-react";
 export const Route = createFileRoute("/clinicas-parceiras")({
   head: () => ({
     meta: [
-      { title: "Clínicas Parceiras — PróteseCrédito" },
+      { title: "Clínicas Parceiras — ProtesePay" },
       { name: "description", content: "Cadastre sua clínica e ofereça financiamento de próteses ortopédicas para seus pacientes." },
-      { property: "og:title", content: "Clínicas Parceiras — PróteseCrédito" },
+      { property: "og:title", content: "Clínicas Parceiras — ProtesePay" },
       { property: "og:description", content: "Cadastre sua clínica e ofereça financiamento para seus pacientes." },
     ],
   }),

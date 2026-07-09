@@ -9,9 +9,9 @@ import { ArrowRight, CheckCircle } from "lucide-react";
 export const Route = createFileRoute("/simular")({
   head: () => ({
     meta: [
-      { title: "Simular Crédito — PróteseCrédito" },
+      { title: "Simular Crédito — ProtesePay" },
       { name: "description", content: "Simule o financiamento da sua prótese ortopédica. Escolha valor, entrada e parcelas." },
-      { property: "og:title", content: "Simular Crédito — PróteseCrédito" },
+      { property: "og:title", content: "Simular Crédito — ProtesePay" },
       { property: "og:description", content: "Simule o financiamento da sua prótese ortopédica." },
     ],
   }),

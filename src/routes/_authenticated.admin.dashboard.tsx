@@ -13,7 +13,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/_authenticated/admin/dashboard")({
   head: () => ({
     meta: [
-      { title: "Painel Administrativo — PróteseCrédito" },
+      { title: "Painel Administrativo — ProtesePay" },
       { name: "description", content: "Gerencie e aprove propostas de financiamento de próteses ortopédicas." },
     ],
   }),

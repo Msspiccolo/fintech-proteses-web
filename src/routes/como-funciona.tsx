@@ -7,9 +7,9 @@ import { Search, FileText, ClipboardCheck, HeartPulse } from "lucide-react";
 export const Route = createFileRoute("/como-funciona")({
   head: () => ({
     meta: [
-      { title: "Como Funciona — PróteseCrédito" },
+      { title: "Como Funciona — ProtesePay" },
       { name: "description", content: "Entenda como simular, solicitar e acompanhar o financiamento de próteses ortopédicas." },
-      { property: "og:title", content: "Como Funciona — PróteseCrédito" },
+      { property: "og:title", content: "Como Funciona — ProtesePay" },
       { property: "og:description", content: "Entenda como simular, solicitar e acompanhar o financiamento de próteses ortopédicas." },
     ],
   }),

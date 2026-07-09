@@ -11,7 +11,7 @@ import { Footer } from "@/components/layout/footer";
 export const Route = createFileRoute("/_authenticated/clinica/dashboard")({
   head: () => ({
     meta: [
-      { title: "Painel da Clínica — PróteseCrédito" },
+      { title: "Painel da Clínica — ProtesePay" },
       { name: "description", content: "Gerencie propostas de financiamento enviadas pelos pacientes da sua clínica." },
     ],
   }),
