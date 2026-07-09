@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Box } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { createLoanApplication } from "@/lib/loans.functions";
 import { getApprovedClinics } from "@/lib/clinics.functions";
@@ -43,6 +45,8 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
   const [amount, setAmount] = useState(15000);
   const [downPayment, setDownPayment] = useState(3000);
   const [installments, setInstallments] = useState(24);
+  const [include3D, setInclude3D] = useState(false);
+  const modeling3DCost = 1500;
   const interestRate = 1.99;
 
   const form = useForm<ProposalForm>({
@@ -56,7 +60,8 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
     },
   });
 
-  const financedAmount = Math.max(0, amount - downPayment);
+  const totalAmount = amount + (include3D ? modeling3DCost : 0);
+  const financedAmount = Math.max(0, totalAmount - downPayment);
   const monthlyRate = interestRate / 100;
   const monthlyPayment =
     monthlyRate === 0
@@ -67,16 +72,22 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
 
   async function onSubmit(values: ProposalForm) {
     try {
+      const purposeText = [
+        values.purpose,
+        include3D ? "[Modelagem 3D personalizada incluída]" : null,
+      ]
+        .filter(Boolean)
+        .join(" ");
       await createApplication({
         data: {
-          requestedAmount: amount,
+          requestedAmount: totalAmount,
           downPayment: values.downPayment,
           installments: values.installments,
           monthlyPayment: Number(monthlyPayment.toFixed(2)),
           interestRate,
           totalCost: Number(totalCost.toFixed(2)),
           clinicId: values.clinicId || undefined,
-          purpose: values.purpose,
+          purpose: purposeText,
         },
       });
       toast.success("Proposta enviada com sucesso!");
@@ -166,6 +177,29 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
         />
       </div>
 
+      <Card className="border-primary/30 bg-primary/5">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <Checkbox
+              id="modeling-3d"
+              checked={include3D}
+              onCheckedChange={(v) => setInclude3D(v === true)}
+              className="mt-1"
+            />
+            <div className="flex-1">
+              <Label htmlFor="modeling-3d" className="flex cursor-pointer items-center gap-2 text-base font-semibold text-foreground">
+                <Box className="h-4 w-4 text-primary" />
+                Modelagem 3D personalizada da prótese
+              </Label>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Escaneamento e impressão 3D sob medida para máximo conforto e precisão anatômica.
+                Acréscimo de <span className="font-semibold text-foreground">{formatCurrency(modeling3DCost)}</span> ao valor financiado.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="bg-background/50">
         <CardContent className="p-4">
           <div className="grid grid-cols-2 gap-4">
@@ -178,7 +212,9 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
               <p className="text-xl font-semibold text-foreground">{formatCurrency(totalCost)}</p>
             </div>
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">Taxa de {interestRate}% ao mês</p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Taxa de {interestRate}% ao mês{include3D ? " • Inclui modelagem 3D" : ""}
+          </p>
         </CardContent>
       </Card>
 
