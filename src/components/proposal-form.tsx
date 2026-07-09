@@ -106,8 +106,10 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
 
   async function onSubmit(values: ProposalForm) {
     try {
+      const selected = PROSTHESIS_MODELS.find((m) => m.id === selectedModel);
       const purposeText = [
         values.purpose,
+        selected ? `[Modelo escolhido: ${selected.name}]` : null,
         include3D ? "[Modelagem 3D personalizada incluída]" : null,
       ]
         .filter(Boolean)
