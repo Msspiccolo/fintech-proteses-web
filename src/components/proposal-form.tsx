@@ -12,6 +12,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Box, Loader2, Sparkles, Download } from "lucide-react";
 import { flushSync } from "react-dom";
 import { streamImage } from "@/lib/streamImage";
+import {
+  Prosthesis3DPreview,
+  PROSTHESIS_MODELS,
+  type ProsthesisModelId,
+} from "@/components/prosthesis-3d-preview";
 import { useServerFn } from "@tanstack/react-start";
 import { createLoanApplication } from "@/lib/loans.functions";
 import { getApprovedClinics } from "@/lib/clinics.functions";
@@ -48,6 +53,7 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
   const [downPayment, setDownPayment] = useState(3000);
   const [installments, setInstallments] = useState(24);
   const [include3D, setInclude3D] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<ProsthesisModelId | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewFinal, setPreviewFinal] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -100,8 +106,10 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
 
   async function onSubmit(values: ProposalForm) {
     try {
+      const selected = PROSTHESIS_MODELS.find((m) => m.id === selectedModel);
       const purposeText = [
         values.purpose,
+        selected ? `[Modelo escolhido: ${selected.name}]` : null,
         include3D ? "[Modelagem 3D personalizada incluída]" : null,
       ]
         .filter(Boolean)
@@ -203,6 +211,61 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
           className="mt-1.5"
           {...form.register("purpose")}
         />
+      </div>
+
+      <div className="space-y-3">
+        <div>
+          <Label>Modelos disponíveis</Label>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Escolha um modelo existente do nosso catálogo — visualize em 3D antes de solicitar.
+          </p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {PROSTHESIS_MODELS.map((model) => {
+            const active = selectedModel === model.id;
+            return (
+              <button
+                type="button"
+                key={model.id}
+                onClick={() => {
+                  setSelectedModel(active ? null : model.id);
+                  if (!active) {
+                    setAmount(model.basePrice);
+                    form.setValue("requestedAmount", model.basePrice);
+                    if (downPayment > model.basePrice) {
+                      setDownPayment(0);
+                      form.setValue("downPayment", 0);
+                    }
+                  }
+                }}
+                className={
+                  "group overflow-hidden rounded-lg border text-left transition-all " +
+                  (active
+                    ? "border-primary ring-2 ring-primary/40"
+                    : "border-border hover:border-primary/60")
+                }
+              >
+                <Prosthesis3DPreview
+                  modelId={model.id}
+                  autoRotate={active}
+                  className="aspect-square w-full"
+                />
+                <div className="space-y-1 p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold text-foreground">{model.name}</span>
+                    <span className="text-xs font-medium text-primary">
+                      {formatCurrency(model.basePrice)}
+                    </span>
+                  </div>
+                  <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                    {model.category}
+                  </p>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{model.description}</p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <Card className="border-primary/30 bg-primary/5">
