@@ -9,7 +9,9 @@ import { Slider } from "@/components/ui/slider";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Box } from "lucide-react";
+import { Box, Loader2, Sparkles, Download } from "lucide-react";
+import { flushSync } from "react-dom";
+import { streamImage } from "@/lib/streamImage";
 import { useServerFn } from "@tanstack/react-start";
 import { createLoanApplication } from "@/lib/loans.functions";
 import { getApprovedClinics } from "@/lib/clinics.functions";
@@ -46,6 +48,9 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
   const [downPayment, setDownPayment] = useState(3000);
   const [installments, setInstallments] = useState(24);
   const [include3D, setInclude3D] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewFinal, setPreviewFinal] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const modeling3DCost = 1500;
   const interestRate = 1.99;
 
@@ -69,6 +74,29 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
       : (financedAmount * monthlyRate * Math.pow(1 + monthlyRate, installments)) /
         (Math.pow(1 + monthlyRate, installments) - 1);
   const totalCost = monthlyPayment * installments + downPayment;
+
+  async function handleGeneratePreview() {
+    const description = form.getValues("purpose") || "";
+    setGenerating(true);
+    setPreviewUrl(null);
+    setPreviewFinal(false);
+    try {
+      await streamImage(
+        "/api/generate-3d-preview",
+        { description },
+        (dataUrl, isFinal) => {
+          flushSync(() => {
+            setPreviewUrl(dataUrl);
+            if (isFinal) setPreviewFinal(true);
+          });
+        },
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao gerar prévia 3D");
+    } finally {
+      setGenerating(false);
+    }
+  }
 
   async function onSubmit(values: ProposalForm) {
     try {
@@ -183,7 +211,13 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
             <Checkbox
               id="modeling-3d"
               checked={include3D}
-              onCheckedChange={(v) => setInclude3D(v === true)}
+              onCheckedChange={(v) => {
+                setInclude3D(v === true);
+                if (v !== true) {
+                  setPreviewUrl(null);
+                  setPreviewFinal(false);
+                }
+              }}
               className="mt-1"
             />
             <div className="flex-1">
@@ -192,9 +226,59 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
                 Modelagem 3D personalizada da prótese
               </Label>
               <p className="mt-1 text-sm text-muted-foreground">
-                Escaneamento e impressão 3D sob medida para máximo conforto e precisão anatômica.
+                Modelo 3D sob medida, com arquivo <span className="font-semibold text-foreground">.STL</span> compatível
+                com impressoras 3D médicas (FDM/SLA/SLS). Entregue após aprovação, junto de renderização técnica.
                 Acréscimo de <span className="font-semibold text-foreground">{formatCurrency(modeling3DCost)}</span> ao valor financiado.
               </p>
+
+              {include3D && (
+                <div className="mt-4 space-y-3">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleGeneratePreview}
+                    disabled={generating}
+                    className="gap-2"
+                  >
+                    {generating ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Gerando prévia...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4" />
+                        {previewUrl ? "Gerar novamente" : "Gerar prévia 3D com IA"}
+                      </>
+                    )}
+                  </Button>
+                  {previewUrl && (
+                    <div className="overflow-hidden rounded-lg border border-border bg-background">
+                      <img
+                        src={previewUrl}
+                        alt="Prévia da prótese modelada em 3D"
+                        className={
+                          "w-full transition-[filter] duration-500 " +
+                          (previewFinal ? "blur-0" : "blur-2xl")
+                        }
+                      />
+                      <div className="flex items-center justify-between gap-2 border-t border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                        <span>Prévia ilustrativa • Arquivo STL final entregue após aprovação</span>
+                        {previewFinal && (
+                          <a
+                            href={previewUrl}
+                            download="prevía-protese-3d.png"
+                            className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+                          >
+                            <Download className="h-3 w-3" /> PNG
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
