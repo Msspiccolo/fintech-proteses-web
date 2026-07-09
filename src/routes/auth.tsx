@@ -17,8 +17,8 @@ import { Chrome } from "lucide-react";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Entrar — PróteseCrédito" },
-      { name: "description", content: "Entre ou crie sua conta na PróteseCrédito para simular e solicitar financiamento de próteses ortopédicas." },
+      { title: "Entrar — ProtesePay" },
+      { name: "description", content: "Entre ou crie sua conta na ProtesePay para simular e solicitar financiamento de próteses ortopédicas." },
     ],
   }),
   component: AuthPage,
@@ -143,7 +143,7 @@ function AuthPage() {
       <div className="flex flex-1 items-center justify-center px-4 py-12">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">PróteseCrédito</CardTitle>
+            <CardTitle className="text-2xl font-bold">ProtesePay</CardTitle>
             <CardDescription>Entre ou crie sua conta para continuar</CardDescription>
           </CardHeader>
           <CardContent>

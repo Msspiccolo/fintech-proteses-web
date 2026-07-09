@@ -43,7 +43,7 @@ export function Footer() {
         </div>
 
         <div className="mt-8 border-t border-border pt-8 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} PróteseCrédito. Todos os direitos reservados.
+          © {new Date().getFullYear()} ProtesePay. Todos os direitos reservados.
         </div>
       </div>
     </footer>

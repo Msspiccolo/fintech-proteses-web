@@ -12,7 +12,7 @@ import { ProposalForm } from "@/components/proposal-form";
 export const Route = createFileRoute("/_authenticated/paciente/dashboard")({
   head: () => ({
     meta: [
-      { title: "Painel do Paciente — PróteseCrédito" },
+      { title: "Painel do Paciente — ProtesePay" },
       { name: "description", content: "Acompanhe suas propostas de financiamento de próteses ortopédicas." },
     ],
   }),

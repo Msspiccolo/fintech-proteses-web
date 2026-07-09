@@ -32,7 +32,7 @@ export function Header() {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
         <Link to="/" className="flex items-center gap-2">
           <span className="text-xl font-bold tracking-tight text-foreground">
-            Prótese<span className="text-primary">Crédito</span>
+            Prótese<span className="text-primary">Pay</span>
           </span>
         </Link>
 

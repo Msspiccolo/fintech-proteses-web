@@ -79,10 +79,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "PróteseCrédito — Financiamento de Próteses Ortopédicas" },
+      { title: "ProtesePay — Financiamento de Próteses Ortopédicas" },
       { name: "description", content: "Simule e financie próteses ortopédicas com parcelas acessíveis. Crédito rápido para pacientes e clínicas parceiras." },
-      { name: "author", content: "PróteseCrédito" },
-      { property: "og:title", content: "PróteseCrédito — Financiamento de Próteses Ortopédicas" },
+      { name: "author", content: "ProtesePay" },
+      { property: "og:title", content: "ProtesePay — Financiamento de Próteses Ortopédicas" },
       { property: "og:description", content: "Simule e financie próteses ortopédicas com parcelas acessíveis. Crédito rápido para pacientes e clínicas parceiras." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

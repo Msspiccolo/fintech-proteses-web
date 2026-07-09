@@ -9,9 +9,9 @@ import { Activity, Shield, Clock, Stethoscope, ArrowRight, CheckCircle } from "l
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "PróteseCrédito — Financiamento de Próteses Ortopédicas" },
+      { title: "ProtesePay — Financiamento de Próteses Ortopédicas" },
       { name: "description", content: "Simule e financie próteses ortopédicas com parcelas acessíveis. Crédito rápido para pacientes e clínicas parceiras." },
-      { property: "og:title", content: "PróteseCrédito — Financiamento de Próteses Ortopédicas" },
+      { property: "og:title", content: "ProtesePay — Financiamento de Próteses Ortopédicas" },
       { property: "og:description", content: "Simule e financie próteses ortopédicas com parcelas acessíveis." },
     ],
   }),
@@ -42,7 +42,7 @@ function HomePage() {
                   Financie sua prótese ortopédica com parcelas que cabem no bolso
                 </h1>
                 <p className="text-lg text-muted-foreground">
-                  A PróteseCrédito conecta pacientes e clínicas parceiras a crédito rápido, transparente e sem burocracia para próteses de quadril, joelho, membros e mais.
+                  A ProtesePay conecta pacientes e clínicas parceiras a crédito rápido, transparente e sem burocracia para próteses de quadril, joelho, membros e mais.
                 </p>
                 <div className="flex flex-wrap gap-4">
                   <Link to="/simular">
@@ -92,7 +92,7 @@ function HomePage() {
         <section className="border-y border-border bg-secondary/30 px-4 py-20">
           <div className="mx-auto max-w-7xl">
             <div className="text-center">
-              <h2 className="text-3xl font-bold text-foreground md:text-4xl">Por que escolher a PróteseCrédito?</h2>
+              <h2 className="text-3xl font-bold text-foreground md:text-4xl">Por que escolher a ProtesePay?</h2>
               <p className="mt-4 text-muted-foreground">Tecnologia e cuidado para transformar tratamentos em realidade.</p>
             </div>
             <div className="mt-12 grid gap-6 md:grid-cols-3">
