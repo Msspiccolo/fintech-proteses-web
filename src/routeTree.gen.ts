@@ -16,6 +16,7 @@ import { Route as ClinicasParceirasRouteImport } from './routes/clinicas-parceir
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiGenerate3dPreviewRouteImport } from './routes/api/generate-3d-preview'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedPacienteDashboardRouteImport } from './routes/_authenticated.paciente.dashboard'
 import { Route as AuthenticatedClinicaDashboardRouteImport } from './routes/_authenticated.clinica.dashboard'
@@ -55,6 +56,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGenerate3dPreviewRoute = ApiGenerate3dPreviewRouteImport.update({
+  id: '/api/generate-3d-preview',
+  path: '/api/generate-3d-preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/simular': typeof SimularRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/api/generate-3d-preview': typeof ApiGenerate3dPreviewRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/clinica/dashboard': typeof AuthenticatedClinicaDashboardRoute
   '/paciente/dashboard': typeof AuthenticatedPacienteDashboardRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/simular': typeof SimularRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/api/generate-3d-preview': typeof ApiGenerate3dPreviewRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/clinica/dashboard': typeof AuthenticatedClinicaDashboardRoute
   '/paciente/dashboard': typeof AuthenticatedPacienteDashboardRoute
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/simular': typeof SimularRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/api/generate-3d-preview': typeof ApiGenerate3dPreviewRoute
   '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/_authenticated/clinica/dashboard': typeof AuthenticatedClinicaDashboardRoute
   '/_authenticated/paciente/dashboard': typeof AuthenticatedPacienteDashboardRoute
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/simular'
     | '/sitemap.xml'
     | '/dashboard'
+    | '/api/generate-3d-preview'
     | '/admin/dashboard'
     | '/clinica/dashboard'
     | '/paciente/dashboard'
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/simular'
     | '/sitemap.xml'
     | '/dashboard'
+    | '/api/generate-3d-preview'
     | '/admin/dashboard'
     | '/clinica/dashboard'
     | '/paciente/dashboard'
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/simular'
     | '/sitemap.xml'
     | '/_authenticated/dashboard'
+    | '/api/generate-3d-preview'
     | '/_authenticated/admin/dashboard'
     | '/_authenticated/clinica/dashboard'
     | '/_authenticated/paciente/dashboard'
@@ -165,6 +177,7 @@ export interface RootRouteChildren {
   ComoFuncionaRoute: typeof ComoFuncionaRoute
   SimularRoute: typeof SimularRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiGenerate3dPreviewRoute: typeof ApiGenerate3dPreviewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -216,6 +229,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/generate-3d-preview': {
+      id: '/api/generate-3d-preview'
+      path: '/api/generate-3d-preview'
+      fullPath: '/api/generate-3d-preview'
+      preLoaderRoute: typeof ApiGenerate3dPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/dashboard': {
@@ -275,6 +295,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComoFuncionaRoute: ComoFuncionaRoute,
   SimularRoute: SimularRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiGenerate3dPreviewRoute: ApiGenerate3dPreviewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
