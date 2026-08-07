@@ -10,8 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
-import { signUp, signIn } from "@/lib/auth.functions";
-import { useServerFn } from "@tanstack/react-start";
+import { signUpWithPassword, signInWithPassword } from "@/lib/auth-client";
 import { Chrome } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
@@ -52,9 +51,6 @@ function AuthPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [error, setError] = useState<string | null>(null);
-
-  const doSignUp = useServerFn(signUp);
-  const doSignIn = useServerFn(signIn);
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -102,11 +98,8 @@ function AuthPage() {
   async function onLogin(values: LoginForm) {
     setError(null);
     try {
-      await doSignIn({ data: values });
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        navigate({ to: "/dashboard", replace: true });
-      }
+      await signInWithPassword(values.email, values.password);
+      navigate({ to: "/dashboard", replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao entrar");
     }
@@ -115,23 +108,20 @@ function AuthPage() {
   async function onRegister(values: RegisterForm) {
     setError(null);
     try {
-      await doSignUp({
-        data: {
-          email: values.email,
-          password: values.password,
-          fullName: values.fullName,
-          document: values.document,
-          phone: values.phone,
-          role: values.role,
-          clinicName: values.clinicName,
-        },
+      const { needsEmailConfirmation } = await signUpWithPassword({
+        email: values.email,
+        password: values.password,
+        fullName: values.fullName,
+        document: values.document,
+        phone: values.phone,
+        role: values.role,
+        clinicName: values.clinicName,
       });
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        navigate({ to: "/dashboard", replace: true });
-      } else {
+      if (needsEmailConfirmation) {
         setMode("login");
-        setError("Conta criada. Faça login para continuar.");
+        setError("Conta criada. Confirme seu email e faça login para continuar.");
+      } else {
+        navigate({ to: "/dashboard", replace: true });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao criar conta");

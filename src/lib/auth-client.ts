@@ -17,7 +17,7 @@ export async function completeSignup(input: Omit<SignUpInput, "email" | "passwor
     _document: input.document,
     _phone: input.phone,
     _role: input.role,
-    _clinic_name: input.clinicName ?? null,
+    _clinic_name: input.clinicName ?? undefined,
   });
   if (error) throw new Error(error.message);
 }
