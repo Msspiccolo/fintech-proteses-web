@@ -1,7 +1,9 @@
-import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect } from "react";
 import { getCurrentUserProfile } from "@/lib/auth.functions";
+import { completeSignup } from "@/lib/auth-client";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardRedirect,
@@ -13,7 +15,18 @@ function DashboardRedirect() {
 
   useEffect(() => {
     getProfile({ data: undefined })
-      .then(({ profile, roles }) => {
+      .then(async ({ profile, roles }) => {
+        if (!profile) {
+          // Social sign-in: create a default patient profile on first visit.
+          const { data } = await supabase.auth.getUser();
+          const meta = data.user?.user_metadata ?? {};
+          await completeSignup({
+            fullName: (meta.full_name as string) || (meta.name as string) || "Usuário",
+            document: "",
+            phone: "",
+            role: "patient",
+          }).catch(() => undefined);
+        }
         if (roles.includes("admin")) {
           router.navigate({ to: "/admin/dashboard", replace: true });
         } else if (roles.includes("clinic")) {

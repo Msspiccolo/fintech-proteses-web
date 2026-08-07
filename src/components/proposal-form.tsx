@@ -188,12 +188,15 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
 
       <div>
         <Label htmlFor="clinic">Clínica parceira (opcional)</Label>
-        <Select onValueChange={(value) => form.setValue("clinicId", value)} defaultValue="">
+        <Select
+          onValueChange={(value) => form.setValue("clinicId", value === "none" ? "" : value)}
+          defaultValue="none"
+        >
           <SelectTrigger id="clinic" className="mt-1.5">
             <SelectValue placeholder="Selecione uma clínica" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Nenhuma</SelectItem>
+            <SelectItem value="none">Nenhuma</SelectItem>
             {clinics.map((clinic) => (
               <SelectItem key={clinic.id} value={clinic.id}>
                 {clinic.name}

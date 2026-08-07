@@ -218,6 +218,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      complete_signup: {
+        Args: {
+          _clinic_name?: string
+          _document: string
+          _full_name: string
+          _phone: string
+          _role: string
+        }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
