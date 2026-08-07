@@ -1,0 +1,47 @@
+import { supabase } from "@/integrations/supabase/client";
+
+export type SignUpInput = {
+  email: string;
+  password: string;
+  fullName: string;
+  document: string;
+  phone: string;
+  role: "patient" | "clinic";
+  clinicName?: string;
+};
+
+/** Completes the user's profile + role after a session exists. */
+export async function completeSignup(input: Omit<SignUpInput, "email" | "password">) {
+  const { error } = await supabase.rpc("complete_signup", {
+    _full_name: input.fullName,
+    _document: input.document,
+    _phone: input.phone,
+    _role: input.role,
+    _clinic_name: input.clinicName ?? null,
+  });
+  if (error) throw new Error(error.message);
+}
+
+export async function signUpWithPassword(input: SignUpInput) {
+  const { data, error } = await supabase.auth.signUp({
+    email: input.email,
+    password: input.password,
+    options: {
+      emailRedirectTo: `${window.location.origin}/dashboard`,
+      data: { full_name: input.fullName },
+    },
+  });
+  if (error) throw new Error(error.message);
+
+  if (data.session) {
+    await completeSignup(input);
+    return { needsEmailConfirmation: false as const };
+  }
+  return { needsEmailConfirmation: true as const };
+}
+
+export async function signInWithPassword(email: string, password: string) {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw new Error(error.message);
+  return data;
+}
