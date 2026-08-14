@@ -16,7 +16,7 @@ export interface ProsthesisModel {
 export const PROSTHESIS_MODELS: ProsthesisModel[] = [
   {
     id: "knee",
-    name: "Joelho Modular",
+    name: "Joelho Modulares",
     description: "Articulação de joelho - Com pivô central em titânio e sleeve em polímero médico. Feito com peças resistentes, e com tamanho personalizado!",
     category: "Membro inferior",
     basePrice: 18500,
