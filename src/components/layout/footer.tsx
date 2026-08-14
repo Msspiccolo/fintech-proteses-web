@@ -7,7 +7,7 @@ export function Footer() {
         <div className="grid gap-8 md:grid-cols-3">
           <div>
             <span className="text-xl font-bold tracking-tight text-foreground">
-              Prótese<span className="text-primary">Crédito</span>
+              Protese<span className="text-primary">Pay</span>
             </span>
             <p className="mt-2 text-sm text-muted-foreground">
               Financiamento acessível para próteses ortopédicas. Transformando saúde em realidade.
