@@ -12,6 +12,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 function DashboardRedirect() {
   const getProfile = useServerFn(getCurrentUserProfile);
   const router = useRouter();
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     getProfile({ data: undefined })
@@ -37,9 +38,21 @@ function DashboardRedirect() {
       })
       .catch((err) => {
         console.error("DashboardRedirect getProfile error:", err);
-        router.navigate({ to: "/auth", replace: true });
+        setErrorMsg(err instanceof Error ? err.message : String(err));
       });
   }, [getProfile, router]);
+
+  if (errorMsg) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="rounded-lg bg-destructive/10 p-6 text-destructive max-w-md">
+          <h2 className="font-bold text-lg mb-2">Erro ao carregar perfil</h2>
+          <p className="font-mono text-sm">{errorMsg}</p>
+          <button onClick={() => router.navigate({ to: "/auth" })} className="mt-4 underline">Voltar para o login</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
