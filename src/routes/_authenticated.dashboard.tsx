@@ -35,7 +35,8 @@ function DashboardRedirect() {
           router.navigate({ to: "/paciente/dashboard", replace: true });
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("DashboardRedirect getProfile error:", err);
         router.navigate({ to: "/auth", replace: true });
       });
   }, [getProfile, router]);
