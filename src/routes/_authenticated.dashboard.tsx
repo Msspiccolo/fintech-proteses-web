@@ -1,7 +1,5 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
-import { useEffect } from "react";
-import { getCurrentUserProfile } from "@/lib/auth.functions";
+import { useEffect, useState } from "react";
 import { completeSignup } from "@/lib/auth-client";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -9,13 +7,34 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardRedirect,
 });
 
+async function fetchProfileData() {
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) throw new Error(userError?.message || "Usuário não autenticado");
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (profileError) throw new Error(profileError.message);
+
+  const { data: rolesData, error: rolesError } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", user.id);
+
+  if (rolesError) throw new Error(rolesError.message);
+
+  return { profile, roles: rolesData?.map(r => r.role) ?? [] };
+}
+
 function DashboardRedirect() {
-  const getProfile = useServerFn(getCurrentUserProfile);
   const router = useRouter();
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
-    getProfile({ data: undefined })
+    fetchProfileData()
       .then(async ({ profile, roles }) => {
         if (!profile) {
           // Social sign-in: create a default patient profile on first visit.
@@ -37,10 +56,10 @@ function DashboardRedirect() {
         }
       })
       .catch((err) => {
-        console.error("DashboardRedirect getProfile error:", err);
+        console.error("DashboardRedirect fetchProfileData error:", err);
         setErrorMsg(err instanceof Error ? err.message : String(err));
       });
-  }, [getProfile, router]);
+  }, [router]);
 
   if (errorMsg) {
     return (
