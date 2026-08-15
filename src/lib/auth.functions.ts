@@ -24,12 +24,12 @@ export const getCurrentUserProfile = createServerFn({ method: "GET" })
       throw new Error(rolesError.message);
     }
 
-    return { profile: data, roles: roles?.map((r) => r.role) ?? [] };
+    return { profile: data, roles: roles?.map((r: { role: string }) => r.role) ?? [] };
   });
 
 export const updateProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data) =>
+  .validator((data: unknown) =>
     z
       .object({
         fullName: z.string().min(2).optional(),

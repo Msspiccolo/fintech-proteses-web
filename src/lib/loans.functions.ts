@@ -21,7 +21,7 @@ const updateApplicationSchema = z.object({
 
 export const createLoanApplication = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data) => createApplicationSchema.parse(data))
+  .validator((data: unknown) => createApplicationSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { data: application, error } = await context.supabase
       .from("loan_applications")
@@ -75,7 +75,7 @@ export const getClinicLoanApplications = createServerFn({ method: "GET" })
       throw new Error(affiliationsError.message);
     }
 
-    const clinicIds = affiliations?.map((a) => a.clinic_id) ?? [];
+    const clinicIds = affiliations?.map((a: { clinic_id: string }) => a.clinic_id) ?? [];
     if (clinicIds.length === 0) {
       return { applications: [] };
     }
@@ -119,7 +119,7 @@ export const getAllLoanApplications = createServerFn({ method: "GET" })
 
 export const updateLoanApplication = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data) => updateApplicationSchema.parse(data))
+  .validator((data: unknown) => updateApplicationSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { data: isAdmin, error: adminError } = await context.supabase.rpc("has_role", {
       _user_id: context.userId,
