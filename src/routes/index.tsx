@@ -9,8 +9,8 @@ import { Activity, Shield, Clock, Stethoscope, ArrowRight, CheckCircle } from "l
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "ProtesePay — Financiamento de Próteses Ortopédicas" },
-      { name: "description", content: "Simule e financie próteses ortopédicas com parcelas acessíveis. Crédito rápido para pacientes e clínicas parceiras." },
+      { title: "ProtesePay — Financiamento de Próteses" },
+      { name: "description", content: "Simule e financie próteses com parcelas acessíveis para pacientes." },
       { property: "og:title", content: "ProtesePay — Financiamento de Próteses Ortopédicas" },
       { property: "og:description", content: "Simule e financie próteses ortopédicas com parcelas acessíveis." },
     ],
@@ -39,10 +39,10 @@ function HomePage() {
                   <span>Crédito seguro para saúde</span>
                 </div>
                 <h1 className="text-4xl font-bold leading-tight text-foreground md:text-6xl">
-                  Financie sua prótese ortopédica com parcelas que cabem no bolso
+                  Financie sua prótese agora com um preço acessível
                 </h1>
                 <p className="text-lg text-muted-foreground">
-                  A ProtesePay conecta pacientes e clínicas parceiras a crédito rápido, transparente e sem burocracia para próteses de quadril, joelho, membros e mais.
+                  A ProtesePay traz facilidades para os pacientes.Transparencia e sem burocracia.
                 </p>
                 <div className="flex flex-wrap gap-4">
                   <Link to="/simular">
