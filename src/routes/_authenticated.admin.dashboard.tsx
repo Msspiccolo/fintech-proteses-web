@@ -125,6 +125,7 @@ function AdminDashboard() {
 
           <div className="mt-8">
             <h2 className="text-xl font-semibold text-foreground">Todas as propostas</h2>
+            {/* propostas */}
             {isLoading ? (
               <p className="mt-4 text-muted-foreground">Carregando...</p>
             ) : applications.length === 0 ? (
