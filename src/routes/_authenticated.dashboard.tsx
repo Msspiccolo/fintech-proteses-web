@@ -39,20 +39,29 @@ function DashboardRedirect() {
   useEffect(() => {
     fetchProfileData()
       .then(async ({ profile, roles }) => {
+        let currentRoles = [...roles];
+        
         if (!profile) {
-          // Social sign-in: create a default patient profile on first visit.
+          // Social sign-in or first login after email confirmation: create profile from metadata.
           const { data } = await supabase.auth.getUser();
           const meta = data.user?.user_metadata ?? {};
+          
+          const newRole = (meta.role as "patient" | "clinic") || "patient";
+          
           await completeSignup({
             fullName: (meta.full_name as string) || (meta.name as string) || "Usuário",
-            document: "",
-            phone: "",
-            role: "patient",
+            document: (meta.document as string) || "",
+            phone: (meta.phone as string) || "",
+            role: newRole,
+            clinicName: (meta.clinic_name as string) || undefined,
           }).catch(() => undefined);
+          
+          currentRoles = [newRole];
         }
-        if (roles.includes("admin")) {
+        
+        if (currentRoles.includes("admin")) {
           router.navigate({ to: "/admin/dashboard", replace: true });
-        } else if (roles.includes("clinic")) {
+        } else if (currentRoles.includes("clinic")) {
           router.navigate({ to: "/clinica/dashboard", replace: true });
         } else {
           router.navigate({ to: "/paciente/dashboard", replace: true });

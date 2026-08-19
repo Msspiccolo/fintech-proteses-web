@@ -28,7 +28,13 @@ export async function signUpWithPassword(input: SignUpInput) {
     password: input.password,
     options: {
       emailRedirectTo: `${window.location.origin}/dashboard`,
-      data: { full_name: input.fullName },
+      data: { 
+        full_name: input.fullName,
+        document: input.document,
+        phone: input.phone,
+        role: input.role,
+        clinic_name: input.clinicName,
+      },
     },
   });
   if (error) throw new Error(error.message);
