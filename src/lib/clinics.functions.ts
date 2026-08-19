@@ -44,8 +44,6 @@ export const getApprovedClinics = createServerFn({ method: "GET" }).handler(asyn
 export const getClinicByUser = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data: affiliationsCheck } = { data: null as null };
-    void affiliationsCheck;
     const { data: affiliations, error: affiliationsError } = await context.supabase
       .from("clinic_affiliations")
       .select("clinic_id")
@@ -105,4 +103,37 @@ export const registerClinic = createServerFn({ method: "POST" })
     }
 
     return { clinic };
+  });
+
+export const getAllClinicsAdmin = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("clinics")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return { clinics: data ?? [] };
+  });
+
+export const setClinicStatus = createServerFn({ method: "POST" })
+  .validator((data: unknown) =>
+    z.object({ id: z.string().uuid(), status: z.enum(["pending", "approved", "rejected"]) }).parse(data),
+  )
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("clinics")
+      .update({ status: data.status })
+      .eq("id", data.id);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return { ok: true };
   });
