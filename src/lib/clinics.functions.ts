@@ -44,6 +44,8 @@ export const getApprovedClinics = createServerFn({ method: "GET" }).handler(asyn
 export const getClinicByUser = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const { data: affiliationsCheck } = { data: null as null };
+    void affiliationsCheck;
     const { data: affiliations, error: affiliationsError } = await context.supabase
       .from("clinic_affiliations")
       .select("clinic_id")
