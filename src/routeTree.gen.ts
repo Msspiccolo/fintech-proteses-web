@@ -13,6 +13,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SimularRouteImport } from './routes/simular'
 import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
 import { Route as ClinicasParceirasRouteImport } from './routes/clinicas-parceiras'
+import { Route as CadastroClinicaRouteImport } from './routes/cadastro-clinica'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
@@ -20,6 +21,7 @@ import { Route as ApiGenerate3dPreviewRouteImport } from './routes/api/generate-
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedPacienteDashboardRouteImport } from './routes/_authenticated.paciente.dashboard'
 import { Route as AuthenticatedClinicaDashboardRouteImport } from './routes/_authenticated.clinica.dashboard'
+import { Route as AuthenticatedAdminSetupRouteImport } from './routes/_authenticated.admin.setup'
 import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated.admin.dashboard'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -40,6 +42,11 @@ const ComoFuncionaRoute = ComoFuncionaRouteImport.update({
 const ClinicasParceirasRoute = ClinicasParceirasRouteImport.update({
   id: '/clinicas-parceiras',
   path: '/clinicas-parceiras',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CadastroClinicaRoute = CadastroClinicaRouteImport.update({
+  id: '/cadastro-clinica',
+  path: '/cadastro-clinica',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -78,6 +85,11 @@ const AuthenticatedClinicaDashboardRoute =
     path: '/clinica/dashboard',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminSetupRoute = AuthenticatedAdminSetupRouteImport.update({
+  id: '/admin/setup',
+  path: '/admin/setup',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedAdminDashboardRoute =
   AuthenticatedAdminDashboardRouteImport.update({
     id: '/admin/dashboard',
@@ -88,6 +100,7 @@ const AuthenticatedAdminDashboardRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/cadastro-clinica': typeof CadastroClinicaRoute
   '/clinicas-parceiras': typeof ClinicasParceirasRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/simular': typeof SimularRoute
@@ -95,12 +108,14 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/api/generate-3d-preview': typeof ApiGenerate3dPreviewRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/clinica/dashboard': typeof AuthenticatedClinicaDashboardRoute
   '/paciente/dashboard': typeof AuthenticatedPacienteDashboardRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/cadastro-clinica': typeof CadastroClinicaRoute
   '/clinicas-parceiras': typeof ClinicasParceirasRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/simular': typeof SimularRoute
@@ -108,6 +123,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/api/generate-3d-preview': typeof ApiGenerate3dPreviewRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/clinica/dashboard': typeof AuthenticatedClinicaDashboardRoute
   '/paciente/dashboard': typeof AuthenticatedPacienteDashboardRoute
 }
@@ -116,6 +132,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
+  '/cadastro-clinica': typeof CadastroClinicaRoute
   '/clinicas-parceiras': typeof ClinicasParceirasRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/simular': typeof SimularRoute
@@ -123,6 +140,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/api/generate-3d-preview': typeof ApiGenerate3dPreviewRoute
   '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/_authenticated/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/_authenticated/clinica/dashboard': typeof AuthenticatedClinicaDashboardRoute
   '/_authenticated/paciente/dashboard': typeof AuthenticatedPacienteDashboardRoute
 }
@@ -131,6 +149,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/cadastro-clinica'
     | '/clinicas-parceiras'
     | '/como-funciona'
     | '/simular'
@@ -138,12 +157,14 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/api/generate-3d-preview'
     | '/admin/dashboard'
+    | '/admin/setup'
     | '/clinica/dashboard'
     | '/paciente/dashboard'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/cadastro-clinica'
     | '/clinicas-parceiras'
     | '/como-funciona'
     | '/simular'
@@ -151,6 +172,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/api/generate-3d-preview'
     | '/admin/dashboard'
+    | '/admin/setup'
     | '/clinica/dashboard'
     | '/paciente/dashboard'
   id:
@@ -158,6 +180,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/cadastro-clinica'
     | '/clinicas-parceiras'
     | '/como-funciona'
     | '/simular'
@@ -165,6 +188,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/api/generate-3d-preview'
     | '/_authenticated/admin/dashboard'
+    | '/_authenticated/admin/setup'
     | '/_authenticated/clinica/dashboard'
     | '/_authenticated/paciente/dashboard'
   fileRoutesById: FileRoutesById
@@ -173,6 +197,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AuthRoute: typeof AuthRoute
+  CadastroClinicaRoute: typeof CadastroClinicaRoute
   ClinicasParceirasRoute: typeof ClinicasParceirasRoute
   ComoFuncionaRoute: typeof ComoFuncionaRoute
   SimularRoute: typeof SimularRoute
@@ -208,6 +233,13 @@ declare module '@tanstack/react-router' {
       path: '/clinicas-parceiras'
       fullPath: '/clinicas-parceiras'
       preLoaderRoute: typeof ClinicasParceirasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cadastro-clinica': {
+      id: '/cadastro-clinica'
+      path: '/cadastro-clinica'
+      fullPath: '/cadastro-clinica'
+      preLoaderRoute: typeof CadastroClinicaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -259,6 +291,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClinicaDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/setup': {
+      id: '/_authenticated/admin/setup'
+      path: '/admin/setup'
+      fullPath: '/admin/setup'
+      preLoaderRoute: typeof AuthenticatedAdminSetupRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin/dashboard': {
       id: '/_authenticated/admin/dashboard'
       path: '/admin/dashboard'
@@ -272,6 +311,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
+  AuthenticatedAdminSetupRoute: typeof AuthenticatedAdminSetupRoute
   AuthenticatedClinicaDashboardRoute: typeof AuthenticatedClinicaDashboardRoute
   AuthenticatedPacienteDashboardRoute: typeof AuthenticatedPacienteDashboardRoute
 }
@@ -279,6 +319,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedAdminDashboardRoute: AuthenticatedAdminDashboardRoute,
+  AuthenticatedAdminSetupRoute: AuthenticatedAdminSetupRoute,
   AuthenticatedClinicaDashboardRoute: AuthenticatedClinicaDashboardRoute,
   AuthenticatedPacienteDashboardRoute: AuthenticatedPacienteDashboardRoute,
 }
@@ -291,6 +332,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AuthRoute: AuthRoute,
+  CadastroClinicaRoute: CadastroClinicaRoute,
   ClinicasParceirasRoute: ClinicasParceirasRoute,
   ComoFuncionaRoute: ComoFuncionaRoute,
   SimularRoute: SimularRoute,

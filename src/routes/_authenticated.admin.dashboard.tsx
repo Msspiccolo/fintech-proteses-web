@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getAllLoanApplications, updateLoanApplication } from "@/lib/loans.functions";
+import { getAllClinicsAdmin, setClinicStatus } from "@/lib/clinics.functions";
 import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Header } from "@/components/layout/header";
@@ -26,6 +27,8 @@ export const Route = createFileRoute("/_authenticated/admin/dashboard")({
 function AdminDashboard() {
   const fetchApplications = useServerFn(getAllLoanApplications);
   const updateApplication = useServerFn(updateLoanApplication);
+  const fetchClinics = useServerFn(getAllClinicsAdmin);
+  const updateClinicStatus = useServerFn(setClinicStatus);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["all-loan-applications"],
@@ -33,6 +36,27 @@ function AdminDashboard() {
   });
 
   const applications: any[] = data?.applications ?? [];
+
+  const {
+    data: clinicsData,
+    isLoading: clinicsLoading,
+    refetch: refetchClinics,
+  } = useQuery({
+    queryKey: ["admin-clinics"],
+    queryFn: () => fetchClinics({ data: undefined }),
+  });
+
+  const clinics: any[] = clinicsData?.clinics ?? [];
+
+  async function handleClinicStatus(id: string, status: "approved" | "rejected") {
+    try {
+      await updateClinicStatus({ data: { id, status } });
+      toast.success(status === "approved" ? "Clínica aprovada" : "Clínica reprovada");
+      refetchClinics();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao atualizar clínica");
+    }
+  }
 
   async function handleStatus(id: string, status: "approved" | "rejected") {
     try {
@@ -99,8 +123,61 @@ function AdminDashboard() {
             </Card>
           </div>
 
+          <div className="mt-10">
+            <h2 className="text-xl font-semibold text-foreground">Clínicas cadastradas</h2>
+            {clinicsLoading ? (
+              <p className="mt-4 text-muted-foreground">Carregando...</p>
+            ) : clinics.length === 0 ? (
+              <p className="mt-4 text-muted-foreground">Nenhuma clínica cadastrada.</p>
+            ) : (
+              <div className="mt-4 space-y-4">
+                {clinics.map((clinic) => (
+                  <Card key={clinic.id}>
+                    <CardContent className="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Clínica</p>
+                        <p className="text-lg font-semibold text-foreground">{clinic.name}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">CNPJ</p>
+                        <p className="text-foreground">{clinic.document ?? "Não informado"}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Cidade</p>
+                        <p className="text-foreground">
+                          {clinic.city ? `${clinic.city}${clinic.state ? ` - ${clinic.state}` : ""}` : "Não informada"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Status</p>
+                        <StatusBadge status={clinic.status} />
+                      </div>
+                      <div className="flex gap-2">
+                        {clinic.status !== "approved" && (
+                          <Button size="sm" onClick={() => handleClinicStatus(clinic.id, "approved")}>
+                            Aprovar
+                          </Button>
+                        )}
+                        {clinic.status !== "rejected" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleClinicStatus(clinic.id, "rejected")}
+                          >
+                            Reprovar
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="mt-8">
             <h2 className="text-xl font-semibold text-foreground">Todas as propostas</h2>
+            {/* propostas */}
             {isLoading ? (
               <p className="mt-4 text-muted-foreground">Carregando...</p>
             ) : applications.length === 0 ? (
