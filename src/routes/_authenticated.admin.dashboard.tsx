@@ -32,7 +32,7 @@ function AdminDashboard() {
     queryFn: () => fetchApplications({ data: undefined }),
   });
 
-  const applications = data?.applications ?? [];
+  const applications: any[] = data?.applications ?? [];
 
   async function handleStatus(id: string, status: "approved" | "rejected") {
     try {
