@@ -20,6 +20,9 @@ import { signUpWithPassword, signInWithPassword } from "@/lib/auth-client";
 import { Chrome } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    tipo: search['tipo'] === "clinica" ? ("clinica" as const) : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Entrar — ProtesePay" },
@@ -59,7 +62,8 @@ type RegisterForm = z.infer<typeof registerSchema>;
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const { tipo } = Route.useSearch();
+  const [mode, setMode] = useState<"login" | "register">(tipo === "clinica" ? "register" : "login");
   const [error, setError] = useState<string | null>(null);
 
   const loginForm = useForm<LoginForm>({
@@ -76,7 +80,7 @@ function AuthPage() {
       phone: "",
       password: "",
       confirmPassword: "",
-      role: "patient",
+      role: tipo === "clinica" ? "clinic" : "patient",
       clinicName: "",
     },
   });
