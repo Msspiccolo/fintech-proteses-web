@@ -61,7 +61,7 @@ function PatientDashboard() {
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-bold text-foreground">
-                  {applications.filter((a) => a.status === "approved").length}
+                  {applications.filter((a: any) => a.status === "approved").length}
                 </p>
               </CardContent>
             </Card>
@@ -73,7 +73,7 @@ function PatientDashboard() {
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-bold text-foreground">
-                  {applications.filter((a) => a.status === "pending").length}
+                  {applications.filter((a: any) => a.status === "pending").length}
                 </p>
               </CardContent>
             </Card>
@@ -105,7 +105,7 @@ function PatientDashboard() {
                 </p>
               ) : (
                 <div className="mt-4 space-y-4">
-                  {applications.map((app) => (
+                  {applications.map((app: any) => (
                     <Card key={app.id}>
                       <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
                         <div>
