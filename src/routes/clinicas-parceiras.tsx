@@ -8,7 +8,14 @@ import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { useServerFn } from "@tanstack/react-start";
 import { registerClinic } from "@/lib/clinics.functions";
 import { toast } from "sonner";
@@ -18,9 +25,16 @@ export const Route = createFileRoute("/clinicas-parceiras")({
   head: () => ({
     meta: [
       { title: "Clínicas Parceiras — ProtesePay" },
-      { name: "description", content: "Cadastre sua clínica e ofereça financiamento de próteses ortopédicas para seus pacientes." },
+      {
+        name: "description",
+        content:
+          "Cadastre sua clínica e ofereça financiamento de próteses ortopédicas para seus pacientes.",
+      },
       { property: "og:title", content: "Clínicas Parceiras — ProtesePay" },
-      { property: "og:description", content: "Cadastre sua clínica e ofereça financiamento para seus pacientes." },
+      {
+        property: "og:description",
+        content: "Cadastre sua clínica e ofereça financiamento para seus pacientes.",
+      },
     ],
   }),
   component: ClinicasParceirasPage,
@@ -81,7 +95,9 @@ function ClinicasParceirasPage() {
       <main className="flex-1 px-4 py-12 md:py-20">
         <div className="mx-auto max-w-5xl">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-foreground md:text-4xl">Seja uma clínica parceira</h1>
+            <h1 className="text-3xl font-bold text-foreground md:text-4xl">
+              Seja uma clínica parceira
+            </h1>
             <p className="mt-4 text-muted-foreground">
               Ofereça financiamento para próteses ortopédicas e aumente a conversão de tratamentos.
             </p>

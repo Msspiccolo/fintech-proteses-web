@@ -17,7 +17,8 @@ export const PROSTHESIS_MODELS: ProsthesisModel[] = [
   {
     id: "knee",
     name: "Joelho Modulares",
-    description: "Articulação de joelho - Com pivô central em titânio e sleeve em polímero médico. Feito com peças resistentes, e com tamanho personalizado!",
+    description:
+      "Articulação de joelho - Com pivô central em titânio e sleeve em polímero médico. Feito com peças resistentes, e com tamanho personalizado!",
     category: "Membro inferior",
     basePrice: 18500,
   },
@@ -38,7 +39,8 @@ export const PROSTHESIS_MODELS: ProsthesisModel[] = [
   {
     id: "foot",
     name: "Pé Dinâmico Direito",
-    description: "Possue lâmina de retorno de energia feita com fibra de carbono e compátivel para caminhada ativa",
+    description:
+      "Possue lâmina de retorno de energia feita com fibra de carbono e compátivel para caminhada ativa",
     category: "Membro inferior",
     basePrice: 14200,
   },
@@ -144,11 +146,33 @@ function FootMesh() {
         <meshStandardMaterial color={TITANIUM} metalness={0.85} roughness={0.2} />
       </mesh>
       <mesh castShadow rotation={[Math.PI / 2, 0, 0]} position={[0, 0.05, 0]}>
-        <extrudeGeometry args={[shape, { depth: 0.25, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 3 }]} />
+        <extrudeGeometry
+          args={[
+            shape,
+            {
+              depth: 0.25,
+              bevelEnabled: true,
+              bevelThickness: 0.02,
+              bevelSize: 0.02,
+              bevelSegments: 3,
+            },
+          ]}
+        />
         <meshStandardMaterial color={POLYMER} roughness={0.5} />
       </mesh>
       <mesh castShadow rotation={[Math.PI / 2, 0, 0]} position={[0, -0.1, 0]}>
-        <extrudeGeometry args={[shape, { depth: 0.15, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 3 }]} />
+        <extrudeGeometry
+          args={[
+            shape,
+            {
+              depth: 0.15,
+              bevelEnabled: true,
+              bevelThickness: 0.02,
+              bevelSize: 0.02,
+              bevelSegments: 3,
+            },
+          ]}
+        />
         <meshStandardMaterial color="#0f172a" roughness={0.7} />
       </mesh>
     </group>
@@ -161,7 +185,11 @@ function Finger({ x, len = 0.5 }: { x: number; len?: number }) {
       {[0, 1, 2].map((i) => (
         <mesh key={i} castShadow position={[0, i * (len / 3), 0]}>
           <boxGeometry args={[0.08, len / 3 - 0.02, 0.08]} />
-          <meshStandardMaterial color={i % 2 === 0 ? TITANIUM : POLYMER} metalness={0.7} roughness={0.3} />
+          <meshStandardMaterial
+            color={i % 2 === 0 ? TITANIUM : POLYMER}
+            metalness={0.7}
+            roughness={0.3}
+          />
         </mesh>
       ))}
     </group>
@@ -215,12 +243,18 @@ function ArmMesh() {
 
 function ModelMesh({ id }: { id: ProsthesisModelId }) {
   switch (id) {
-    case "knee": return <KneeMesh />;
-    case "hip": return <HipMesh />;
-    case "leg": return <LegMesh />;
-    case "foot": return <FootMesh />;
-    case "hand": return <HandMesh />;
-    case "arm": return <ArmMesh />;
+    case "knee":
+      return <KneeMesh />;
+    case "hip":
+      return <HipMesh />;
+    case "leg":
+      return <LegMesh />;
+    case "foot":
+      return <FootMesh />;
+    case "hand":
+      return <HandMesh />;
+    case "arm":
+      return <ArmMesh />;
   }
 }
 
@@ -230,7 +264,11 @@ interface Prosthesis3DPreviewProps {
   className?: string;
 }
 
-export function Prosthesis3DPreview({ modelId, autoRotate = true, className }: Prosthesis3DPreviewProps) {
+export function Prosthesis3DPreview({
+  modelId,
+  autoRotate = true,
+  className,
+}: Prosthesis3DPreviewProps) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   if (!mounted) {
@@ -249,7 +287,13 @@ export function Prosthesis3DPreview({ modelId, autoRotate = true, className }: P
           <ContactShadows position={[0, -1.05, 0]} opacity={0.5} scale={6} blur={2.5} far={2} />
           <Environment preset="city" />
         </Suspense>
-        <OrbitControls enablePan={false} autoRotate={autoRotate} autoRotateSpeed={1.2} minDistance={2} maxDistance={6} />
+        <OrbitControls
+          enablePan={false}
+          autoRotate={autoRotate}
+          autoRotateSpeed={1.2}
+          minDistance={2}
+          maxDistance={6}
+        />
       </Canvas>
     </div>
   );

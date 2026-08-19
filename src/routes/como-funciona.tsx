@@ -8,9 +8,17 @@ export const Route = createFileRoute("/como-funciona")({
   head: () => ({
     meta: [
       { title: "Como Funciona — ProtesePay" },
-      { name: "description", content: "Entenda como simular, solicitar e acompanhar o financiamento de próteses ortopédicas." },
+      {
+        name: "description",
+        content:
+          "Entenda como simular, solicitar e acompanhar o financiamento de próteses ortopédicas.",
+      },
       { property: "og:title", content: "Como Funciona — ProtesePay" },
-      { property: "og:description", content: "Entenda como simular, solicitar e acompanhar o financiamento de próteses ortopédicas." },
+      {
+        property: "og:description",
+        content:
+          "Entenda como simular, solicitar e acompanhar o financiamento de próteses ortopédicas.",
+      },
     ],
   }),
   component: ComoFuncionaPage,
@@ -20,12 +28,14 @@ const steps = [
   {
     icon: Search,
     title: "1. Simule",
-    description: "Escolha o valor do tratamento, a entrada e o número de parcelas. Veja a prestação mensal em segundos.",
+    description:
+      "Escolha o valor do tratamento, a entrada e o número de parcelas. Veja a prestação mensal em segundos.",
   },
   {
     icon: FileText,
     title: "2. Solicite",
-    description: "Crie sua conta com email e senha. Informe seus dados e os da prótese ou clínica escolhida.",
+    description:
+      "Crie sua conta com email e senha. Informe seus dados e os da prótese ou clínica escolhida.",
   },
   {
     icon: ClipboardCheck,

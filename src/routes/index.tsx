@@ -10,9 +10,15 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "ProtesePay — Financiamento de Próteses" },
-      { name: "description", content: "Simule e financie próteses com parcelas acessíveis para pacientes." },
+      {
+        name: "description",
+        content: "Simule e financie próteses com parcelas acessíveis para pacientes.",
+      },
       { property: "og:title", content: "ProtesePay — Financiamento de Próteses Ortopédicas" },
-      { property: "og:description", content: "Simule e financie próteses ortopédicas com parcelas acessíveis." },
+      {
+        property: "og:description",
+        content: "Simule e financie próteses ortopédicas com parcelas acessíveis.",
+      },
     ],
   }),
   component: HomePage,
@@ -92,8 +98,12 @@ function HomePage() {
         <section className="border-y border-border bg-secondary/30 px-4 py-20">
           <div className="mx-auto max-w-7xl">
             <div className="text-center">
-              <h2 className="text-3xl font-bold text-foreground md:text-4xl">Por que escolher a ProtesePay?</h2>
-              <p className="mt-4 text-muted-foreground">Tecnologia e cuidado para transformar tratamentos em realidade.</p>
+              <h2 className="text-3xl font-bold text-foreground md:text-4xl">
+                Por que escolher a ProtesePay?
+              </h2>
+              <p className="mt-4 text-muted-foreground">
+                Tecnologia e cuidado para transformar tratamentos em realidade.
+              </p>
             </div>
             <div className="mt-12 grid gap-6 md:grid-cols-3">
               <div className="rounded-xl border border-border bg-card p-6">
@@ -102,7 +112,8 @@ function HomePage() {
                 </div>
                 <h3 className="text-xl font-semibold text-foreground">Rápido</h3>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Simule em segundos e receba uma resposta de crédito em poucos minutos, direto no app.
+                  Simule em segundos e receba uma resposta de crédito em poucos minutos, direto no
+                  app.
                 </p>
               </div>
               <div className="rounded-xl border border-border bg-card p-6">
@@ -120,7 +131,8 @@ function HomePage() {
                 </div>
                 <h3 className="text-xl font-semibold text-foreground">Especializado</h3>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Focamos em próteses ortopédicas e clínicas parceiras, com condições pensadas para saúde.
+                  Focamos em próteses ortopédicas e clínicas parceiras, com condições pensadas para
+                  saúde.
                 </p>
               </div>
             </div>
@@ -134,7 +146,8 @@ function HomePage() {
               <div>
                 <h2 className="text-3xl font-bold text-foreground">É uma clínica ou hospital?</h2>
                 <p className="mt-4 text-muted-foreground">
-                  Ofereça financiamento para seus pacientes e converta mais tratamentos. Cadastre sua clínica gratuitamente.
+                  Ofereça financiamento para seus pacientes e converta mais tratamentos. Cadastre
+                  sua clínica gratuitamente.
                 </p>
               </div>
               <div className="flex justify-start md:justify-end">

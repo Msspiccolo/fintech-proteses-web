@@ -4,7 +4,10 @@ interface StatusBadgeProps {
   status: string;
 }
 
-const statusMap: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" | null }> = {
+const statusMap: Record<
+  string,
+  { label: string; variant: "default" | "secondary" | "destructive" | "outline" | null }
+> = {
   pending: { label: "Em análise", variant: "secondary" },
   approved: { label: "Aprovada", variant: "default" },
   rejected: { label: "Reprovada", variant: "destructive" },

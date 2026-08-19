@@ -7,7 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Box, Loader2, Sparkles, Download } from "lucide-react";
 import { flushSync } from "react-dom";
@@ -87,16 +93,12 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
     setPreviewUrl(null);
     setPreviewFinal(false);
     try {
-      await streamImage(
-        "/api/generate-3d-preview",
-        { description },
-        (dataUrl, isFinal) => {
-          flushSync(() => {
-            setPreviewUrl(dataUrl);
-            if (isFinal) setPreviewFinal(true);
-          });
-        },
-      );
+      await streamImage("/api/generate-3d-preview", { description }, (dataUrl, isFinal) => {
+        flushSync(() => {
+          setPreviewUrl(dataUrl);
+          if (isFinal) setPreviewFinal(true);
+        });
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao gerar prévia 3D");
     } finally {
@@ -287,14 +289,22 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
               className="mt-1"
             />
             <div className="flex-1">
-              <Label htmlFor="modeling-3d" className="flex cursor-pointer items-center gap-2 text-base font-semibold text-foreground">
+              <Label
+                htmlFor="modeling-3d"
+                className="flex cursor-pointer items-center gap-2 text-base font-semibold text-foreground"
+              >
                 <Box className="h-4 w-4 text-primary" />
                 Modelagem 3D personalizada da prótese
               </Label>
               <p className="mt-1 text-sm text-muted-foreground">
-                Modelo 3D sob medida, com arquivo <span className="font-semibold text-foreground">.STL</span> compatível
-                com impressoras 3D médicas (FDM/SLA/SLS). Entregue após aprovação, junto de renderização técnica.
-                Acréscimo de <span className="font-semibold text-foreground">{formatCurrency(modeling3DCost)}</span> ao valor financiado.
+                Modelo 3D sob medida, com arquivo{" "}
+                <span className="font-semibold text-foreground">.STL</span> compatível com
+                impressoras 3D médicas (FDM/SLA/SLS). Entregue após aprovação, junto de renderização
+                técnica. Acréscimo de{" "}
+                <span className="font-semibold text-foreground">
+                  {formatCurrency(modeling3DCost)}
+                </span>{" "}
+                ao valor financiado.
               </p>
 
               {include3D && (

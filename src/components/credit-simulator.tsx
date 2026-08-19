@@ -107,11 +107,15 @@ export function CreditSimulator({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-xs text-muted-foreground">Parcela mensal</p>
-            <p className="text-2xl font-bold text-foreground">{formatCurrency(calculation.monthlyPayment)}</p>
+            <p className="text-2xl font-bold text-foreground">
+              {formatCurrency(calculation.monthlyPayment)}
+            </p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Total estimado</p>
-            <p className="text-xl font-semibold text-foreground">{formatCurrency(calculation.totalCost)}</p>
+            <p className="text-xl font-semibold text-foreground">
+              {formatCurrency(calculation.totalCost)}
+            </p>
           </div>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">

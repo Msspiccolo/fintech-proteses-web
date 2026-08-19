@@ -10,7 +10,11 @@ export const Route = createFileRoute("/simular")({
   head: () => ({
     meta: [
       { title: "Simular Crédito — ProtesePay" },
-      { name: "description", content: "Simule o financiamento da sua prótese ortopédica. Escolha valor, entrada e parcelas." },
+      {
+        name: "description",
+        content:
+          "Simule o financiamento da sua prótese ortopédica. Escolha valor, entrada e parcelas.",
+      },
       { property: "og:title", content: "Simular Crédito — ProtesePay" },
       { property: "og:description", content: "Simule o financiamento da sua prótese ortopédica." },
     ],
@@ -32,7 +36,8 @@ function SimularPage() {
           <div className="text-center">
             <h1 className="text-3xl font-bold text-foreground md:text-4xl">Simule seu crédito</h1>
             <p className="mt-4 text-muted-foreground">
-              Ajuste o valor do tratamento, a entrada e o número de parcelas. Veja o resultado em tempo real.
+              Ajuste o valor do tratamento, a entrada e o número de parcelas. Veja o resultado em
+              tempo real.
             </p>
           </div>
 

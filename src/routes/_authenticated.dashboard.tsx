@@ -8,7 +8,10 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 async function fetchProfileData() {
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
   if (userError || !user) throw new Error(userError?.message || "Usuário não autenticado");
 
   const { data: profile, error: profileError } = await supabase
@@ -26,7 +29,7 @@ async function fetchProfileData() {
 
   if (rolesError) throw new Error(rolesError.message);
 
-  return { profile, roles: rolesData?.map(r => r.role) ?? [] };
+  return { profile, roles: rolesData?.map((r) => r.role) ?? [] };
 }
 
 function DashboardRedirect() {
@@ -67,7 +70,9 @@ function DashboardRedirect() {
         <div className="rounded-lg bg-destructive/10 p-6 text-destructive max-w-md">
           <h2 className="font-bold text-lg mb-2">Erro ao carregar perfil</h2>
           <p className="font-mono text-sm">{errorMsg}</p>
-          <button onClick={() => router.navigate({ to: "/auth" })} className="mt-4 underline">Voltar para o login</button>
+          <button onClick={() => router.navigate({ to: "/auth" })} className="mt-4 underline">
+            Voltar para o login
+          </button>
         </div>
       </div>
     );

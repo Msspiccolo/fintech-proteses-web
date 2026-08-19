@@ -13,7 +13,10 @@ export const Route = createFileRoute("/_authenticated/paciente/dashboard")({
   head: () => ({
     meta: [
       { title: "Painel do Paciente — ProtesePay" },
-      { name: "description", content: "Acompanhe suas propostas de financiamento de próteses ortopédicas." },
+      {
+        name: "description",
+        content: "Acompanhe suas propostas de financiamento de próteses ortopédicas.",
+      },
     ],
   }),
   component: PatientDashboard,
@@ -35,12 +38,16 @@ function PatientDashboard() {
       <main className="flex-1 px-4 py-12">
         <div className="mx-auto max-w-5xl">
           <h1 className="text-3xl font-bold text-foreground">Painel do Paciente</h1>
-          <p className="mt-2 text-muted-foreground">Acompanhe o status das suas propostas de financiamento.</p>
+          <p className="mt-2 text-muted-foreground">
+            Acompanhe o status das suas propostas de financiamento.
+          </p>
 
           <div className="mt-8 grid gap-6 md:grid-cols-3">
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium text-muted-foreground">Propostas</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Propostas
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-bold text-foreground">{applications.length}</p>
@@ -48,7 +55,9 @@ function PatientDashboard() {
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium text-muted-foreground">Aprovadas</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Aprovadas
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-bold text-foreground">
@@ -58,7 +67,9 @@ function PatientDashboard() {
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium text-muted-foreground">Em análise</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Em análise
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-bold text-foreground">
@@ -71,10 +82,16 @@ function PatientDashboard() {
           <div className="mt-12 grid gap-8 lg:grid-cols-2">
             <div>
               <h2 className="text-xl font-semibold text-foreground">Nova proposta</h2>
-              <p className="mt-2 text-sm text-muted-foreground">Ajuste o valor e envie uma nova proposta de financiamento.</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Ajuste o valor e envie uma nova proposta de financiamento.
+              </p>
               <Card className="mt-4">
                 <CardContent className="p-6">
-                  <ProposalForm onSuccess={() => queryClient.invalidateQueries({ queryKey: ["my-loan-applications"] })} />
+                  <ProposalForm
+                    onSuccess={() =>
+                      queryClient.invalidateQueries({ queryKey: ["my-loan-applications"] })
+                    }
+                  />
                 </CardContent>
               </Card>
             </div>
@@ -83,34 +100,40 @@ function PatientDashboard() {
               {isLoading ? (
                 <p className="mt-4 text-muted-foreground">Carregando...</p>
               ) : applications.length === 0 ? (
-                <p className="mt-4 text-muted-foreground">Você ainda não tem propostas. Simule e solicite uma.</p>
+                <p className="mt-4 text-muted-foreground">
+                  Você ainda não tem propostas. Simule e solicite uma.
+                </p>
               ) : (
                 <div className="mt-4 space-y-4">
-                {applications.map((app) => (
-                  <Card key={app.id}>
-                    <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Valor solicitado</p>
-                        <p className="text-lg font-semibold text-foreground">{formatCurrency(app.requested_amount)}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {app.installments}x de {formatCurrency(app.monthly_payment)}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Clínica</p>
-                        <p className="text-foreground">{(app.clinics as { name: string } | null)?.name ?? "Não informada"}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Status</p>
-                        <StatusBadge status={app.status} />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Data</p>
-                        <p className="text-foreground">{formatDate(app.created_at)}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                  {applications.map((app) => (
+                    <Card key={app.id}>
+                      <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Valor solicitado</p>
+                          <p className="text-lg font-semibold text-foreground">
+                            {formatCurrency(app.requested_amount)}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {app.installments}x de {formatCurrency(app.monthly_payment)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Clínica</p>
+                          <p className="text-foreground">
+                            {(app.clinics as { name: string } | null)?.name ?? "Não informada"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Status</p>
+                          <StatusBadge status={app.status} />
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Data</p>
+                          <p className="text-foreground">{formatDate(app.created_at)}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               )}
             </div>

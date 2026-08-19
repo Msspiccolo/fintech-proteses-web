@@ -58,10 +58,7 @@ export const getClinicByUser = createServerFn({ method: "GET" })
       return { clinics: [] };
     }
 
-    const { data, error } = await context.supabase
-      .from("clinics")
-      .select("*")
-      .in("id", clinicIds);
+    const { data, error } = await context.supabase.from("clinics").select("*").in("id", clinicIds);
 
     if (error) {
       throw new Error(error.message);

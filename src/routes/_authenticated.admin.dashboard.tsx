@@ -14,7 +14,10 @@ export const Route = createFileRoute("/_authenticated/admin/dashboard")({
   head: () => ({
     meta: [
       { title: "Painel Administrativo — ProtesePay" },
-      { name: "description", content: "Gerencie e aprove propostas de financiamento de próteses ortopédicas." },
+      {
+        name: "description",
+        content: "Gerencie e aprove propostas de financiamento de próteses ortopédicas.",
+      },
     ],
   }),
   component: AdminDashboard,
@@ -60,7 +63,9 @@ function AdminDashboard() {
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium text-muted-foreground">Pendentes</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Pendentes
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-bold text-foreground">
@@ -70,7 +75,9 @@ function AdminDashboard() {
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium text-muted-foreground">Aprovadas</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Aprovadas
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-bold text-foreground">
@@ -80,7 +87,9 @@ function AdminDashboard() {
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium text-muted-foreground">Reprovadas</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Reprovadas
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-bold text-foreground">
@@ -104,12 +113,15 @@ function AdminDashboard() {
                       <div>
                         <p className="text-sm text-muted-foreground">Paciente</p>
                         <p className="text-lg font-semibold text-foreground">
-                          {((app.profiles as unknown) as { full_name: string | null } | null)?.full_name ?? "Não informado"}
+                          {(app.profiles as unknown as { full_name: string | null } | null)
+                            ?.full_name ?? "Não informado"}
                         </p>
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Clínica</p>
-                        <p className="text-foreground">{(app.clinics as { name: string } | null)?.name ?? "Não informada"}</p>
+                        <p className="text-foreground">
+                          {(app.clinics as { name: string } | null)?.name ?? "Não informada"}
+                        </p>
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Valor</p>
@@ -131,7 +143,11 @@ function AdminDashboard() {
                           <Button size="sm" onClick={() => handleStatus(app.id, "approved")}>
                             Aprovar
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => handleStatus(app.id, "rejected")}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleStatus(app.id, "rejected")}
+                          >
                             Reprovar
                           </Button>
                         </div>

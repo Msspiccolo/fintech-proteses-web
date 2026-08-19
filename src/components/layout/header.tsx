@@ -40,13 +40,22 @@ export function Header() {
           <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground">
             Home
           </Link>
-          <Link to="/simular" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+          <Link
+            to="/simular"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
             Simular
           </Link>
-          <Link to="/como-funciona" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+          <Link
+            to="/como-funciona"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
             Como funciona
           </Link>
-          <Link to="/clinicas-parceiras" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+          <Link
+            to="/clinicas-parceiras"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
             Clínicas parceiras
           </Link>
         </nav>
@@ -82,29 +91,56 @@ export function Header() {
       {mobileOpen && (
         <div className="border-t border-border px-4 py-4 md:hidden">
           <nav className="flex flex-col gap-4">
-            <Link to="/" className="text-sm font-medium text-muted-foreground" onClick={() => setMobileOpen(false)}>
+            <Link
+              to="/"
+              className="text-sm font-medium text-muted-foreground"
+              onClick={() => setMobileOpen(false)}
+            >
               Home
             </Link>
-            <Link to="/simular" className="text-sm font-medium text-muted-foreground" onClick={() => setMobileOpen(false)}>
+            <Link
+              to="/simular"
+              className="text-sm font-medium text-muted-foreground"
+              onClick={() => setMobileOpen(false)}
+            >
               Simular
             </Link>
-            <Link to="/como-funciona" className="text-sm font-medium text-muted-foreground" onClick={() => setMobileOpen(false)}>
+            <Link
+              to="/como-funciona"
+              className="text-sm font-medium text-muted-foreground"
+              onClick={() => setMobileOpen(false)}
+            >
               Como funciona
             </Link>
-            <Link to="/clinicas-parceiras" className="text-sm font-medium text-muted-foreground" onClick={() => setMobileOpen(false)}>
+            <Link
+              to="/clinicas-parceiras"
+              className="text-sm font-medium text-muted-foreground"
+              onClick={() => setMobileOpen(false)}
+            >
               Clínicas parceiras
             </Link>
             {user ? (
               <>
-                <Link to="/dashboard" className="text-sm font-medium text-primary" onClick={() => setMobileOpen(false)}>
+                <Link
+                  to="/dashboard"
+                  className="text-sm font-medium text-primary"
+                  onClick={() => setMobileOpen(false)}
+                >
                   Meu painel
                 </Link>
-                <button className="text-left text-sm font-medium text-muted-foreground" onClick={handleSignOut}>
+                <button
+                  className="text-left text-sm font-medium text-muted-foreground"
+                  onClick={handleSignOut}
+                >
                   Sair
                 </button>
               </>
             ) : (
-              <Link to="/auth" className="text-sm font-medium text-primary" onClick={() => setMobileOpen(false)}>
+              <Link
+                to="/auth"
+                className="text-sm font-medium text-primary"
+                onClick={() => setMobileOpen(false)}
+              >
                 Entrar
               </Link>
             )}

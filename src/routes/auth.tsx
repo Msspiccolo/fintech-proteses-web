@@ -7,7 +7,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { lovable } from "@/integrations/lovable";
 import { signUpWithPassword, signInWithPassword } from "@/lib/auth-client";
 import { Chrome } from "lucide-react";
@@ -16,7 +23,11 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Entrar — ProtesePay" },
-      { name: "description", content: "Entre ou crie sua conta na ProtesePay para simular e solicitar financiamento de próteses ortopédicas." },
+      {
+        name: "description",
+        content:
+          "Entre ou crie sua conta na ProtesePay para simular e solicitar financiamento de próteses ortopédicas.",
+      },
     ],
   }),
   component: AuthPage,
@@ -80,7 +91,9 @@ function AuthPage() {
       });
 
       if (result.error) {
-        setError(result.error instanceof Error ? result.error.message : "Erro ao entrar com Google");
+        setError(
+          result.error instanceof Error ? result.error.message : "Erro ao entrar com Google",
+        );
         return;
       }
 
