@@ -123,6 +123,58 @@ function AdminDashboard() {
             </Card>
           </div>
 
+          <div className="mt-10">
+            <h2 className="text-xl font-semibold text-foreground">Clínicas cadastradas</h2>
+            {clinicsLoading ? (
+              <p className="mt-4 text-muted-foreground">Carregando...</p>
+            ) : clinics.length === 0 ? (
+              <p className="mt-4 text-muted-foreground">Nenhuma clínica cadastrada.</p>
+            ) : (
+              <div className="mt-4 space-y-4">
+                {clinics.map((clinic) => (
+                  <Card key={clinic.id}>
+                    <CardContent className="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Clínica</p>
+                        <p className="text-lg font-semibold text-foreground">{clinic.name}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">CNPJ</p>
+                        <p className="text-foreground">{clinic.document ?? "Não informado"}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Cidade</p>
+                        <p className="text-foreground">
+                          {clinic.city ? `${clinic.city}${clinic.state ? ` - ${clinic.state}` : ""}` : "Não informada"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Status</p>
+                        <StatusBadge status={clinic.status} />
+                      </div>
+                      <div className="flex gap-2">
+                        {clinic.status !== "approved" && (
+                          <Button size="sm" onClick={() => handleClinicStatus(clinic.id, "approved")}>
+                            Aprovar
+                          </Button>
+                        )}
+                        {clinic.status !== "rejected" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleClinicStatus(clinic.id, "rejected")}
+                          >
+                            Reprovar
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="mt-8">
             <h2 className="text-xl font-semibold text-foreground">Todas as propostas</h2>
             {/* propostas */}
