@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getAllLoanApplications, updateLoanApplication } from "@/lib/loans.functions";
+import { getAllClinicsAdmin, setClinicStatus } from "@/lib/clinics.functions";
 import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Header } from "@/components/layout/header";
@@ -26,6 +27,8 @@ export const Route = createFileRoute("/_authenticated/admin/dashboard")({
 function AdminDashboard() {
   const fetchApplications = useServerFn(getAllLoanApplications);
   const updateApplication = useServerFn(updateLoanApplication);
+  const fetchClinics = useServerFn(getAllClinicsAdmin);
+  const updateClinicStatus = useServerFn(setClinicStatus);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["all-loan-applications"],
@@ -33,6 +36,27 @@ function AdminDashboard() {
   });
 
   const applications: any[] = data?.applications ?? [];
+
+  const {
+    data: clinicsData,
+    isLoading: clinicsLoading,
+    refetch: refetchClinics,
+  } = useQuery({
+    queryKey: ["admin-clinics"],
+    queryFn: () => fetchClinics({ data: undefined }),
+  });
+
+  const clinics: any[] = clinicsData?.clinics ?? [];
+
+  async function handleClinicStatus(id: string, status: "approved" | "rejected") {
+    try {
+      await updateClinicStatus({ data: { id, status } });
+      toast.success(status === "approved" ? "Clínica aprovada" : "Clínica reprovada");
+      refetchClinics();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao atualizar clínica");
+    }
+  }
 
   async function handleStatus(id: string, status: "approved" | "rejected") {
     try {
