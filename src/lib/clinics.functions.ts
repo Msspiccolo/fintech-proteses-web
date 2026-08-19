@@ -14,6 +14,11 @@ const registerClinicSchema = z.object({
   zipCode: z.string().optional(),
 });
 
+const updateClinicStatusSchema = z.object({
+  id: z.string(),
+  status: z.enum(["pending", "approved", "rejected"]),
+});
+
 export const getApprovedClinics = createServerFn({ method: "GET" }).handler(async () => {
   const { createClient } = await import("@supabase/supabase-js");
   const supabasePublic = createClient(
@@ -40,6 +45,39 @@ export const getApprovedClinics = createServerFn({ method: "GET" }).handler(asyn
 
   return { clinics: data ?? [] };
 });
+
+export const getAllClinicsForAdmin = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("clinics")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return { clinics: data ?? [] };
+  });
+
+export const updateClinicStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: unknown) => updateClinicStatusSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { data: clinic, error } = await context.supabase
+      .from("clinics")
+      .update({ status: data.status })
+      .eq("id", data.id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return { clinic };
+  });
 
 export const getClinicByUser = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

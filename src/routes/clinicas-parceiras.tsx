@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,6 +20,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { registerClinic } from "@/lib/clinics.functions";
 import { toast } from "sonner";
 import { Building2, Users, TrendingUp, CheckCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/clinicas-parceiras")({
   head: () => ({
@@ -55,6 +56,23 @@ type RegisterForm = z.infer<typeof registerSchema>;
 function ClinicasParceirasPage() {
   const registerClinicFn = useServerFn(registerClinic);
   const [submitted, setSubmitted] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+      setIsLoadingAuth(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const form = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
@@ -134,7 +152,20 @@ function ClinicasParceirasPage() {
           </div>
 
           <div className="mx-auto mt-12 max-w-xl rounded-xl border border-border bg-card p-6">
-            {submitted ? (
+            {isLoadingAuth ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Carregando...</p>
+              </div>
+            ) : !isAuthenticated ? (
+              <div className="text-center py-8">
+                <h2 className="mb-4 text-xl font-semibold text-foreground">
+                  Para cadastrar sua clínica, você precisa ter uma conta
+                </h2>
+                <Button asChild className="mt-4">
+                  <Link to="/auth">Faça login ou cadastre-se</Link>
+                </Button>
+              </div>
+            ) : submitted ? (
               <div className="text-center">
                 <CheckCircle className="mx-auto h-12 w-12 text-primary" />
                 <h2 className="mt-4 text-xl font-semibold text-foreground">Cadastro recebido!</h2>

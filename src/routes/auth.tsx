@@ -15,6 +15,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { lovable } from "@/integrations/lovable";
 import { signUpWithPassword, signInWithPassword } from "@/lib/auth-client";
 import { Chrome } from "lucide-react";
@@ -247,15 +248,17 @@ function AuthPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Tipo de conta</FormLabel>
-                          <FormControl>
-                            <select
-                              {...field}
-                              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors"
-                            >
-                              <option value="patient">Sou paciente</option>
-                              <option value="clinic">Sou clínica</option>
-                            </select>
-                          </FormControl>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione o tipo de conta" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="patient">Sou paciente</SelectItem>
+                              <SelectItem value="clinic">Sou clínica</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}

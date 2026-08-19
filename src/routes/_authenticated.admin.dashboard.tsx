@@ -4,7 +4,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getAllLoanApplications, updateLoanApplication } from "@/lib/loans.functions";
+import { getAllClinicsForAdmin, updateClinicStatus } from "@/lib/clinics.functions";
 import { StatusBadge } from "@/components/status-badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -44,6 +46,26 @@ function AdminDashboard() {
     }
   }
 
+  const fetchClinics = useServerFn(getAllClinicsForAdmin);
+  const updateClinic = useServerFn(updateClinicStatus);
+
+  const { data: clinicsData, isLoading: isLoadingClinics, refetch: refetchClinics } = useQuery({
+    queryKey: ["all-clinics-admin"],
+    queryFn: () => fetchClinics({ data: undefined }),
+  });
+
+  const clinics: any[] = clinicsData?.clinics ?? [];
+
+  async function handleClinicStatus(id: string, status: "approved" | "rejected") {
+    try {
+      await updateClinic({ data: { id, status } });
+      toast.success(`Clínica ${status === "approved" ? "aprovada" : "reprovada"} com sucesso`);
+      refetchClinics();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao atualizar clínica");
+    }
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
@@ -52,112 +74,232 @@ function AdminDashboard() {
           <h1 className="text-3xl font-bold text-foreground">Painel Administrativo</h1>
           <p className="mt-2 text-muted-foreground">Analise e aprove propostas de financiamento.</p>
 
-          <div className="mt-8 grid gap-6 md:grid-cols-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold text-foreground">{applications.length}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Pendentes
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold text-foreground">
-                  {applications.filter((a) => a.status === "pending").length}
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Aprovadas
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold text-foreground">
-                  {applications.filter((a) => a.status === "approved").length}
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Reprovadas
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold text-foreground">
-                  {applications.filter((a) => a.status === "rejected").length}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+          <Tabs defaultValue="applications" className="mt-8">
+            <TabsList className="grid w-full grid-cols-2 max-w-[400px]">
+              <TabsTrigger value="applications">Propostas</TabsTrigger>
+              <TabsTrigger value="clinics">Clínicas Parceiras</TabsTrigger>
+            </TabsList>
 
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold text-foreground">Todas as propostas</h2>
-            {isLoading ? (
-              <p className="mt-4 text-muted-foreground">Carregando...</p>
-            ) : applications.length === 0 ? (
-              <p className="mt-4 text-muted-foreground">Nenhuma proposta cadastrada.</p>
-            ) : (
-              <div className="mt-4 space-y-4">
-                {applications.map((app) => (
-                  <Card key={app.id}>
-                    <CardContent className="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Paciente</p>
-                        <p className="text-lg font-semibold text-foreground">
-                          {(app.profiles as unknown as { full_name: string | null } | null)
-                            ?.full_name ?? "Não informado"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Clínica</p>
-                        <p className="text-foreground">
-                          {(app.clinics as { name: string } | null)?.name ?? "Não informada"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Valor</p>
-                        <p className="text-foreground">{formatCurrency(app.requested_amount)}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {app.installments}x de {formatCurrency(app.monthly_payment)}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Status</p>
-                        <StatusBadge status={app.status} />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Data</p>
-                        <p className="text-foreground">{formatDate(app.created_at)}</p>
-                      </div>
-                      {app.status === "pending" && (
-                        <div className="flex gap-2">
-                          <Button size="sm" onClick={() => handleStatus(app.id, "approved")}>
-                            Aprovar
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleStatus(app.id, "rejected")}
-                          >
-                            Reprovar
-                          </Button>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
+            <TabsContent value="applications" className="mt-6 space-y-6">
+              <div className="grid gap-6 md:grid-cols-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-foreground">{applications.length}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      Pendentes
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-foreground">
+                      {applications.filter((a) => a.status === "pending").length}
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      Aprovadas
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-foreground">
+                      {applications.filter((a) => a.status === "approved").length}
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      Reprovadas
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-foreground">
+                      {applications.filter((a) => a.status === "rejected").length}
+                    </p>
+                  </CardContent>
+                </Card>
               </div>
-            )}
-          </div>
+
+              <div>
+                <h2 className="text-xl font-semibold text-foreground">Todas as propostas</h2>
+                {isLoading ? (
+                  <p className="mt-4 text-muted-foreground">Carregando...</p>
+                ) : applications.length === 0 ? (
+                  <p className="mt-4 text-muted-foreground">Nenhuma proposta cadastrada.</p>
+                ) : (
+                  <div className="mt-4 space-y-4">
+                    {applications.map((app) => (
+                      <Card key={app.id}>
+                        <CardContent className="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between">
+                          <div>
+                            <p className="text-sm text-muted-foreground">Paciente</p>
+                            <p className="text-lg font-semibold text-foreground">
+                              {(app.profiles as unknown as { full_name: string | null } | null)
+                                ?.full_name ?? "Não informado"}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Clínica</p>
+                            <p className="text-foreground">
+                              {(app.clinics as { name: string } | null)?.name ?? "Não informada"}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Valor</p>
+                            <p className="text-foreground">{formatCurrency(app.requested_amount)}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {app.installments}x de {formatCurrency(app.monthly_payment)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Status</p>
+                            <StatusBadge status={app.status} />
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Data</p>
+                            <p className="text-foreground">{formatDate(app.created_at)}</p>
+                          </div>
+                          {app.status === "pending" && (
+                            <div className="flex gap-2">
+                              <Button size="sm" onClick={() => handleStatus(app.id, "approved")}>
+                                Aprovar
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleStatus(app.id, "rejected")}
+                              >
+                                Reprovar
+                              </Button>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="clinics" className="mt-6 space-y-6">
+              <div className="grid gap-6 md:grid-cols-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-foreground">{clinics.length}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      Pendentes
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-foreground">
+                      {clinics.filter((c) => c.status === "pending").length}
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      Aprovadas
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-foreground">
+                      {clinics.filter((c) => c.status === "approved").length}
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      Reprovadas
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-foreground">
+                      {clinics.filter((c) => c.status === "rejected").length}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div>
+                <h2 className="text-xl font-semibold text-foreground">Todas as clínicas</h2>
+                {isLoadingClinics ? (
+                  <p className="mt-4 text-muted-foreground">Carregando...</p>
+                ) : clinics.length === 0 ? (
+                  <p className="mt-4 text-muted-foreground">Nenhuma clínica cadastrada.</p>
+                ) : (
+                  <div className="mt-4 space-y-4">
+                    {clinics.map((clinic) => (
+                      <Card key={clinic.id}>
+                        <CardContent className="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between">
+                          <div>
+                            <p className="text-sm text-muted-foreground">Clínica</p>
+                            <p className="text-lg font-semibold text-foreground">
+                              {clinic.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {clinic.document}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Contato</p>
+                            <p className="text-foreground">{clinic.email ?? "—"}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {clinic.phone ?? "—"}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Localização</p>
+                            <p className="text-foreground">
+                              {clinic.city ? `${clinic.city}, ${clinic.state}` : "—"}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Status</p>
+                            <StatusBadge status={clinic.status} />
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Data</p>
+                            <p className="text-foreground">{formatDate(clinic.created_at)}</p>
+                          </div>
+                          {clinic.status === "pending" && (
+                            <div className="flex gap-2">
+                              <Button size="sm" onClick={() => handleClinicStatus(clinic.id, "approved")}>
+                                Aprovar
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleClinicStatus(clinic.id, "rejected")}
+                              >
+                                Reprovar
+                              </Button>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
       <Footer />
