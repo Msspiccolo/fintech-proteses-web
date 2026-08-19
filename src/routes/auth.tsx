@@ -20,9 +20,8 @@ import { signUpWithPassword, signInWithPassword } from "@/lib/auth-client";
 import { Chrome } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    tipo: search['tipo'] === "clinica" ? ("clinica" as const) : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { tipo?: "clinica" } =>
+    search["tipo"] === "clinica" ? { tipo: "clinica" } : {},
   head: () => ({
     meta: [
       { title: "Entrar — ProtesePay" },
