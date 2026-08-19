@@ -121,10 +121,10 @@ export const getAllClinicsAdmin = createServerFn({ method: "GET" })
   });
 
 export const setClinicStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .validator((data: unknown) =>
     z.object({ id: z.string().uuid(), status: z.enum(["pending", "approved", "rejected"]) }).parse(data),
   )
-  .middleware([requireSupabaseAuth])
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase
       .from("clinics")
