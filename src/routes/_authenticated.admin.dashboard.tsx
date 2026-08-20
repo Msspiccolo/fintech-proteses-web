@@ -5,8 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getAllLoanApplications, updateLoanApplication } from "@/lib/loans.functions";
 import { getAllClinicsForAdmin, updateClinicStatus } from "@/lib/clinics.functions";
+import { getAllUsersForAdmin } from "@/lib/auth.functions";
 import { StatusBadge } from "@/components/status-badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -66,6 +70,14 @@ function AdminDashboard() {
     }
   }
 
+  const fetchUsers = useServerFn(getAllUsersForAdmin);
+  const { data: usersData, isLoading: isLoadingUsers } = useQuery({
+    queryKey: ["all-users-admin"],
+    queryFn: () => fetchUsers({ data: undefined }),
+  });
+  
+  const users: any[] = usersData?.users ?? [];
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
@@ -75,9 +87,11 @@ function AdminDashboard() {
           <p className="mt-2 text-muted-foreground">Analise e aprove propostas de financiamento.</p>
 
           <Tabs defaultValue="applications" className="mt-8">
-            <TabsList className="grid w-full grid-cols-2 max-w-[400px]">
+            <TabsList className="grid w-full grid-cols-4 max-w-[800px]">
               <TabsTrigger value="applications">Propostas</TabsTrigger>
               <TabsTrigger value="clinics">Clínicas Parceiras</TabsTrigger>
+              <TabsTrigger value="users">Usuários</TabsTrigger>
+              <TabsTrigger value="settings">Configurações</TabsTrigger>
             </TabsList>
 
             <TabsContent value="applications" className="mt-6 space-y-6">
@@ -297,6 +311,126 @@ function AdminDashboard() {
                     ))}
                   </div>
                 )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="users" className="mt-6 space-y-6">
+              <div>
+                <h2 className="text-xl font-semibold text-foreground">Todos os usuários</h2>
+                {isLoadingUsers ? (
+                  <p className="mt-4 text-muted-foreground">Carregando...</p>
+                ) : users.length === 0 ? (
+                  <p className="mt-4 text-muted-foreground">Nenhum usuário cadastrado.</p>
+                ) : (
+                  <div className="overflow-hidden rounded-lg border bg-card shadow-sm mt-4">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm text-left">
+                        <thead className="bg-muted/50 text-muted-foreground text-xs uppercase">
+                          <tr>
+                            <th className="px-6 py-4 font-medium">Nome</th>
+                            <th className="px-6 py-4 font-medium">Tipo de Conta</th>
+                            <th className="px-6 py-4 font-medium">Documento</th>
+                            <th className="px-6 py-4 font-medium">Contato</th>
+                            <th className="px-6 py-4 font-medium">Data de Cadastro</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y">
+                          {users.map((user) => (
+                            <tr key={user.user_id} className="hover:bg-muted/30 transition-colors">
+                              <td className="px-6 py-4 font-medium text-foreground">
+                                {user.full_name || "Não informado"}
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
+                                  ${user.roles?.includes('admin') ? 'bg-purple-100 text-purple-800 border-purple-200' : 
+                                    user.roles?.includes('clinic') ? 'bg-blue-100 text-blue-800 border-blue-200' : 
+                                    'bg-green-100 text-green-800 border-green-200'}
+                                `}>
+                                  {user.roles?.includes('admin') ? 'Administrador' : 
+                                   user.roles?.includes('clinic') ? 'Clínica' : 'Paciente'}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-muted-foreground">
+                                {user.document || "—"}
+                              </td>
+                              <td className="px-6 py-4 text-muted-foreground">
+                                {user.phone || "—"}
+                              </td>
+                              <td className="px-6 py-4 text-muted-foreground">
+                                {formatDate(user.created_at)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="settings" className="mt-6 space-y-6">
+              <div>
+                <h2 className="text-xl font-semibold text-foreground mb-4">Configurações do Sistema</h2>
+                <div className="grid gap-6 md:grid-cols-2 max-w-4xl">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Taxas e Condições</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="interestRate">Taxa de Juros Mensal (%)</Label>
+                        <Input id="interestRate" defaultValue="1.99" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="maxInstallments">Número Máximo de Parcelas</Label>
+                        <Input id="maxInstallments" type="number" defaultValue="48" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="downPaymentMin">Entrada Mínima (%)</Label>
+                        <Input id="downPaymentMin" type="number" defaultValue="20" />
+                      </div>
+                      <Button className="w-full mt-2" onClick={() => toast.success("Configurações salvas (Mocado)")}>
+                        Salvar Taxas
+                      </Button>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Regras de Aprovação</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label className="text-base">Aprovação Automática</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Aprovar propostas abaixo de R$ 5.000 automaticamente.
+                          </p>
+                        </div>
+                        <Switch defaultChecked />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label className="text-base">Verificação SPC/Serasa</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Ativar consulta obrigatória na API de crédito.
+                          </p>
+                        </div>
+                        <Switch />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label className="text-base">Novas Clínicas</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Exigir aprovação manual para o cadastro de clínicas.
+                          </p>
+                        </div>
+                        <Switch defaultChecked />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
             </TabsContent>
           </Tabs>

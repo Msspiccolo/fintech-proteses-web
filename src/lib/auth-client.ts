@@ -51,3 +51,10 @@ export async function signInWithPassword(email: string, password: string) {
   if (error) throw new Error(error.message);
   return data;
 }
+
+export async function resetPasswordForEmail(email: string) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/auth/reset-password`,
+  });
+  if (error) throw new Error(error.message);
+}

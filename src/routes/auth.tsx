@@ -17,8 +17,9 @@ import {
 } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { lovable } from "@/integrations/lovable";
-import { signUpWithPassword, signInWithPassword } from "@/lib/auth-client";
+import { signUpWithPassword, signInWithPassword, resetPasswordForEmail } from "@/lib/auth-client";
 import { Chrome } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (search: Record<string, unknown>): { tipo?: "clinica" } =>
@@ -41,6 +42,10 @@ const loginSchema = z.object({
   password: z.string().min(6, "Mínimo 6 caracteres"),
 });
 
+const resetSchema = z.object({
+  email: z.string().email("Email inválido"),
+});
+
 const registerSchema = z
   .object({
     fullName: z.string().min(2, "Nome completo obrigatório"),
@@ -58,17 +63,24 @@ const registerSchema = z
   });
 
 type LoginForm = z.infer<typeof loginSchema>;
+type ResetForm = z.infer<typeof resetSchema>;
 type RegisterForm = z.infer<typeof registerSchema>;
 
 function AuthPage() {
   const navigate = useNavigate();
   const { tipo } = Route.useSearch();
-  const [mode, setMode] = useState<"login" | "register">(tipo === "clinica" ? "register" : "login");
+  const [mode, setMode] = useState<"login" | "register" | "forgot_password">(tipo === "clinica" ? "register" : "login");
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
+  });
+
+  const resetForm = useForm<ResetForm>({
+    resolver: zodResolver(resetSchema),
+    defaultValues: { email: "" },
   });
 
   const registerForm = useForm<RegisterForm>({
@@ -118,6 +130,17 @@ function AuthPage() {
       navigate({ to: "/dashboard", replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao entrar");
+    }
+  }
+
+  async function onResetPassword(values: ResetForm) {
+    setError(null);
+    setSuccess(null);
+    try {
+      await resetPasswordForEmail(values.email);
+      setSuccess("Enviamos um link de recuperação para o seu email.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao solicitar recuperação");
     }
   }
 
@@ -210,7 +233,17 @@ function AuthPage() {
                       name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Senha</FormLabel>
+                          <div className="flex items-center justify-between">
+                            <FormLabel>Senha</FormLabel>
+                            <Button 
+                              type="button" 
+                              variant="link" 
+                              className="px-0 py-0 h-auto font-normal text-xs text-muted-foreground"
+                              onClick={() => setMode("forgot_password")}
+                            >
+                              Esqueci a senha
+                            </Button>
+                          </div>
                           <FormControl>
                             <Input type="password" placeholder="******" {...field} />
                           </FormControl>
@@ -224,6 +257,54 @@ function AuthPage() {
                     </Button>
                   </form>
                 </Form>
+                <div className="text-center pt-2">
+                  <Button 
+                    type="button" 
+                    variant="link" 
+                    className="text-xs text-muted-foreground"
+                    onClick={() => {
+                      setMode("login");
+                      toast("Faça login com suas credenciais de administrador.");
+                    }}
+                  >
+                    É administrador? Faça login aqui
+                  </Button>
+                </div>
+              </div>
+            ) : mode === "forgot_password" ? (
+              <div className="mt-4 space-y-4">
+                <Form {...resetForm}>
+                  <form onSubmit={resetForm.handleSubmit(onResetPassword)} className="space-y-4">
+                    <FormField
+                      control={resetForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email para recuperação</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="seu@email.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {error && <p className="text-sm text-destructive">{error}</p>}
+                    {success && <p className="text-sm text-green-600 dark:text-green-400">{success}</p>}
+                    <Button type="submit" className="w-full">
+                      Enviar link
+                    </Button>
+                  </form>
+                </Form>
+                <div className="text-center pt-2">
+                  <Button 
+                    type="button" 
+                    variant="link" 
+                    className="text-xs text-muted-foreground"
+                    onClick={() => setMode("login")}
+                  >
+                    Voltar para o login
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="mt-4 space-y-4">
