@@ -60,9 +60,9 @@ function DashboardRedirect() {
         }
         
         if (currentRoles.includes("admin")) {
-          router.navigate({ to: "/admin/dashboard", replace: true });
+          window.location.href = "http://localhost:8081/admin/dashboard";
         } else if (currentRoles.includes("clinic")) {
-          router.navigate({ to: "/clinica/dashboard", replace: true });
+          window.location.href = "http://localhost:8081/clinica/dashboard";
         } else {
           router.navigate({ to: "/paciente/dashboard", replace: true });
         }
