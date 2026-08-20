@@ -54,7 +54,7 @@ const registerSchema = z
     phone: z.string().min(10, "Telefone inválido").max(20, "Telefone inválido"),
     password: z.string().min(6, "Mínimo 6 caracteres"),
     confirmPassword: z.string().min(6, "Mínimo 6 caracteres"),
-    role: z.enum(["patient", "clinic"]),
+    role: z.enum(["patient", "clinic", "admin"]),
     clinicName: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -341,6 +341,7 @@ function AuthPage() {
                             <SelectContent>
                               <SelectItem value="patient">Sou paciente</SelectItem>
                               <SelectItem value="clinic">Sou clínica</SelectItem>
+                              <SelectItem value="admin">Administrador</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />

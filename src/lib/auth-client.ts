@@ -6,7 +6,7 @@ export type SignUpInput = {
   fullName: string;
   document: string;
   phone: string;
-  role: "patient" | "clinic";
+  role: "patient" | "clinic" | "admin";
   clinicName?: string;
 };
 
