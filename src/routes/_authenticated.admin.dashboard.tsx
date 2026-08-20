@@ -5,12 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getAllLoanApplications, updateLoanApplication } from "@/lib/loans.functions";
 import { getAllClinicsForAdmin, updateClinicStatus } from "@/lib/clinics.functions";
-import { getAllUsersForAdmin } from "@/lib/auth.functions";
+import { getAllUsersForAdmin, updateUserRoleForAdmin } from "@/lib/auth.functions";
 import { StatusBadge } from "@/components/status-badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -71,12 +72,23 @@ function AdminDashboard() {
   }
 
   const fetchUsers = useServerFn(getAllUsersForAdmin);
-  const { data: usersData, isLoading: isLoadingUsers } = useQuery({
+  const updateUserRole = useServerFn(updateUserRoleForAdmin);
+  const { data: usersData, isLoading: isLoadingUsers, refetch: refetchUsers } = useQuery({
     queryKey: ["all-users-admin"],
     queryFn: () => fetchUsers({ data: undefined }),
   });
   
   const users: any[] = usersData?.users ?? [];
+
+  async function handleRoleChange(userId: string, newRole: "patient" | "clinic" | "admin") {
+    try {
+      await updateUserRole({ data: { targetUserId: userId, newRole } });
+      toast.success("Cargo do usuário atualizado com sucesso!");
+      refetchUsers();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao atualizar cargo");
+    }
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -332,6 +344,7 @@ function AdminDashboard() {
                             <th className="px-6 py-4 font-medium">Documento</th>
                             <th className="px-6 py-4 font-medium">Contato</th>
                             <th className="px-6 py-4 font-medium">Data de Cadastro</th>
+                            <th className="px-6 py-4 font-medium">Ações</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y">
@@ -358,6 +371,21 @@ function AdminDashboard() {
                               </td>
                               <td className="px-6 py-4 text-muted-foreground">
                                 {formatDate(user.created_at)}
+                              </td>
+                              <td className="px-6 py-4">
+                                <Select 
+                                  defaultValue={user.roles?.[0] || "patient"}
+                                  onValueChange={(val: "patient"|"clinic"|"admin") => handleRoleChange(user.user_id, val)}
+                                >
+                                  <SelectTrigger className="w-[140px] h-8 text-xs">
+                                    <SelectValue placeholder="Cargo" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="patient">Paciente</SelectItem>
+                                    <SelectItem value="clinic">Clínica</SelectItem>
+                                    <SelectItem value="admin">Administrador</SelectItem>
+                                  </SelectContent>
+                                </Select>
                               </td>
                             </tr>
                           ))}

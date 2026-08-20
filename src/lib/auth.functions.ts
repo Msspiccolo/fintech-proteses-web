@@ -92,3 +92,48 @@ export const getAllUsersForAdmin = createServerFn({ method: "GET" })
 
     return { users };
   });
+
+export const updateUserRoleForAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: unknown) =>
+    z
+      .object({
+        targetUserId: z.string().uuid(),
+        newRole: z.enum(["patient", "clinic", "admin"]),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    // Check if user is admin
+    const { data: roles, error: rolesError } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId);
+
+    if (rolesError) throw new Error(rolesError.message);
+    const isAdmin = roles?.some((r: any) => r.role === "admin");
+    if (!isAdmin) throw new Error("Unauthorized");
+
+    // First delete existing role for user
+    const { error: deleteError } = await context.supabase
+      .from("user_roles")
+      .delete()
+      .eq("user_id", data.targetUserId);
+      
+    if (deleteError) throw new Error(deleteError.message);
+
+    // Insert new role
+    const { error: insertError } = await context.supabase
+      .from("user_roles")
+      .insert({ user_id: data.targetUserId, role: data.newRole });
+
+    if (insertError) throw new Error(insertError.message);
+
+    // Update profiles role as well to keep them in sync
+    await context.supabase
+      .from("profiles")
+      .update({ role: data.newRole })
+      .eq("user_id", data.targetUserId);
+
+    return { ok: true };
+  });
