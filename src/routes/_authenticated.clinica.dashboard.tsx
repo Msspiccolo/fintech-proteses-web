@@ -25,7 +25,7 @@ import {
   Pie,
   Cell
 } from "recharts";
-import { DollarSign, Activity, Users, CreditCard, TrendingUp, Package } from "lucide-react";
+import { DollarSign, Activity, Users, CreditCard, TrendingUp, Package, AlertCircle, FileText } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/clinica/dashboard")({
   head: () => ({
@@ -48,6 +48,23 @@ const MOCK_PROSTHETICS_DATA = [
   { name: "Prótese Transfemoral", vendas: 15, valor: 120000 },
   { name: "Mão Robótica", vendas: 10, valor: 250000 }
 ];
+
+const MOCK_CLIENTS_DATA = [
+  { id: 1, name: "João Carlos Silva", propostas: 2, statusPagamento: "Em dia", valorTotal: 150000 },
+  { id: 2, name: "Maria Fernanda Oliveira", propostas: 1, statusPagamento: "Em atraso", valorTotal: 45000 },
+  { id: 3, name: "Pedro Henrique Santos", propostas: 3, statusPagamento: "Em dia", valorTotal: 210000 },
+  { id: 4, name: "Ana Beatriz Costa", propostas: 1, statusPagamento: "Em dia", valorTotal: 85000 },
+  { id: 5, name: "Roberto Alves", propostas: 1, statusPagamento: "Inadimplente", valorTotal: 120000 },
+];
+
+const MOCK_KPIS = {
+  clientesCadastrados: 124,
+  valoresASeremPagos: 2850000,
+  valoresAVencer: 340000,
+  clientesInadimplentes: 12,
+  protesesVendidas: 130,
+};
+
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 function ClinicDashboard() {
@@ -216,57 +233,68 @@ function ClinicDashboard() {
           )}
 
           {/* KPIs Section */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5 mb-8">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Volume de Financiamentos (Aprovados)</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">Clientes Cadastrados</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
+                <div className="text-2xl font-bold">{MOCK_KPIS.clientesCadastrados}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Baseado em {applications.filter((a: any) => a.status === 'approved').length} contratos
+                  Pacientes da clínica
                 </p>
               </CardContent>
             </Card>
             
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Ticket Médio por Paciente</CardTitle>
-                <CreditCard className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">Valores a Receber</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{formatCurrency(ticketMedio)}</div>
+                <div className="text-2xl font-bold">{formatCurrency(MOCK_KPIS.valoresASeremPagos)}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Média de valor por financiamento
+                  Total em financiamentos
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Taxa de Conversão</CardTitle>
+                <CardTitle className="text-sm font-medium">Valores a Vencer</CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{conversionRate.toFixed(1)}%</div>
+                <div className="text-2xl font-bold">{formatCurrency(MOCK_KPIS.valoresAVencer)}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Propostas aprovadas vs Totais
+                  Próximos 30 dias
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Pacientes na Fila</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">Inadimplentes</CardTitle>
+                <AlertCircle className="h-4 w-4 text-destructive" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {applications.filter((a: any) => a.status === "pending").length}
-                </div>
+                <div className="text-2xl font-bold text-destructive">{MOCK_KPIS.clientesInadimplentes}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Aguardando análise de crédito
+                  Clientes que não pagaram
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Próteses Vendidas</CardTitle>
+                <Package className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{MOCK_KPIS.protesesVendidas}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Unidades financiadas
                 </p>
               </CardContent>
             </Card>
@@ -356,62 +384,52 @@ function ClinicDashboard() {
             </Card>
           </div>
 
-          {/* Applications Table/List */}
+          {/* Clients and Proposals Table */}
           <div className="mb-8">
-            <h2 className="text-xl font-bold text-foreground mb-4">Pipeline de Financiamentos</h2>
-            {isLoading ? (
-              <p className="mt-4 text-muted-foreground animate-pulse">Carregando dados da clínica...</p>
-            ) : applications.length === 0 ? (
-              <Card className="border-dashed bg-muted/30">
-                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="rounded-full bg-muted p-4 mb-4">
-                    <CreditCard className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-lg font-medium">Nenhuma proposta recebida</h3>
-                  <p className="text-muted-foreground mt-1 max-w-sm">
-                    Quando os pacientes solicitarem financiamento informando sua clínica, as propostas aparecerão aqui.
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="overflow-hidden rounded-lg border bg-card shadow-sm">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
-                    <thead className="bg-muted/50 text-muted-foreground text-xs uppercase">
-                      <tr>
-                        <th className="px-6 py-4 font-medium">Paciente</th>
-                        <th className="px-6 py-4 font-medium">Valor Solicitado</th>
-                        <th className="px-6 py-4 font-medium">Parcelamento</th>
-                        <th className="px-6 py-4 font-medium">Data</th>
-                        <th className="px-6 py-4 font-medium">Status</th>
+            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              Clientes e Propostas
+            </h2>
+            <div className="overflow-hidden rounded-lg border bg-card shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-muted/50 text-muted-foreground text-xs uppercase">
+                    <tr>
+                      <th className="px-6 py-4 font-medium">Nome do Cliente</th>
+                      <th className="px-6 py-4 font-medium text-center">Nº de Propostas</th>
+                      <th className="px-6 py-4 font-medium">Valor Total</th>
+                      <th className="px-6 py-4 font-medium">Status de Pagamento</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {MOCK_CLIENTS_DATA.map((client) => (
+                      <tr key={client.id} className="hover:bg-muted/30 transition-colors">
+                        <td className="px-6 py-4 font-medium text-foreground">
+                          {client.name}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className="inline-flex items-center justify-center bg-secondary w-8 h-8 rounded-full font-bold text-secondary-foreground">
+                            {client.propostas}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-muted-foreground">
+                          {formatCurrency(client.valorTotal)}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
+                            ${client.statusPagamento === 'Em dia' ? 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' : ''}
+                            ${client.statusPagamento === 'Em atraso' ? 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800' : ''}
+                            ${client.statusPagamento === 'Inadimplente' ? 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800' : ''}
+                          `}>
+                            {client.statusPagamento}
+                          </span>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      {applications.map((app: any) => (
-                        <tr key={app.id} className="hover:bg-muted/30 transition-colors">
-                          <td className="px-6 py-4 font-medium text-foreground">
-                            {(app.profiles as unknown as { full_name: string | null } | null)
-                              ?.full_name ?? "Não informado"}
-                          </td>
-                          <td className="px-6 py-4">
-                            {formatCurrency(app.requested_amount)}
-                          </td>
-                          <td className="px-6 py-4 text-muted-foreground">
-                            {app.installments}x de {formatCurrency(app.monthly_payment)}
-                          </td>
-                          <td className="px-6 py-4 text-muted-foreground">
-                            {formatDate(app.created_at)}
-                          </td>
-                          <td className="px-6 py-4">
-                            <StatusBadge status={app.status} />
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </main>
