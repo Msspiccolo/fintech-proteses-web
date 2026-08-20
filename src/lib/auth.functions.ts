@@ -65,7 +65,7 @@ export const getAllUsersForAdmin = createServerFn({ method: "GET" })
       .eq("user_id", context.userId);
 
     if (rolesError) throw new Error(rolesError.message);
-    const isAdmin = roles?.some((r) => r.role === "admin");
+    const isAdmin = roles?.some((r: any) => r.role === "admin");
     if (!isAdmin) throw new Error("Unauthorized");
 
     // Fetch all profiles
@@ -83,10 +83,10 @@ export const getAllUsersForAdmin = createServerFn({ method: "GET" })
 
     if (allRolesError) throw new Error(allRolesError.message);
 
-    const users = profiles.map((p) => {
-      const userRoles = allRoles
-        .filter((r) => r.user_id === p.user_id)
-        .map((r) => r.role);
+    const users = (profiles || []).map((p: any) => {
+      const userRoles = (allRoles || [])
+        .filter((r: any) => r.user_id === p.user_id)
+        .map((r: any) => r.role);
       return { ...p, roles: userRoles };
     });
 
