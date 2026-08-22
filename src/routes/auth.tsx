@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { supabase } from "@/integrations/supabase/client";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +18,15 @@ import {
 } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { lovable } from "@/integrations/lovable";
-import { signUpWithPassword, signInWithPassword, resetPasswordForEmail } from "@/lib/auth-client";
+import {
+  signUpWithPassword,
+  signInWithPassword,
+  resetPasswordForEmail,
+  getAuthenticatedUserRole,
+  redirectUserByRole,
+  setAccountAsClinic,
+  recordKnownUser,
+} from "@/lib/auth-client";
 import { Chrome } from "lucide-react";
 import { toast } from "sonner";
 
@@ -26,11 +35,11 @@ export const Route = createFileRoute("/auth")({
     search["tipo"] === "clinica" ? { tipo: "clinica" } : {},
   head: () => ({
     meta: [
-      { title: "Entrar — ProtesePay" },
+      { title: "Entrar — PrótesePay" },
       {
         name: "description",
         content:
-          "Entre ou crie sua conta na ProtesePay para simular e solicitar financiamento de próteses ortopédicas.",
+          "Entre ou crie sua conta na PrótesePay para simular e solicitar financiamento de próteses ortopédicas.",
       },
     ],
   }),
@@ -70,8 +79,19 @@ function AuthPage() {
   const navigate = useNavigate();
   const { tipo } = Route.useSearch();
   const [mode, setMode] = useState<"login" | "register" | "forgot_password">(tipo === "clinica" ? "register" : "login");
+  const [loginRole, setLoginRole] = useState<"auto" | "patient" | "clinic" | "admin">(tipo === "clinica" ? "clinic" : "auto");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) {
+        getAuthenticatedUserRole().then((role) => {
+          redirectUserByRole(role, navigate);
+        });
+      }
+    });
+  }, [navigate]);
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -117,7 +137,14 @@ function AuthPage() {
         return;
       }
 
-      navigate({ to: "/dashboard", replace: true });
+      if (loginRole === "clinic") {
+        await setAccountAsClinic().catch(() => { });
+        navigate({ to: "/clinica/dashboard", replace: true });
+        return;
+      }
+
+      const role = await getAuthenticatedUserRole();
+      redirectUserByRole(role, navigate);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao entrar com Google");
     }
@@ -126,8 +153,91 @@ function AuthPage() {
   async function onLogin(values: LoginForm) {
     setError(null);
     try {
-      await signInWithPassword(values.email, values.password);
-      navigate({ to: "/dashboard", replace: true });
+      const authData = await signInWithPassword(values.email, values.password);
+
+      if (authData.user) {
+        recordKnownUser({
+          user_id: authData.user.id,
+          email: values.email,
+          created_at: authData.user.created_at,
+        });
+      }
+
+      const emailLower = values.email.toLowerCase();
+      if (
+        emailLower.includes("clinic") ||
+        emailLower.includes("clinica") ||
+        emailLower.includes("ortopedia") ||
+        authData.user?.user_metadata?.role === "clinic" ||
+        authData.user?.user_metadata?.role === "clinica" ||
+        authData.user?.user_metadata?.clinic_name
+      ) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem("user_role_hint", "clinic");
+          if (authData.user?.id) {
+            localStorage.setItem(`user_role_${authData.user.id}`, "clinic");
+          }
+        }
+        await setAccountAsClinic().catch(() => { });
+        if (authData.user) {
+          recordKnownUser({
+            user_id: authData.user.id,
+            email: values.email,
+            role: "clinic",
+            clinic_name: (authData.user.user_metadata?.clinic_name as string) || null,
+          });
+        }
+        navigate({ to: "/clinica/dashboard", replace: true });
+        return;
+      }
+
+      if (loginRole === "clinic") {
+        await setAccountAsClinic().catch(() => { });
+        if (authData.user) {
+          recordKnownUser({
+            user_id: authData.user.id,
+            email: values.email,
+            role: "clinic",
+          });
+        }
+        navigate({ to: "/clinica/dashboard", replace: true });
+        return;
+      }
+
+      if (loginRole === "admin") {
+        if (authData.user) {
+          recordKnownUser({
+            user_id: authData.user.id,
+            email: values.email,
+            role: "admin",
+          });
+        }
+        navigate({ to: "/admin/dashboard", replace: true });
+        return;
+      }
+
+      if (loginRole === "patient") {
+        if (authData.user) {
+          recordKnownUser({
+            user_id: authData.user.id,
+            email: values.email,
+            role: "patient",
+          });
+        }
+        navigate({ to: "/paciente/dashboard", replace: true });
+        return;
+      }
+
+      const role = await getAuthenticatedUserRole();
+      console.log("[Auth] Logged in successfully. Resolved role:", role);
+      if (authData.user) {
+        recordKnownUser({
+          user_id: authData.user.id,
+          email: values.email,
+          role,
+        });
+      }
+      redirectUserByRole(role, navigate);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao entrar");
     }
@@ -147,6 +257,17 @@ function AuthPage() {
   async function onRegister(values: RegisterForm) {
     setError(null);
     try {
+      recordKnownUser({
+        user_id: `reg_${Date.now()}`,
+        email: values.email,
+        full_name: values.fullName,
+        document: values.document,
+        phone: values.phone,
+        role: values.role,
+        clinic_name: values.clinicName || null,
+        created_at: new Date().toISOString(),
+      });
+
       const { needsEmailConfirmation } = await signUpWithPassword({
         email: values.email,
         password: values.password,
@@ -158,9 +279,10 @@ function AuthPage() {
       });
       if (needsEmailConfirmation) {
         setMode("login");
-        setError("Conta criada. Confirme seu email e faça login para continuar.");
+        setError("Conta criada com sucesso! Confirme seu email ou faça login para continuar.");
       } else {
-        navigate({ to: "/dashboard", replace: true });
+        const role = await getAuthenticatedUserRole();
+        redirectUserByRole(role, navigate);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao criar conta");
@@ -172,7 +294,7 @@ function AuthPage() {
       <div className="flex flex-1 items-center justify-center px-4 py-12">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">ProtesePay</CardTitle>
+            <CardTitle className="text-2xl font-bold">PrótesePay</CardTitle>
             <CardDescription>Entre ou crie sua conta para continuar</CardDescription>
           </CardHeader>
           <CardContent>
@@ -213,6 +335,42 @@ function AuthPage() {
                     <span className="bg-card px-2 text-muted-foreground">ou email</span>
                   </div>
                 </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Tipo de conta:</label>
+                  <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted/60 p-1 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setLoginRole("auto")}
+                      className={`rounded px-2 py-1.5 font-medium transition-all ${loginRole === "auto"
+                          ? "bg-background shadow-sm text-foreground font-semibold"
+                          : "text-muted-foreground hover:text-foreground"
+                        }`}
+                    >
+                      Automático
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLoginRole("patient")}
+                      className={`rounded px-2 py-1.5 font-medium transition-all ${loginRole === "patient"
+                          ? "bg-background shadow-sm text-foreground font-semibold"
+                          : "text-muted-foreground hover:text-foreground"
+                        }`}
+                    >
+                      Paciente
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLoginRole("clinic")}
+                      className={`rounded px-2 py-1.5 font-medium transition-all ${loginRole === "clinic"
+                          ? "bg-primary text-primary-foreground shadow-sm font-semibold"
+                          : "text-muted-foreground hover:text-foreground"
+                        }`}
+                    >
+                      Clínica
+                    </button>
+                  </div>
+                </div>
+
                 <Form {...loginForm}>
                   <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
                     <FormField
@@ -235,9 +393,9 @@ function AuthPage() {
                         <FormItem>
                           <div className="flex items-center justify-between">
                             <FormLabel>Senha</FormLabel>
-                            <Button 
-                              type="button" 
-                              variant="link" 
+                            <Button
+                              type="button"
+                              variant="link"
                               className="px-0 py-0 h-auto font-normal text-xs text-muted-foreground"
                               onClick={() => setMode("forgot_password")}
                             >
@@ -258,9 +416,9 @@ function AuthPage() {
                   </form>
                 </Form>
                 <div className="text-center pt-2">
-                  <Button 
-                    type="button" 
-                    variant="link" 
+                  <Button
+                    type="button"
+                    variant="link"
                     className="text-xs text-muted-foreground"
                     onClick={() => {
                       setMode("login");
@@ -296,9 +454,9 @@ function AuthPage() {
                   </form>
                 </Form>
                 <div className="text-center pt-2">
-                  <Button 
-                    type="button" 
-                    variant="link" 
+                  <Button
+                    type="button"
+                    variant="link"
                     className="text-xs text-muted-foreground"
                     onClick={() => setMode("login")}
                   >

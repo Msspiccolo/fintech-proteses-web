@@ -1,8 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { getAuthenticatedUserRole } from "@/lib/auth-client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,13 +14,13 @@ import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip as RechartsTooltip, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -68,6 +69,25 @@ const MOCK_KPIS = {
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 function ClinicDashboard() {
+  const router = useRouter();
+  useEffect(() => {
+    getAuthenticatedUserRole().then((role) => {
+      if (role === "patient") {
+        router.navigate({ to: "/paciente/dashboard", replace: true });
+        return;
+      }
+      if (role === "admin") {
+        router.navigate({ to: "/admin/dashboard", replace: true });
+        return;
+      }
+
+      if (role === "clinic") {
+        router.navigate({ to: "/clinica/dashboard", replace: true });
+        return;
+      }
+    });
+  }, [router]);
+
   const fetchApplications = useServerFn(getClinicLoanApplications);
   const fetchMyClinics = useServerFn(getClinicByUser);
   const createClinic = useServerFn(registerClinic);
@@ -118,7 +138,7 @@ function ClinicDashboard() {
           zipCode: form.zipCode || undefined,
         },
       });
-      toast.success("Clínica cadastrada! Aguarde a aprovação da equipe ProtesePay.");
+      toast.success("Clínica cadastrada! Aguarde a aprovação da equipe PrótesePay.");
       refetchClinics();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao cadastrar clínica");
@@ -161,9 +181,9 @@ function ClinicDashboard() {
       );
     }
 
-    return { 
-      totalRevenue: total, 
-      ticketMedio: ticket, 
+    return {
+      totalRevenue: total,
+      ticketMedio: ticket,
       conversionRate: rate,
       monthlyData: chartData.reverse() // naive ordering for mock mix
     };
@@ -181,7 +201,7 @@ function ClinicDashboard() {
                 Painel analítico e gerenciamento de financiamentos da sua clínica.
               </p>
             </div>
-            
+
             {clinics.length > 0 && clinics[0].status === 'approved' && (
               <div className="flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-primary">
                 <Activity size={18} />
@@ -246,7 +266,7 @@ function ClinicDashboard() {
                 </p>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Valores a Receber</CardTitle>
@@ -315,20 +335,20 @@ function ClinicDashboard() {
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={monthlyData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                      <XAxis 
-                        dataKey="name" 
+                      <XAxis
+                        dataKey="name"
                         axisLine={false}
                         tickLine={false}
                         tick={{ fill: '#6b7280', fontSize: 12 }}
                         dy={10}
                       />
-                      <YAxis 
+                      <YAxis
                         tickFormatter={(value: number) => Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact', maximumFractionDigits: 1 }).format(value)}
                         axisLine={false}
                         tickLine={false}
                         tick={{ fill: '#6b7280', fontSize: 12 }}
                       />
-                      <RechartsTooltip 
+                      <RechartsTooltip
                         formatter={(value: number) => formatCurrency(value)}
                         cursor={{ fill: 'transparent' }}
                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
@@ -365,7 +385,7 @@ function ClinicDashboard() {
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <RechartsTooltip 
+                      <RechartsTooltip
                         formatter={(value: number) => [`${value} unidades`, 'Vendas']}
                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                       />

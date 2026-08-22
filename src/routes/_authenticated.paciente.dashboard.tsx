@@ -1,6 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useEffect } from "react";
+import { getAuthenticatedUserRole } from "@/lib/auth-client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getMyLoanApplications } from "@/lib/loans.functions";
 import { StatusBadge } from "@/components/status-badge";
@@ -12,7 +14,7 @@ import { ProposalForm } from "@/components/proposal-form";
 export const Route = createFileRoute("/_authenticated/paciente/dashboard")({
   head: () => ({
     meta: [
-      { title: "Painel do Paciente — ProtesePay" },
+      { title: "Painel do Paciente — PrótesePay" },
       {
         name: "description",
         content: "Acompanhe suas propostas de financiamento de próteses ortopédicas.",
@@ -23,6 +25,25 @@ export const Route = createFileRoute("/_authenticated/paciente/dashboard")({
 });
 
 function PatientDashboard() {
+  const router = useRouter();
+  useEffect(() => {
+    getAuthenticatedUserRole().then((role) => {
+      if (role === "clinic") {
+        router.navigate({ to: "/clinica/dashboard", replace: true });
+        return;
+      }
+      if (role === "admin") {
+        router.navigate({ to: "/admin/dashboard", replace: true });
+        return;
+      }
+
+      if (role === "patient") {
+        router.navigate({ to: "/paciente/dashboard", replace: true });
+        return;
+      }
+    })
+  }, [router]);
+
   const fetchApplications = useServerFn(getMyLoanApplications);
   const queryClient = useQueryClient();
   const { data, isLoading } = useQuery({
@@ -37,10 +58,12 @@ function PatientDashboard() {
       <Header />
       <main className="flex-1 px-4 py-12">
         <div className="mx-auto max-w-5xl">
-          <h1 className="text-3xl font-bold text-foreground">Painel do Paciente</h1>
-          <p className="mt-2 text-muted-foreground">
-            Acompanhe o status das suas propostas de financiamento.
-          </p>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Painel do Paciente</h1>
+            <p className="mt-2 text-muted-foreground">
+              Acompanhe o status das suas propostas de financiamento.
+            </p>
+          </div>
 
           <div className="mt-8 grid gap-6 md:grid-cols-3">
             <Card>

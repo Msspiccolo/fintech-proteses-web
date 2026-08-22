@@ -20,6 +20,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as ApiGenerate3dPreviewRouteImport } from './routes/api/generate-3d-preview'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
+import { Route as AuthenticatedClinicaIndexRouteImport } from './routes/_authenticated.clinica.index'
 import { Route as AuthenticatedPacienteDashboardRouteImport } from './routes/_authenticated.paciente.dashboard'
 import { Route as AuthenticatedClinicaDashboardRouteImport } from './routes/_authenticated.clinica.dashboard'
 import { Route as AuthenticatedAdminSetupRouteImport } from './routes/_authenticated.admin.setup'
@@ -79,6 +80,12 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedClinicaIndexRoute =
+  AuthenticatedClinicaIndexRouteImport.update({
+    id: '/clinica/',
+    path: '/clinica/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedPacienteDashboardRoute =
   AuthenticatedPacienteDashboardRouteImport.update({
     id: '/paciente/dashboard',
@@ -118,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/clinica/dashboard': typeof AuthenticatedClinicaDashboardRoute
   '/paciente/dashboard': typeof AuthenticatedPacienteDashboardRoute
+  '/clinica/': typeof AuthenticatedClinicaIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -134,6 +142,7 @@ export interface FileRoutesByTo {
   '/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/clinica/dashboard': typeof AuthenticatedClinicaDashboardRoute
   '/paciente/dashboard': typeof AuthenticatedPacienteDashboardRoute
+  '/clinica': typeof AuthenticatedClinicaIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -152,6 +161,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/_authenticated/clinica/dashboard': typeof AuthenticatedClinicaDashboardRoute
   '/_authenticated/paciente/dashboard': typeof AuthenticatedPacienteDashboardRoute
+  '/_authenticated/clinica/': typeof AuthenticatedClinicaIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -170,6 +180,7 @@ export interface FileRouteTypes {
     | '/admin/setup'
     | '/clinica/dashboard'
     | '/paciente/dashboard'
+    | '/clinica/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -186,6 +197,7 @@ export interface FileRouteTypes {
     | '/admin/setup'
     | '/clinica/dashboard'
     | '/paciente/dashboard'
+    | '/clinica'
   id:
     | '__root__'
     | '/'
@@ -203,6 +215,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/setup'
     | '/_authenticated/clinica/dashboard'
     | '/_authenticated/paciente/dashboard'
+    | '/_authenticated/clinica/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -296,6 +309,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/clinica/': {
+      id: '/_authenticated/clinica/'
+      path: '/clinica'
+      fullPath: '/clinica/'
+      preLoaderRoute: typeof AuthenticatedClinicaIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/paciente/dashboard': {
       id: '/_authenticated/paciente/dashboard'
       path: '/paciente/dashboard'
@@ -333,6 +353,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAdminSetupRoute: typeof AuthenticatedAdminSetupRoute
   AuthenticatedClinicaDashboardRoute: typeof AuthenticatedClinicaDashboardRoute
   AuthenticatedPacienteDashboardRoute: typeof AuthenticatedPacienteDashboardRoute
+  AuthenticatedClinicaIndexRoute: typeof AuthenticatedClinicaIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -341,6 +362,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminSetupRoute: AuthenticatedAdminSetupRoute,
   AuthenticatedClinicaDashboardRoute: AuthenticatedClinicaDashboardRoute,
   AuthenticatedPacienteDashboardRoute: AuthenticatedPacienteDashboardRoute,
+  AuthenticatedClinicaIndexRoute: AuthenticatedClinicaIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
