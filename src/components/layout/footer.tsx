@@ -24,7 +24,7 @@ export function Footer() {
               </li>
               <li>
                 <Link to="/como-funciona" className="hover:text-foreground">
-                  Como funciona
+                  Como funciona?
                 </Link>
               </li>
               <li>
