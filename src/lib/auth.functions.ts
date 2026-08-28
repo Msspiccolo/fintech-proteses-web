@@ -119,7 +119,7 @@ export const updateUserRoleForAdmin = createServerFn({ method: "POST" })
       .from("user_roles")
       .delete()
       .eq("user_id", data.targetUserId);
-      
+
     if (deleteError) throw new Error(deleteError.message);
 
     // Insert new role

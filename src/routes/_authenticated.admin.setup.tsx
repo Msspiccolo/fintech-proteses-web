@@ -41,7 +41,7 @@ function AdminSetupPage() {
       toast.error(error.message);
       return;
     }
-    toast.success("Você agora é administrador da ProtesePay.");
+    toast.success("Você agora é administrador da PrótesePay.");
     router.navigate({ to: "/admin/dashboard", replace: true });
   }
 

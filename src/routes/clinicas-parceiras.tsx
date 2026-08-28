@@ -25,13 +25,13 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/clinicas-parceiras")({
   head: () => ({
     meta: [
-      { title: "Clínicas Parceiras — ProtesePay" },
+      { title: "Clínicas Parceiras — PrótesePay" },
       {
         name: "description",
         content:
           "Cadastre sua clínica e ofereça financiamento de próteses ortopédicas para seus pacientes.",
       },
-      { property: "og:title", content: "Clínicas Parceiras — ProtesePay" },
+      { property: "og:title", content: "Clínicas Parceiras — PrótesePay" },
       {
         property: "og:description",
         content: "Cadastre sua clínica e ofereça financiamento para seus pacientes.",
@@ -175,7 +175,7 @@ function ClinicasParceirasPage() {
               </div>
             ) : (
               <>
-                <h2 className="mb-6 text-xl font-semibold text-foreground">Cadastre sua clínica</h2>
+                <h2 className="mb-6 text-xl font-semibold text-foreground">Cadastre sua clínica:</h2>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <FormField
