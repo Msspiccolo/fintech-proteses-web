@@ -7,7 +7,7 @@ export function Footer() {
         <div className="grid gap-8 md:grid-cols-3">
           <div>
             <span className="text-xl font-bold tracking-tight text-foreground">
-              Protese<span className="text-primary">Pay</span>
+              Prótese<span className="text-primary">Pay</span>
             </span>
             <p className="mt-2 text-sm text-muted-foreground">
               Financiamento acessível para próteses ortopédicas. Transformando saúde em realidade.
@@ -24,7 +24,7 @@ export function Footer() {
               </li>
               <li>
                 <Link to="/como-funciona" className="hover:text-foreground">
-                  Como funciona
+                  Como funciona?
                 </Link>
               </li>
               <li>
@@ -43,7 +43,7 @@ export function Footer() {
         </div>
 
         <div className="mt-8 border-t border-border pt-8 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} ProtesePay. Todos os direitos reservados.
+          © {new Date().getFullYear()} PrótesePay. Todos os direitos reservados.
         </div>
       </div>
     </footer>

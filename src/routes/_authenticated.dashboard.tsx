@@ -40,14 +40,14 @@ function DashboardRedirect() {
     fetchProfileData()
       .then(async ({ profile, roles }) => {
         let currentRoles = [...roles];
-        
+
         if (!profile) {
           // Social sign-in or first login after email confirmation: create profile from metadata.
           const { data } = await supabase.auth.getUser();
           const meta = data.user?.user_metadata ?? {};
-          
+
           const newRole = (meta.role as "patient" | "clinic") || "patient";
-          
+
           await completeSignup({
             fullName: (meta.full_name as string) || (meta.name as string) || "Usuário",
             document: (meta.document as string) || "",
@@ -55,10 +55,10 @@ function DashboardRedirect() {
             role: newRole,
             clinicName: (meta.clinic_name as string) || undefined,
           }).catch(() => undefined);
-          
+
           currentRoles = [newRole];
         }
-        
+
         if (currentRoles.includes("admin")) {
           window.location.href = "http://localhost:8081/admin/dashboard";
         } else if (currentRoles.includes("clinic")) {

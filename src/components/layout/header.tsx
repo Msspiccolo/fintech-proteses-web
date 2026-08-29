@@ -32,7 +32,7 @@ export function Header() {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
         <Link to="/" className="flex items-center gap-2">
           <span className="text-xl font-bold tracking-tight text-foreground">
-            Protese<span className="text-primary">Pay</span>
+            Prótese<span className="text-primary">Pay</span>
           </span>
         </Link>
 
@@ -110,7 +110,7 @@ export function Header() {
               className="text-sm font-medium text-muted-foreground"
               onClick={() => setMobileOpen(false)}
             >
-              Como funciona
+              Como funciona?
             </Link>
             <Link
               to="/clinicas-parceiras"

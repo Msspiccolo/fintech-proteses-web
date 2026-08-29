@@ -77,7 +77,7 @@ function AdminDashboard() {
     queryKey: ["all-users-admin"],
     queryFn: () => fetchUsers({ data: undefined }),
   });
-  
+
   const users: any[] = usersData?.users ?? [];
 
   async function handleRoleChange(userId: string, newRole: "patient" | "clinic" | "admin") {
@@ -355,12 +355,12 @@ function AdminDashboard() {
                               </td>
                               <td className="px-6 py-4">
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
-                                  ${user.roles?.includes('admin') ? 'bg-purple-100 text-purple-800 border-purple-200' : 
-                                    user.roles?.includes('clinic') ? 'bg-blue-100 text-blue-800 border-blue-200' : 
-                                    'bg-green-100 text-green-800 border-green-200'}
+                                  ${user.roles?.includes('admin') ? 'bg-purple-100 text-purple-800 border-purple-200' :
+                                    user.roles?.includes('clinic') ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                                      'bg-green-100 text-green-800 border-green-200'}
                                 `}>
-                                  {user.roles?.includes('admin') ? 'Administrador' : 
-                                   user.roles?.includes('clinic') ? 'Clínica' : 'Paciente'}
+                                  {user.roles?.includes('admin') ? 'Administrador' :
+                                    user.roles?.includes('clinic') ? 'Clínica' : 'Paciente'}
                                 </span>
                               </td>
                               <td className="px-6 py-4 text-muted-foreground">
@@ -373,9 +373,9 @@ function AdminDashboard() {
                                 {formatDate(user.created_at)}
                               </td>
                               <td className="px-6 py-4">
-                                <Select 
+                                <Select
                                   defaultValue={user.roles?.[0] || "patient"}
-                                  onValueChange={(val: "patient"|"clinic"|"admin") => handleRoleChange(user.user_id, val)}
+                                  onValueChange={(val: "patient" | "clinic" | "admin") => handleRoleChange(user.user_id, val)}
                                 >
                                   <SelectTrigger className="w-[140px] h-8 text-xs">
                                     <SelectValue placeholder="Cargo" />
@@ -423,7 +423,7 @@ function AdminDashboard() {
                       </Button>
                     </CardContent>
                   </Card>
-                  
+
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-lg">Regras de Aprovação</CardTitle>

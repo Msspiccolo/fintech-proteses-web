@@ -9,13 +9,13 @@ import { ArrowRight, CheckCircle } from "lucide-react";
 export const Route = createFileRoute("/simular")({
   head: () => ({
     meta: [
-      { title: "Simular Crédito — ProtesePay" },
+      { title: "Simular Crédito — PrótesePay" },
       {
         name: "description",
         content:
           "Simule o financiamento da sua prótese ortopédica. Escolha valor, entrada e parcelas.",
       },
-      { property: "og:title", content: "Simular Crédito — ProtesePay" },
+      { property: "og:title", content: "Simular Crédito — PrótesePay" },
       { property: "og:description", content: "Simule o financiamento da sua prótese ortopédica." },
     ],
   }),
@@ -53,7 +53,7 @@ function SimularPage() {
           </div>
 
           <div className="mt-8 rounded-xl border border-border bg-card p-6">
-            <h2 className="text-lg font-semibold text-foreground">O que você precisa saber</h2>
+            <h2 className="text-lg font-semibold text-foreground">O que você precisa saber:</h2>
             <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
               <li className="flex items-start gap-2">
                 <CheckCircle size={16} className="mt-0.5 text-primary" />
