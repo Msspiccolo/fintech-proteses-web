@@ -105,36 +105,18 @@ export async function getAuthenticatedUserRole(): Promise<"patient" | "clinic" |
 
     console.log("[Auth] Checking role for user:", user.email, "metadata:", user.user_metadata);
 
-    // 1. Check user_metadata
+    // 1. Check for Admin
     const metaRole = (user.user_metadata?.role as string)?.toLowerCase();
     if (metaRole === "admin") return "admin";
-    if (metaRole === "clinic" || metaRole === "clinica") {
-      await setAccountAsClinic().catch(() => { });
-      return "clinic";
-    }
-    if (user.user_metadata?.clinic_name || user.user_metadata?.tipo === "clinica") {
-      await setAccountAsClinic().catch(() => { });
-      return "clinic";
-    }
 
-    // 2. Check RPC has_role
     try {
       const { data: isAdminRpc } = await supabase.rpc("has_role", {
         _user_id: user.id,
         _role: "admin",
       });
       if (isAdminRpc) return "admin";
+    } catch { }
 
-      const { data: isClinicRpc } = await supabase.rpc("has_role", {
-        _user_id: user.id,
-        _role: "clinic",
-      });
-      if (isClinicRpc) return "clinic";
-    } catch {
-      // Ignore if RPC fails
-    }
-
-    // 3. Check user_roles table
     const { data: rolesData } = await supabase
       .from("user_roles")
       .select("role")
@@ -143,10 +125,8 @@ export async function getAuthenticatedUserRole(): Promise<"patient" | "clinic" |
     if (rolesData && rolesData.length > 0) {
       const roles = rolesData.map((r) => String(r.role).toLowerCase());
       if (roles.includes("admin")) return "admin";
-      if (roles.includes("clinic") || roles.includes("clinica")) return "clinic";
     }
 
-    // 4. Check profiles table
     const { data: profile } = await supabase
       .from("profiles")
       .select("*")
@@ -167,30 +147,31 @@ export async function getAuthenticatedUserRole(): Promise<"patient" | "clinic" |
       }
     }
 
-    if (profile) {
-      const pRole = String(profile.role).toLowerCase();
-      if (pRole === "admin") return "admin";
-      if (pRole === "clinic" || pRole === "clinica") return "clinic";
+    if (profile && String(profile.role).toLowerCase() === "admin") return "admin";
 
-      const docClean = (profile.document || "").replace(/\D/g, "");
-      if (docClean.length === 14) {
-        await setAccountAsClinic().catch(() => { });
-        return "clinic";
-      }
-
-      const nameLower = (profile.full_name || "").toLowerCase();
-      if (
-        nameLower.includes("clínica") ||
-        nameLower.includes("clinica") ||
-        nameLower.includes("ortopedia") ||
-        nameLower.includes("ortopédic")
-      ) {
-        await setAccountAsClinic().catch(() => { });
-        return "clinic";
-      }
+    // 2. Check for Clinic
+    if (metaRole === "clinic" || metaRole === "clinica" || user.user_metadata?.tipo === "clinica") {
+      await setAccountAsClinic().catch(() => { });
+      return "clinic";
     }
 
-    // 5. Check clinic_affiliations table
+    try {
+      const { data: isClinicRpc } = await supabase.rpc("has_role", {
+        _user_id: user.id,
+        _role: "clinic",
+      });
+      if (isClinicRpc) return "clinic";
+    } catch { }
+
+    if (rolesData && rolesData.length > 0) {
+      const roles = rolesData.map((r) => String(r.role).toLowerCase());
+      if (roles.includes("clinic") || roles.includes("clinica")) return "clinic";
+    }
+
+    if (profile && (String(profile.role).toLowerCase() === "clinic" || String(profile.role).toLowerCase() === "clinica")) {
+      return "clinic";
+    }
+
     const { data: affiliations } = await supabase
       .from("clinic_affiliations")
       .select("id")
@@ -198,7 +179,6 @@ export async function getAuthenticatedUserRole(): Promise<"patient" | "clinic" |
 
     if (affiliations && affiliations.length > 0) return "clinic";
 
-    // 6. Check clinics table by email or email naming pattern
     if (user.email) {
       const { data: clinicByEmail } = await supabase
         .from("clinics")
@@ -209,38 +189,11 @@ export async function getAuthenticatedUserRole(): Promise<"patient" | "clinic" |
         await setAccountAsClinic().catch(() => { });
         return "clinic";
       }
-
-      const emailLower = user.email.toLowerCase();
-      if (
-        emailLower.includes("clinic") ||
-        emailLower.includes("clinica") ||
-        emailLower.includes("ortopedia")
-      ) {
-        await setAccountAsClinic().catch(() => { });
-        return "clinic";
-      }
     }
 
-    // 7. Check localStorage hint if set on this device
-    if (typeof window !== "undefined") {
-      const savedHint =
-        localStorage.getItem(`user_role_${user.id}`) || localStorage.getItem("user_role_hint");
-      if (savedHint === "clinic") {
-        await setAccountAsClinic().catch(() => { });
-        recordKnownUser({
-          user_id: user.id,
-          email: user.email,
-          full_name: profile?.full_name || (user.user_metadata?.full_name as string) || null,
-          document: profile?.document || (user.user_metadata?.document as string) || null,
-          phone: profile?.phone || (user.user_metadata?.phone as string) || null,
-          role: "clinic",
-          clinic_name: (user.user_metadata?.clinic_name as string) || null,
-          created_at: profile?.created_at || user.created_at,
-        });
-        return "clinic";
-      }
-    }
 
+
+    // 3. Default to Patient
     recordKnownUser({
       user_id: user.id,
       email: user.email,
