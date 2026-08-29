@@ -92,7 +92,7 @@ function AuthPage() {
       phone: "",
       password: "",
       confirmPassword: "",
-      role: tipo === "clinica" ? "clinic" : "patient",
+      role: tipo === "clinica" ? "admin" : "patient",
       clinicName: "",
     },
   });
@@ -172,7 +172,7 @@ function AuthPage() {
       <div className="flex flex-1 items-center justify-center px-4 py-12">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">ProtesePay</CardTitle>
+            <CardTitle className="text-2xl font-bold">PrótesePay</CardTitle>
             <CardDescription>Entre ou crie sua conta para continuar</CardDescription>
           </CardHeader>
           <CardContent>

@@ -153,6 +153,20 @@ export async function getAuthenticatedUserRole(): Promise<"patient" | "clinic" |
       .eq("user_id", user.id)
       .maybeSingle();
 
+    if (!profile && user.user_metadata) {
+      try {
+        await completeSignup({
+          fullName: user.user_metadata.full_name || user.user_metadata.name || "",
+          document: user.user_metadata.document || "",
+          phone: user.user_metadata.phone || "",
+          role: user.user_metadata.role || "patient",
+          clinicName: user.user_metadata.clinic_name,
+        });
+      } catch (e) {
+        console.error("Failed to recover user profile", e);
+      }
+    }
+
     if (profile) {
       const pRole = String(profile.role).toLowerCase();
       if (pRole === "admin") return "admin";

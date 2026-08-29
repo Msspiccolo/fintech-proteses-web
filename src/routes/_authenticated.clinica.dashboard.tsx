@@ -82,7 +82,6 @@ function ClinicDashboard() {
       }
 
       if (role === "clinic") {
-        router.navigate({ to: "/clinica/dashboard", replace: true });
         return;
       }
     });
