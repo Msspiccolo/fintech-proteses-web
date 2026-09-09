@@ -92,7 +92,7 @@ function AuthPage() {
       phone: "",
       password: "",
       confirmPassword: "",
-      role: tipo === "clinica" ? "admin" : "patient",
+      role: tipo === "clinica" ? "clinic" : "patient",
       clinicName: "",
     },
   });
@@ -126,8 +126,12 @@ function AuthPage() {
   async function onLogin(values: LoginForm) {
     setError(null);
     try {
-      await signInWithPassword(values.email, values.password);
-      navigate({ to: "/dashboard", replace: true });
+      const { user } = await signInWithPassword(values.email, values.password);
+      const { redirectUserByRole } = await import("@/lib/auth-client");
+      
+      // Get role directly from the user object returned by login
+      const role = user?.role || "patient";
+      redirectUserByRole(role as "patient" | "clinic" | "admin", navigate);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao entrar");
     }
@@ -159,8 +163,14 @@ function AuthPage() {
       if (needsEmailConfirmation) {
         setMode("login");
         setError("Conta criada. Confirme seu email e faça login para continuar.");
+      } else if (values.role === "clinic") {
+        setMode("login");
+        // We use setTimeout to ensure toast happens after state update
+        setTimeout(() => toast.success("Conta de clínica criada com sucesso! Faça seu login abaixo."), 100);
       } else {
-        navigate({ to: "/dashboard", replace: true });
+        const { redirectUserByRole } = await import("@/lib/auth-client");
+        // Get role directly from the form values
+        redirectUserByRole(values.role, navigate);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao criar conta");

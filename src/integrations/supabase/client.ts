@@ -32,18 +32,14 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 function createSupabaseClient() {
   // Use import.meta.env for client-side (Vite build-time replacement)
   // Fall back to process.env for SSR (server-side rendering)
-  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-  const SUPABASE_PUBLISHABLE_KEY =
+  let SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+  let SUPABASE_PUBLISHABLE_KEY =
     import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-    const missing = [
-      ...(!SUPABASE_URL ? ["SUPABASE_URL"] : []),
-      ...(!SUPABASE_PUBLISHABLE_KEY ? ["SUPABASE_PUBLISHABLE_KEY"] : []),
-    ];
-    const message = `Missing Supabase environment variable(s): ${missing.join(", ")}. Connect Supabase in Lovable Cloud.`;
-    console.error(`[Supabase] ${message}`);
-    throw new Error(message);
+    console.warn(`[Supabase] Using mocked client. No real DB connected.`);
+    SUPABASE_URL = "https://mock.supabase.co";
+    SUPABASE_PUBLISHABLE_KEY = "mock_key";
   }
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
@@ -52,8 +48,8 @@ function createSupabaseClient() {
     },
     auth: {
       storage: typeof window !== "undefined" ? localStorage : undefined,
-      persistSession: true,
-      autoRefreshToken: true,
+      persistSession: false,
+      autoRefreshToken: false,
     },
   });
 }
@@ -64,6 +60,36 @@ let _supabase: ReturnType<typeof createSupabaseClient> | undefined;
 // import { supabase } from "@/integrations/supabase/client";
 export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient>, {
   get(_, prop, receiver) {
+    if (prop === "auth") {
+      return {
+        getUser: async () => {
+          if (typeof window !== "undefined") {
+            const token = localStorage.getItem("mock_access_token");
+            if (token) return { data: { user: { id: token } }, error: null };
+          }
+          return { data: { user: null }, error: null };
+        },
+        getSession: async () => {
+          if (typeof window !== "undefined") {
+            const token = localStorage.getItem("mock_access_token");
+            if (token) return { data: { session: { access_token: token, user: { id: token } } }, error: null };
+          }
+          return { data: { session: null }, error: null };
+        },
+        onAuthStateChange: () => {
+          return { data: { subscription: { unsubscribe: () => {} } } };
+        },
+        signOut: async () => {
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("mock_access_token");
+            window.location.href = "/auth";
+          }
+        },
+        setSession: async () => { return { data: {}, error: null }; },
+        updateUser: async () => { return { data: {}, error: null }; }
+      };
+    }
+    
     if (!_supabase) _supabase = createSupabaseClient();
     return Reflect.get(_supabase, prop, receiver);
   },

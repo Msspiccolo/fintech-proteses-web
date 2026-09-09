@@ -22,188 +22,67 @@ export async function completeSignup(input: Omit<SignUpInput, "email" | "passwor
   if (error) throw new Error(error.message);
 }
 
-export async function signUpWithPassword(input: SignUpInput) {
-  const { data, error } = await supabase.auth.signUp({
-    email: input.email,
-    password: input.password,
-    options: {
-      emailRedirectTo: `${window.location.origin}/dashboard`,
-      data: {
-        full_name: input.fullName,
-        document: input.document,
-        phone: input.phone,
-        role: input.role,
-        clinic_name: input.clinicName,
-      },
-    },
-  });
-  if (error) throw new Error(error.message);
+import { mockLogin, mockSignup } from "./auth.functions";
 
-  if (data.session) {
-    await completeSignup(input);
-    return { needsEmailConfirmation: false as const };
+export async function signUpWithPassword(input: SignUpInput) {
+  const result = await mockSignup({ data: input });
+  if (typeof window !== "undefined") {
+    localStorage.setItem("mock_access_token", result.token);
+    localStorage.setItem("mock_role_hint", result.user.role);
   }
-  return { needsEmailConfirmation: true as const };
+  return { needsEmailConfirmation: false as const };
 }
 
 export async function signInWithPassword(email: string, password: string) {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw new Error(error.message);
-  return data;
+  const result = await mockLogin({ data: { email, password } });
+  if (typeof window !== "undefined") {
+    localStorage.setItem("mock_access_token", result.token);
+    localStorage.setItem("mock_role_hint", result.user.role);
+  }
+  return { user: result.user };
 }
 
 export async function resetPasswordForEmail(email: string) {
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/auth/reset-password`,
-  });
-  if (error) throw new Error(error.message);
+  console.log("Mock reset password for", email);
 }
 
 export async function updatePassword(password: string) {
-  const { error } = await supabase.auth.updateUser({ password });
-  if (error) throw new Error(error.message);
+  console.log("Mock update password");
 }
 
 export async function setAccountAsClinic(): Promise<void> {
   try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
+    const token = typeof window !== "undefined" ? localStorage.getItem("mock_access_token") : null;
+    if (!token) return;
 
     if (typeof window !== "undefined") {
       localStorage.setItem("user_role_hint", "clinic");
-      localStorage.setItem(`user_role_${user.id}`, "clinic");
-    }
-
-    await supabase.from("profiles").update({ role: "clinic" }).eq("user_id", user.id);
-
-    try {
-      await supabase.from("user_roles").upsert({ user_id: user.id, role: "clinic" });
-    } catch {
-      // Ignore if constraint error
-    }
-
-    try {
-      await supabase.auth.updateUser({
-        data: { role: "clinic" },
-      });
-    } catch {
-      // Ignore
+      localStorage.setItem(`user_role_${token}`, "clinic");
+      // MOCK: In a real app we would update the backend profile here.
     }
   } catch (err) {
     console.error("Error setting account as clinic:", err);
   }
 }
 
+import { getCurrentUserProfile } from "./auth.functions";
+
 export async function getAuthenticatedUserRole(): Promise<"patient" | "clinic" | "admin"> {
   try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return "patient";
+    const token = typeof window !== "undefined" ? localStorage.getItem("mock_access_token") : null;
+    if (!token) return "patient";
 
-    console.log("[Auth] Checking role for user:", user.email, "metadata:", user.user_metadata);
+    // Read the role hint directly from localStorage to prevent async network race conditions
+    const roleHint = typeof window !== "undefined" ? localStorage.getItem("mock_role_hint") : null;
+    if (roleHint === "admin") return "admin";
+    if (roleHint === "clinic") return "clinic";
 
-    // 1. Check for Admin
-    const metaRole = (user.user_metadata?.role as string)?.toLowerCase();
-    if (metaRole === "admin") return "admin";
-
-    try {
-      const { data: isAdminRpc } = await supabase.rpc("has_role", {
-        _user_id: user.id,
-        _role: "admin",
-      });
-      if (isAdminRpc) return "admin";
-    } catch { }
-
-    const { data: rolesData } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id);
-
-    if (rolesData && rolesData.length > 0) {
-      const roles = rolesData.map((r) => String(r.role).toLowerCase());
-      if (roles.includes("admin")) return "admin";
-    }
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (!profile && user.user_metadata) {
-      try {
-        await completeSignup({
-          fullName: user.user_metadata.full_name || user.user_metadata.name || "",
-          document: user.user_metadata.document || "",
-          phone: user.user_metadata.phone || "",
-          role: user.user_metadata.role || "patient",
-          clinicName: user.user_metadata.clinic_name,
-        });
-      } catch (e) {
-        console.error("Failed to recover user profile", e);
-      }
-    }
-
-    if (profile && String(profile.role).toLowerCase() === "admin") return "admin";
-
-    // 2. Check for Clinic
-    if (metaRole === "clinic" || metaRole === "clinica" || user.user_metadata?.tipo === "clinica") {
-      await setAccountAsClinic().catch(() => { });
-      return "clinic";
-    }
-
-    try {
-      const { data: isClinicRpc } = await supabase.rpc("has_role", {
-        _user_id: user.id,
-        _role: "clinic",
-      });
-      if (isClinicRpc) return "clinic";
-    } catch { }
-
-    if (rolesData && rolesData.length > 0) {
-      const roles = rolesData.map((r) => String(r.role).toLowerCase());
-      if (roles.includes("clinic") || roles.includes("clinica")) return "clinic";
-    }
-
-    if (profile && (String(profile.role).toLowerCase() === "clinic" || String(profile.role).toLowerCase() === "clinica")) {
-      return "clinic";
-    }
-
-    const { data: affiliations } = await supabase
-      .from("clinic_affiliations")
-      .select("id")
-      .eq("user_id", user.id);
-
-    if (affiliations && affiliations.length > 0) return "clinic";
-
-    if (user.email) {
-      const { data: clinicByEmail } = await supabase
-        .from("clinics")
-        .select("id")
-        .eq("email", user.email)
-        .maybeSingle();
-      if (clinicByEmail) {
-        await setAccountAsClinic().catch(() => { });
-        return "clinic";
-      }
-    }
-
-
-
-    // 3. Default to Patient
-    recordKnownUser({
-      user_id: user.id,
-      email: user.email,
-      full_name: profile?.full_name || (user.user_metadata?.full_name as string) || null,
-      document: profile?.document || (user.user_metadata?.document as string) || null,
-      phone: profile?.phone || (user.user_metadata?.phone as string) || null,
-      role: "patient",
-      clinic_name: (user.user_metadata?.clinic_name as string) || null,
-      created_at: profile?.created_at || user.created_at,
-    });
+    const result = await getCurrentUserProfile();
+    const role = result?.profile?.role;
+    
+    if (role === "admin") return "admin";
+    if (role === "clinic") return "clinic";
+    
     return "patient";
   } catch (err) {
     console.error("Error detecting user role:", err);
