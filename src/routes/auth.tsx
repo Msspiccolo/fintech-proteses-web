@@ -164,6 +164,7 @@ function AuthPage() {
         setMode("login");
         setError("Conta criada. Confirme seu email e faça login para continuar.");
       } else if (values.role === "clinic") {
+        navigate({ to: "/auth", replace: true, search: {} });
         setMode("login");
         // We use setTimeout to ensure toast happens after state update
         setTimeout(() => toast.success("Conta de clínica criada com sucesso! Faça seu login abaixo."), 100);

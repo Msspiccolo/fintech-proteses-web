@@ -83,6 +83,16 @@
       "document": "12312312396",
       "phone": "5512369576",
       "created_at": "2026-09-09T00:33:46.051Z"
+    },
+    {
+      "id": "mock-user-1788916351690",
+      "email": "clinicateste@gmail.com",
+      "password": "1234567",
+      "full_name": "Clinica teste1",
+      "role": "patient",
+      "document": "000.000.000.00",
+      "phone": "(16)996168487",
+      "created_at": "2026-09-09T01:12:31.690Z"
     }
   ],
   "clinics": [
