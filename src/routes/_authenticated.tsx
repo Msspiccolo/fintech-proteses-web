@@ -5,11 +5,11 @@ export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async () => {
     if (typeof window !== "undefined") {
-      const token = localStorage.getItem("mock_access_token");
-      if (!token) {
+      const { data, error } = await supabase.auth.getUser();
+      if (error || !data.user) {
         throw redirect({ to: "/auth" });
       }
-      return { user: { id: token } };
+      return { user: data.user };
     }
     // On the server, we don't have access to localStorage, so we pass
     // an empty user and let the client-side hydration perform the redirect.

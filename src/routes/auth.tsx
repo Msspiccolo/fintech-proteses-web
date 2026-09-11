@@ -92,7 +92,7 @@ function AuthPage() {
       phone: "",
       password: "",
       confirmPassword: "",
-      role: tipo === "clinica" ? "clinic" : "patient",
+      role: tipo === "clinica" ? "admin" : "patient",
       clinicName: "",
     },
   });
@@ -126,12 +126,17 @@ function AuthPage() {
   async function onLogin(values: LoginForm) {
     setError(null);
     try {
+<<<<<<< HEAD
       const { user } = await signInWithPassword(values.email, values.password);
       const { redirectUserByRole } = await import("@/lib/auth-client");
       
       // Get role directly from the user object returned by login
       const role = user?.role || "patient";
       redirectUserByRole(role as "patient" | "clinic" | "admin");
+=======
+      await signInWithPassword(values.email, values.password);
+      navigate({ to: "/dashboard", replace: true });
+>>>>>>> a6d7423d10527df803e6b60e48da112007c101d4
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao entrar");
     }
@@ -163,12 +168,17 @@ function AuthPage() {
       if (needsEmailConfirmation) {
         setMode("login");
         setError("Conta criada. Confirme seu email e faça login para continuar.");
+<<<<<<< HEAD
       } else if (values.role === "clinic") {
         window.location.href = "/auth";
       } else {
         const { redirectUserByRole } = await import("@/lib/auth-client");
         // Get role directly from the form values
         redirectUserByRole(values.role);
+=======
+      } else {
+        navigate({ to: "/dashboard", replace: true });
+>>>>>>> a6d7423d10527df803e6b60e48da112007c101d4
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao criar conta");
