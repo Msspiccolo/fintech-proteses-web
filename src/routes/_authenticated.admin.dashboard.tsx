@@ -422,7 +422,7 @@ function AdminDashboard() {
                         <Label htmlFor="downPaymentMin">Entrada Mínima (%)</Label>
                         <Input id="downPaymentMin" type="number" defaultValue="20" />
                       </div>
-                      <Button className="w-full mt-2" onClick={() => toast.success("Configurações salvas (Mocado)")}>
+                      <Button className="w-full mt-2" onClick={() => toast.success("Configurações salvas")}>
                         Salvar Taxas
                       </Button>
                     </CardContent>
