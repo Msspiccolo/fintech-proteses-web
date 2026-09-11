@@ -82,16 +82,7 @@ function AdminDashboard() {
     console.error("Error fetching users:", usersError);
   }
 
-  // Merge known users as fallback
-  const dbUsers: any[] = usersData?.users ?? [];
-  const knownUsers = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("protesepay_system_users") || "[]") : [];
-  
-  // Combine users, preferring DB users
-  const userMap = new Map();
-  knownUsers.forEach((u: any) => userMap.set(u.user_id, { ...u, isFallback: true }));
-  dbUsers.forEach((u: any) => userMap.set(u.user_id, u));
-  
-  const users = Array.from(userMap.values());
+  const users: any[] = usersData?.users ?? [];
 
   async function handleRoleChange(userId: string, newRole: "patient" | "clinic" | "admin") {
     try {
