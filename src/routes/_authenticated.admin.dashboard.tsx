@@ -73,12 +73,25 @@ function AdminDashboard() {
 
   const fetchUsers = useServerFn(getAllUsersForAdmin);
   const updateUserRole = useServerFn(updateUserRoleForAdmin);
-  const { data: usersData, isLoading: isLoadingUsers, refetch: refetchUsers } = useQuery({
+  const { data: usersData, isLoading: isLoadingUsers, refetch: refetchUsers, error: usersError } = useQuery({
     queryKey: ["all-users-admin"],
     queryFn: () => fetchUsers({ data: undefined }),
   });
 
-  const users: any[] = usersData?.users ?? [];
+  if (usersError) {
+    console.error("Error fetching users:", usersError);
+  }
+
+  // Merge known users as fallback
+  const dbUsers: any[] = usersData?.users ?? [];
+  const knownUsers = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("protesepay_system_users") || "[]") : [];
+  
+  // Combine users, preferring DB users
+  const userMap = new Map();
+  knownUsers.forEach((u: any) => userMap.set(u.user_id, { ...u, isFallback: true }));
+  dbUsers.forEach((u: any) => userMap.set(u.user_id, u));
+  
+  const users = Array.from(userMap.values());
 
   async function handleRoleChange(userId: string, newRole: "patient" | "clinic" | "admin") {
     try {
@@ -355,12 +368,12 @@ function AdminDashboard() {
                               </td>
                               <td className="px-6 py-4">
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
-                                  ${user.roles?.includes('admin') ? 'bg-purple-100 text-purple-800 border-purple-200' :
-                                    user.roles?.includes('clinic') ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                                  ${(user.roles?.includes('admin') || user.role === 'admin') ? 'bg-purple-100 text-purple-800 border-purple-200' :
+                                    (user.roles?.includes('clinic') || user.role === 'clinic' || user.role === 'clinica') ? 'bg-blue-100 text-blue-800 border-blue-200' :
                                       'bg-green-100 text-green-800 border-green-200'}
                                 `}>
-                                  {user.roles?.includes('admin') ? 'Administrador' :
-                                    user.roles?.includes('clinic') ? 'Clínica' : 'Paciente'}
+                                  {(user.roles?.includes('admin') || user.role === 'admin') ? 'Administrador' :
+                                    (user.roles?.includes('clinic') || user.role === 'clinic' || user.role === 'clinica') ? 'Clínica' : 'Paciente'}
                                 </span>
                               </td>
                               <td className="px-6 py-4 text-muted-foreground">
@@ -370,11 +383,11 @@ function AdminDashboard() {
                                 {user.phone || "—"}
                               </td>
                               <td className="px-6 py-4 text-muted-foreground">
-                                {formatDate(user.created_at)}
+                                {formatDate(user.created_at || new Date().toISOString())}
                               </td>
                               <td className="px-6 py-4">
                                 <Select
-                                  defaultValue={user.roles?.[0] || "patient"}
+                                  defaultValue={user.roles?.[0] || user.role || "patient"}
                                   onValueChange={(val: "patient" | "clinic" | "admin") => handleRoleChange(user.user_id, val)}
                                 >
                                   <SelectTrigger className="w-[140px] h-8 text-xs">
