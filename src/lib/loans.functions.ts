@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { getDB, saveDB } from "./mock-db";
 
 const createApplicationSchema = z.object({
   requestedAmount: z.number().positive(),
@@ -10,12 +9,12 @@ const createApplicationSchema = z.object({
   monthlyPayment: z.number().positive(),
   interestRate: z.number().min(0),
   totalCost: z.number().positive(),
-  clinicId: z.string().optional(), // Changed to string since mock UUIDs are used
+  clinicId: z.string().uuid().optional(),
   purpose: z.string().optional(),
 });
 
 const updateApplicationSchema = z.object({
-  id: z.string(),
+  id: z.string().uuid(),
   status: z.enum(["pending", "approved", "rejected", "paid", "cancelled"]),
   notes: z.string().optional(),
 });
@@ -24,27 +23,26 @@ export const createLoanApplication = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: unknown) => createApplicationSchema.parse(data))
   .handler(async ({ data, context }) => {
-    const db = getDB();
-    const application = {
-      id: `mock-loan-${Date.now()}`,
-      patient_id: context.userId,
-      clinic_id: data.clinicId ?? null,
-      requested_amount: data.requestedAmount,
-      down_payment: data.downPayment,
-      installments: data.installments,
-      monthly_payment: data.monthlyPayment,
-      interest_rate: data.interestRate,
-      total_cost: data.totalCost,
-      purpose: data.purpose ?? null,
-      status: "pending" as const,
-      notes: null,
-      reviewed_by: null,
-      reviewed_at: null,
-      created_at: new Date().toISOString()
-    };
+    const { data: application, error } = await context.supabase
+      .from("loan_applications")
+      .insert({
+        patient_id: context.userId,
+        clinic_id: data.clinicId ?? null,
+        requested_amount: data.requestedAmount,
+        down_payment: data.downPayment,
+        installments: data.installments,
+        monthly_payment: data.monthlyPayment,
+        interest_rate: data.interestRate,
+        total_cost: data.totalCost,
+        purpose: data.purpose ?? null,
+        status: "pending",
+      })
+      .select()
+      .single();
 
-    db.loans.push(application);
-    saveDB(db);
+    if (error) {
+      throw new Error(error.message);
+    }
 
     return { application };
   });
@@ -52,74 +50,101 @@ export const createLoanApplication = createServerFn({ method: "POST" })
 export const getMyLoanApplications = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const db = getDB();
-    const applications = db.loans
-      .filter(l => l.patient_id === context.userId)
-      .map(l => ({
-        ...l,
-        clinics: db.clinics.find(c => c.id === l.clinic_id)
-      }))
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    const { data, error } = await context.supabase
+      .from("loan_applications")
+      .select("*, clinics(name)")
+      .eq("patient_id", context.userId)
+      .order("created_at", { ascending: false });
 
-    return { applications };
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return { applications: data ?? [] };
   });
 
 export const getClinicLoanApplications = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const db = getDB();
-    const affiliations = db.affiliations.filter(a => a.user_id === context.userId);
-    const clinicIds = affiliations.map(a => a.clinic_id);
-    
-    if (clinicIds.length === 0) return { applications: [] };
+    const { data: affiliations, error: affiliationsError } = await context.supabase
+      .from("clinic_affiliations")
+      .select("clinic_id")
+      .eq("user_id", context.userId);
 
-    const applications = db.loans
-      .filter(l => l.clinic_id && clinicIds.includes(l.clinic_id))
-      .map(l => ({
-        ...l,
-        clinics: db.clinics.find(c => c.id === l.clinic_id),
-        profiles: db.users.find(u => u.id === l.patient_id)
-      }))
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    if (affiliationsError) {
+      throw new Error(affiliationsError.message);
+    }
 
-    return { applications };
+    const clinicIds = affiliations?.map((a: { clinic_id: string }) => a.clinic_id) ?? [];
+    if (clinicIds.length === 0) {
+      return { applications: [] };
+    }
+
+    const { data, error } = await context.supabase
+      .from("loan_applications")
+      .select("*, clinics(name), profiles!loan_applications_patient_id_fkey(full_name)")
+      .in("clinic_id", clinicIds)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return { applications: data ?? [] };
   });
 
 export const getAllLoanApplications = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const db = getDB();
-    const currentUser = db.users.find(u => u.id === context.userId);
-    if (currentUser?.role !== "admin") throw new Error("Forbidden");
+    const { data: isAdmin, error: adminError } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
 
-    const applications = db.loans
-      .map(l => ({
-        ...l,
-        clinics: db.clinics.find(c => c.id === l.clinic_id),
-        profiles: db.users.find(u => u.id === l.patient_id)
-      }))
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    if (adminError || !isAdmin) {
+      throw new Error("Forbidden");
+    }
 
-    return { applications };
+    const { data, error } = await context.supabase
+      .from("loan_applications")
+      .select("*, clinics(name), profiles!loan_applications_patient_id_fkey(full_name)")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return { applications: data ?? [] };
   });
 
 export const updateLoanApplication = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: unknown) => updateApplicationSchema.parse(data))
   .handler(async ({ data, context }) => {
-    const db = getDB();
-    const currentUser = db.users.find(u => u.id === context.userId);
-    if (currentUser?.role !== "admin") throw new Error("Forbidden");
+    const { data: isAdmin, error: adminError } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
 
-    const application = db.loans.find(l => l.id === data.id);
-    if (!application) throw new Error("Loan not found");
+    if (adminError || !isAdmin) {
+      throw new Error("Forbidden");
+    }
 
-    application.status = data.status;
-    application.notes = data.notes ?? null;
-    application.reviewed_by = context.userId;
-    application.reviewed_at = new Date().toISOString();
+    const { data: application, error } = await context.supabase
+      .from("loan_applications")
+      .update({
+        status: data.status,
+        notes: data.notes ?? null,
+        reviewed_by: context.userId,
+        reviewed_at: new Date().toISOString(),
+      })
+      .eq("id", data.id)
+      .select()
+      .single();
 
-    saveDB(db);
+    if (error) {
+      throw new Error(error.message);
+    }
 
     return { application };
   });

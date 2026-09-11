@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { getDB, saveDB } from "./mock-db";
 
 const registerClinicSchema = z.object({
   name: z.string().min(2),
@@ -21,29 +20,61 @@ const updateClinicStatusSchema = z.object({
 });
 
 export const getApprovedClinics = createServerFn({ method: "GET" }).handler(async () => {
-  const db = getDB();
-  const clinics = db.clinics.filter(c => c.status === "approved").sort((a, b) => a.name.localeCompare(b.name));
-  return { clinics };
+  const { createClient } = await import("@supabase/supabase-js");
+  const supabasePublic = createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_PUBLISHABLE_KEY!,
+    {
+      auth: {
+        storage: undefined,
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    },
+  );
+
+  const { data, error } = await supabasePublic
+    .from("clinics")
+    .select("*")
+    .eq("status", "approved")
+    .order("name", { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { clinics: data ?? [] };
 });
 
 export const getAllClinicsForAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const db = getDB();
-    const clinics = [...db.clinics].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    return { clinics };
+    const { data, error } = await context.supabase
+      .from("clinics")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return { clinics: data ?? [] };
   });
 
 export const updateClinicStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: unknown) => updateClinicStatusSchema.parse(data))
   .handler(async ({ data, context }) => {
-    const db = getDB();
-    const clinic = db.clinics.find(c => c.id === data.id);
-    if (!clinic) throw new Error("Clinic not found");
+    const { data: clinic, error } = await context.supabase
+      .from("clinics")
+      .update({ status: data.status })
+      .eq("id", data.id)
+      .select()
+      .single();
 
-    clinic.status = data.status;
-    saveDB(db);
+    if (error) {
+      throw new Error(error.message);
+    }
 
     return { clinic };
   });
@@ -51,43 +82,63 @@ export const updateClinicStatus = createServerFn({ method: "POST" })
 export const getClinicByUser = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const db = getDB();
-    const affiliations = db.affiliations.filter(a => a.user_id === context.userId);
-    const clinicIds = affiliations.map(a => a.clinic_id);
-    if (clinicIds.length === 0) return { clinics: [] };
+    const { data: affiliations, error: affiliationsError } = await context.supabase
+      .from("clinic_affiliations")
+      .select("clinic_id")
+      .eq("user_id", context.userId);
 
-    const clinics = db.clinics.filter(c => clinicIds.includes(c.id));
-    return { clinics };
+    if (affiliationsError) {
+      throw new Error(affiliationsError.message);
+    }
+
+    const clinicIds = affiliations?.map((a: { clinic_id: string }) => a.clinic_id) ?? [];
+    if (clinicIds.length === 0) {
+      return { clinics: [] };
+    }
+
+    const { data, error } = await context.supabase.from("clinics").select("*").in("id", clinicIds);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return { clinics: data ?? [] };
   });
 
 export const registerClinic = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: unknown) => registerClinicSchema.parse(data))
   .handler(async ({ data, context }) => {
-    const db = getDB();
-    const clinic = {
-      id: `mock-clinic-${Date.now()}`,
-      name: data.name,
-      legal_name: data.legalName ?? null,
-      document: data.document ?? null,
-      phone: data.phone ?? null,
-      email: data.email ?? null,
-      address: data.address ?? null,
-      city: data.city ?? null,
-      state: data.state ?? null,
-      zip_code: data.zipCode ?? null,
-      status: "pending" as const,
-      created_at: new Date().toISOString()
-    };
-    
-    db.clinics.push(clinic);
-    
-    db.affiliations.push({
+    const { data: clinic, error } = await context.supabase
+      .from("clinics")
+      .insert({
+        name: data.name,
+        legal_name: data.legalName ?? null,
+        document: data.document ?? null,
+        phone: data.phone ?? null,
+        email: data.email ?? null,
+        address: data.address ?? null,
+        city: data.city ?? null,
+        state: data.state ?? null,
+        zip_code: data.zipCode ?? null,
+        status: "pending",
+      })
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const { error: affiliationError } = await context.supabase.from("clinic_affiliations").insert({
       user_id: context.userId,
       clinic_id: clinic.id,
-      role: "owner"
+      role: "owner",
     });
 
-    saveDB(db);
+    if (affiliationError) {
+      throw new Error(affiliationError.message);
+    }
+
     return { clinic };
   });
