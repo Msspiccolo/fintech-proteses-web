@@ -79,9 +79,9 @@ export const registerClinic = createServerFn({ method: "POST" })
       status: "pending" as const,
       created_at: new Date().toISOString()
     };
-    
+
     db.clinics.push(clinic);
-    
+
     db.affiliations.push({
       user_id: context.userId,
       clinic_id: clinic.id,

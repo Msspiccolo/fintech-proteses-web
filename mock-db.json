@@ -93,6 +93,16 @@
       "document": "000.000.000.00",
       "phone": "(16)996168487",
       "created_at": "2026-09-09T01:12:31.690Z"
+    },
+    {
+      "id": "mock-user-1788990723019",
+      "email": "clinica@gmail.com",
+      "password": "1234567",
+      "full_name": "teste Clinica",
+      "role": "patient",
+      "document": "000.000.000.00",
+      "phone": "(16)00000-0000",
+      "created_at": "2026-09-09T21:52:03.019Z"
     }
   ],
   "clinics": [

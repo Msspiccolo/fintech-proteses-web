@@ -131,7 +131,7 @@ function AuthPage() {
       
       // Get role directly from the user object returned by login
       const role = user?.role || "patient";
-      redirectUserByRole(role as "patient" | "clinic" | "admin", navigate);
+      redirectUserByRole(role as "patient" | "clinic" | "admin");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao entrar");
     }
@@ -164,14 +164,11 @@ function AuthPage() {
         setMode("login");
         setError("Conta criada. Confirme seu email e faça login para continuar.");
       } else if (values.role === "clinic") {
-        navigate({ to: "/auth", replace: true, search: {} });
-        setMode("login");
-        // We use setTimeout to ensure toast happens after state update
-        setTimeout(() => toast.success("Conta de clínica criada com sucesso! Faça seu login abaixo."), 100);
+        window.location.href = "/auth";
       } else {
         const { redirectUserByRole } = await import("@/lib/auth-client");
         // Get role directly from the form values
-        redirectUserByRole(values.role, navigate);
+        redirectUserByRole(values.role);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao criar conta");
