@@ -68,6 +68,11 @@ export function Header() {
                   Meu painel
                 </Button>
               </Link>
+              <Link to="/perfil">
+                <Button variant="ghost" size="sm">
+                  Meu perfil
+                </Button>
+              </Link>
               <Button variant="outline" size="sm" onClick={handleSignOut}>
                 Sair
               </Button>
@@ -127,6 +132,13 @@ export function Header() {
                   onClick={() => setMobileOpen(false)}
                 >
                   Meu painel
+                </Link>
+                <Link
+                  to="/perfil"
+                  className="text-sm font-medium text-muted-foreground"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Meu perfil
                 </Link>
                 <button
                   className="text-left text-sm font-medium text-muted-foreground"

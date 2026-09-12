@@ -418,3 +418,16 @@ INSERT INTO public.profiles (user_id, full_name, role)
 SELECT id, raw_user_meta_data->>'full_name', COALESCE((raw_user_meta_data->>'role')::public.app_role, 'patient'::public.app_role)
 FROM auth.users
 ON CONFLICT (user_id) DO NOTHING;
+
+-- Permite que o usuário delete a própria conta
+create or replace function public.delete_own_account()
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  delete from auth.users where id = auth.uid();
+$$;
+
+grant execute on function public.delete_own_account() to authenticated;
+

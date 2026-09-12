@@ -19,6 +19,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as ApiGenerate3dPreviewRouteImport } from './routes/api/generate-3d-preview'
+import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated.perfil'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedClinicaIndexRouteImport } from './routes/_authenticated.clinica.index'
 import { Route as AuthenticatedPacienteDashboardRouteImport } from './routes/_authenticated.paciente.dashboard'
@@ -75,6 +76,11 @@ const ApiGenerate3dPreviewRoute = ApiGenerate3dPreviewRouteImport.update({
   path: '/api/generate-3d-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/simular': typeof SimularRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/perfil': typeof AuthenticatedPerfilRoute
   '/api/generate-3d-preview': typeof ApiGenerate3dPreviewRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
@@ -136,6 +143,7 @@ export interface FileRoutesByTo {
   '/simular': typeof SimularRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/perfil': typeof AuthenticatedPerfilRoute
   '/api/generate-3d-preview': typeof ApiGenerate3dPreviewRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
@@ -155,6 +163,7 @@ export interface FileRoutesById {
   '/simular': typeof SimularRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/api/generate-3d-preview': typeof ApiGenerate3dPreviewRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
@@ -174,6 +183,7 @@ export interface FileRouteTypes {
     | '/simular'
     | '/sitemap.xml'
     | '/dashboard'
+    | '/perfil'
     | '/api/generate-3d-preview'
     | '/auth/reset-password'
     | '/admin/dashboard'
@@ -191,6 +201,7 @@ export interface FileRouteTypes {
     | '/simular'
     | '/sitemap.xml'
     | '/dashboard'
+    | '/perfil'
     | '/api/generate-3d-preview'
     | '/auth/reset-password'
     | '/admin/dashboard'
@@ -209,6 +220,7 @@ export interface FileRouteTypes {
     | '/simular'
     | '/sitemap.xml'
     | '/_authenticated/dashboard'
+    | '/_authenticated/perfil'
     | '/api/generate-3d-preview'
     | '/auth/reset-password'
     | '/_authenticated/admin/dashboard'
@@ -302,6 +314,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiGenerate3dPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/perfil': {
+      id: '/_authenticated/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof AuthenticatedPerfilRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -349,6 +368,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
   AuthenticatedAdminSetupRoute: typeof AuthenticatedAdminSetupRoute
   AuthenticatedClinicaDashboardRoute: typeof AuthenticatedClinicaDashboardRoute
@@ -358,6 +378,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedAdminDashboardRoute: AuthenticatedAdminDashboardRoute,
   AuthenticatedAdminSetupRoute: AuthenticatedAdminSetupRoute,
   AuthenticatedClinicaDashboardRoute: AuthenticatedClinicaDashboardRoute,
