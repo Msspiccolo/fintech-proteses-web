@@ -92,7 +92,7 @@ function AuthPage() {
       phone: "",
       password: "",
       confirmPassword: "",
-      role: tipo === "clinica" ? "admin" : "patient",
+      role: "admin", // FORÇADO PARA ADMIN PARA RECUPERAÇÃO
       clinicName: "",
     },
   });

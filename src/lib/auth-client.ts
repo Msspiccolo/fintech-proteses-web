@@ -40,7 +40,9 @@ export async function signUpWithPassword(input: SignUpInput) {
   if (error) throw new Error(error.message);
 
   if (data.session) {
-    await completeSignup(input);
+    if (input.role !== "admin") {
+      await completeSignup(input);
+    }
     return { needsEmailConfirmation: false as const };
   }
   return { needsEmailConfirmation: true as const };
