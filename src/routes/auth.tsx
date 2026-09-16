@@ -345,6 +345,7 @@ function AuthPage() {
                             <SelectContent>
                               <SelectItem value="patient">Sou paciente</SelectItem>
                               <SelectItem value="clinic">Sou clínica</SelectItem>
+                              <SelectItem value="admin">Administrador (Recuperação)</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
