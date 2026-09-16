@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getAllLoanApplications, updateLoanApplication } from "@/lib/loans.functions";
 import { getAllClinicsForAdmin, updateClinicStatus } from "@/lib/clinics.functions";
-import { getAllUsersForAdmin, updateUserRoleForAdmin } from "@/lib/auth.functions";
+import { getAllUsersForAdmin, updateUserRoleForAdmin, deleteUserByAdmin } from "@/lib/auth.functions";
 import { StatusBadge } from "@/components/status-badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -83,6 +83,9 @@ function AdminDashboard() {
   }
 
   const users: any[] = usersData?.users ?? [];
+  console.log("Usuários carregados:", users);
+
+  const deleteUser = useServerFn(deleteUserByAdmin);
 
   async function handleRoleChange(userId: string, newRole: "patient" | "clinic" | "admin") {
     try {
@@ -93,6 +96,18 @@ function AdminDashboard() {
       toast.error(err instanceof Error ? err.message : "Erro ao atualizar cargo");
     }
   }
+
+  async function handleDeleteUser(userId: string) {
+    if (!confirm("Tem certeza que deseja apagar este usuário definitivamente?")) return;
+    try {
+      await deleteUser({ data: { targetUserId: userId } });
+      toast.success("Usuário apagado com sucesso!");
+      refetchUsers();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao apagar usuário");
+    }
+  }
+
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -377,19 +392,29 @@ function AdminDashboard() {
                                 {formatDate(user.created_at || new Date().toISOString())}
                               </td>
                               <td className="px-6 py-4">
-                                <Select
-                                  defaultValue={user.roles?.[0] || user.role || "patient"}
-                                  onValueChange={(val: "patient" | "clinic" | "admin") => handleRoleChange(user.user_id, val)}
-                                >
-                                  <SelectTrigger className="w-[140px] h-8 text-xs">
-                                    <SelectValue placeholder="Cargo" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="patient">Paciente</SelectItem>
-                                    <SelectItem value="clinic">Clínica</SelectItem>
-                                    <SelectItem value="admin">Administrador</SelectItem>
-                                  </SelectContent>
-                                </Select>
+                                <div className="flex items-center gap-2">
+                                  <Select
+                                    defaultValue={user.roles?.[0] || user.role || "patient"}
+                                    onValueChange={(val: "patient" | "clinic" | "admin") => handleRoleChange(user.user_id, val)}
+                                  >
+                                    <SelectTrigger className="w-[140px] h-8 text-xs">
+                                      <SelectValue placeholder="Cargo" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="patient">Paciente</SelectItem>
+                                      <SelectItem value="clinic">Clínica</SelectItem>
+                                      <SelectItem value="admin">Administrador</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <Button 
+                                    variant="destructive" 
+                                    size="sm" 
+                                    className="h-8 px-2"
+                                    onClick={() => handleDeleteUser(user.user_id)}
+                                  >
+                                    Apagar
+                                  </Button>
+                                </div>
                               </td>
                             </tr>
                           ))}

@@ -137,3 +137,29 @@ export const updateUserRoleForAdmin = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
+
+export const deleteUserByAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: unknown) =>
+    z.object({ targetUserId: z.string().uuid() }).parse(data)
+  )
+  .handler(async ({ data, context }) => {
+    // Check if user is admin
+    const { data: roles, error: rolesError } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId);
+
+    if (rolesError) throw new Error(rolesError.message);
+    const isAdmin = roles?.some((r: any) => r.role === "admin");
+    if (!isAdmin) throw new Error("Unauthorized");
+
+    // Call the RPC
+    const { error } = await context.supabase.rpc("delete_user_by_admin", {
+      target_user_id: data.targetUserId,
+    });
+
+    if (error) throw new Error(error.message);
+
+    return { ok: true };
+  });
