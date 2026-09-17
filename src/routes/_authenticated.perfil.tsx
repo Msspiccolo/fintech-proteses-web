@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { deleteOwnAccount } from "@/lib/auth.functions";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -20,6 +22,7 @@ export const Route = createFileRoute("/_authenticated/perfil")({
 function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const deleteAccount = useServerFn(deleteOwnAccount);
   const [profile, setProfile] = useState<{
     id?: string;
     full_name: string;
@@ -172,10 +175,8 @@ function ProfilePage() {
                       variant="destructive"
                       onClick={async () => {
                         if (confirm("Tem certeza que deseja apagar sua conta? Isso não pode ser desfeito.")) {
-                          try {
-                            const { error } = await supabase.rpc("delete_own_account");
-                            if (error) throw error;
-                            
+                            try {
+                            await deleteAccount({ data: undefined });
                             await supabase.auth.signOut();
                             window.location.href = "/";
                           } catch (err: any) {

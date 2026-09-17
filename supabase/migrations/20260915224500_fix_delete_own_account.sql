@@ -17,4 +17,4 @@ $$;
 grant execute on function public.delete_own_account() to authenticated;
 
 -- Force PostgREST to reload the schema cache so it picks up the new permissions
-NOTIFY pgrst, reload_schema;
+NOTIFY pgrst, 'reload schema';

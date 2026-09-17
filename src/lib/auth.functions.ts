@@ -59,13 +59,19 @@ export const getAllUsersForAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     // Check if user is admin
-    const { data: roles, error: rolesError } = await context.supabase
+    const { data: profile } = await context.supabase
+      .from("profiles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+
+    const { data: roles } = await context.supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", context.userId);
 
-    if (rolesError) throw new Error(rolesError.message);
-    const isAdmin = roles?.some((r: any) => r.role === "admin");
+    const metaRole = (context.claims?.user_metadata as any)?.role;
+    const isAdmin = roles?.some((r: any) => r.role === "admin") || profile?.role === "admin" || metaRole === "admin";
     if (!isAdmin) throw new Error("Unauthorized");
 
     // Fetch all profiles
@@ -105,13 +111,19 @@ export const updateUserRoleForAdmin = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     // Check if user is admin
-    const { data: roles, error: rolesError } = await context.supabase
+    const { data: profile } = await context.supabase
+      .from("profiles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+
+    const { data: roles } = await context.supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", context.userId);
 
-    if (rolesError) throw new Error(rolesError.message);
-    const isAdmin = roles?.some((r: any) => r.role === "admin");
+    const metaRole = (context.claims?.user_metadata as any)?.role;
+    const isAdmin = roles?.some((r: any) => r.role === "admin") || profile?.role === "admin" || metaRole === "admin";
     if (!isAdmin) throw new Error("Unauthorized");
 
     // First delete existing role for user
@@ -145,13 +157,19 @@ export const deleteUserByAdmin = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     // Check if user is admin
-    const { data: roles, error: rolesError } = await context.supabase
+    const { data: profile } = await context.supabase
+      .from("profiles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+
+    const { data: roles } = await context.supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", context.userId);
 
-    if (rolesError) throw new Error(rolesError.message);
-    const isAdmin = roles?.some((r: any) => r.role === "admin");
+    const metaRole = (context.claims?.user_metadata as any)?.role;
+    const isAdmin = roles?.some((r: any) => r.role === "admin") || profile?.role === "admin" || metaRole === "admin";
     if (!isAdmin) throw new Error("Unauthorized");
 
     // Call the RPC
@@ -161,5 +179,14 @@ export const deleteUserByAdmin = createServerFn({ method: "POST" })
 
     if (error) throw new Error(error.message);
 
+    return { ok: true };
+  });
+
+export const deleteOwnAccount = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(context.userId);
+    if (error) throw new Error(error.message);
     return { ok: true };
   });
