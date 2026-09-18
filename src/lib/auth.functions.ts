@@ -74,8 +74,9 @@ export const getAllUsersForAdmin = createServerFn({ method: "GET" })
     const isAdmin = roles?.some((r: any) => r.role === "admin") || profile?.role === "admin" || metaRole === "admin";
     if (!isAdmin) throw new Error("Unauthorized");
 
-    // Fetch all profiles
-    const { data: profiles, error: profilesError } = await context.supabase
+    // Fetch all profiles using service role key to bypass RLS
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: profiles, error: profilesError } = await supabaseAdmin
       .from("profiles")
       .select("*")
       .order("created_at", { ascending: false });
@@ -83,7 +84,7 @@ export const getAllUsersForAdmin = createServerFn({ method: "GET" })
     if (profilesError) throw new Error(profilesError.message);
 
     // Fetch all roles to map to profiles
-    const { data: allRoles, error: allRolesError } = await context.supabase
+    const { data: allRoles, error: allRolesError } = await supabaseAdmin
       .from("user_roles")
       .select("*");
 
@@ -125,24 +126,25 @@ export const updateUserRoleForAdmin = createServerFn({ method: "POST" })
     const metaRole = (context.claims?.user_metadata as any)?.role;
     const isAdmin = roles?.some((r: any) => r.role === "admin") || profile?.role === "admin" || metaRole === "admin";
     if (!isAdmin) throw new Error("Unauthorized");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // First delete existing role for user
-    const { error: deleteError } = await context.supabase
+    
+    const { error: deleteError } = await supabaseAdmin
       .from("user_roles")
       .delete()
       .eq("user_id", data.targetUserId);
 
     if (deleteError) throw new Error(deleteError.message);
 
-    // Insert new role
-    const { error: insertError } = await context.supabase
+
+    const { error: insertError } = await supabaseAdmin
       .from("user_roles")
       .insert({ user_id: data.targetUserId, role: data.newRole });
 
     if (insertError) throw new Error(insertError.message);
 
     // Update profiles role as well to keep them in sync
-    await context.supabase
+    await supabaseAdmin
       .from("profiles")
       .update({ role: data.newRole })
       .eq("user_id", data.targetUserId);
@@ -185,8 +187,7 @@ export const deleteUserByAdmin = createServerFn({ method: "POST" })
 export const deleteOwnAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.auth.admin.deleteUser(context.userId);
+    const { error } = await context.supabase.rpc("delete_own_account");
     if (error) throw new Error(error.message);
     return { ok: true };
   });

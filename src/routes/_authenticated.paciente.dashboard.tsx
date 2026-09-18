@@ -11,9 +11,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { ProposalForm } from "@/components/proposal-form";
 
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/paciente/dashboard")({
   head: () => ({
@@ -40,12 +38,7 @@ function PatientDashboard() {
         router.navigate({ to: "/admin/dashboard", replace: true });
         return;
       }
-
-      if (role === "patient") {
-        router.navigate({ to: "/paciente/dashboard", replace: true });
-        return;
-      }
-    })
+    });
   }, [router]);
 
   const fetchApplications = useServerFn(getMyLoanApplications);
@@ -56,20 +49,6 @@ function PatientDashboard() {
   });
 
   const applications = data?.applications ?? [];
-
-  async function handleClaimAdmin() {
-    try {
-      const { error } = await supabase.rpc("claim_first_admin");
-      if (error) throw error;
-      toast.success("Agora você é administrador! Redirecionando...");
-      localStorage.setItem("user_role_hint", "admin");
-      const { data: { user } } = await supabase.auth.getUser();
-      if(user) localStorage.setItem(`user_role_${user.id}`, "admin");
-      window.location.href = "/admin/dashboard";
-    } catch (err: any) {
-      toast.error(err.message || "Erro ao virar admin");
-    }
-  }
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -83,9 +62,6 @@ function PatientDashboard() {
                 Acompanhe o status das suas propostas de financiamento.
               </p>
             </div>
-            <Button variant="outline" size="sm" onClick={handleClaimAdmin}>
-              Virar Admin (Dev)
-            </Button>
           </div>
 
           <div className="mt-8 grid gap-6 md:grid-cols-3">

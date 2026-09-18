@@ -71,18 +71,18 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 function ClinicDashboard() {
   const router = useRouter();
   useEffect(() => {
-    getAuthenticatedUserRole().then((role) => {
-      if (role === "patient") {
-        router.navigate({ to: "/paciente/dashboard", replace: true });
-        return;
-      }
+    getAuthenticatedUserRole().then(async (role) => {
       if (role === "admin") {
         router.navigate({ to: "/admin/dashboard", replace: true });
         return;
       }
-
-      if (role === "clinic") {
-        return;
+      if (role !== "clinic") {
+        try {
+          const { setAccountAsClinic } = await import("@/lib/auth-client");
+          await setAccountAsClinic();
+        } catch {
+          // Ignore
+        }
       }
     });
   }, [router]);

@@ -167,6 +167,10 @@ export type Database = {
           full_name: string | null
           id: string
           phone: string | null
+          address: string | null
+          city: string | null
+          state: string | null
+          zip_code: string | null
           role: Database["public"]["Enums"]["app_role"]
           updated_at: string
           user_id: string
@@ -178,6 +182,10 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          address?: string | null
+          city?: string | null
+          state?: string | null
+          zip_code?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
           user_id: string
@@ -189,6 +197,10 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          address?: string | null
+          city?: string | null
+          state?: string | null
+          zip_code?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
           user_id?: string
@@ -227,6 +239,10 @@ export type Database = {
           _full_name: string
           _phone: string
           _role: string
+          _address?: string
+          _city?: string
+          _state?: string
+          _zip_code?: string
         }
         Returns: undefined
       }
@@ -240,6 +256,13 @@ export type Database = {
       is_clinic_member: {
         Args: { _clinic_id: string; _user_id: string }
         Returns: boolean
+      }
+      delete_own_account: { Args: Record<PropertyKey, never>; Returns: undefined }
+      delete_user_by_admin: {
+        Args: {
+          target_user_id: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

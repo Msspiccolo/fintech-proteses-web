@@ -15,11 +15,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { lovable } from "@/integrations/lovable";
 import { signUpWithPassword, signInWithPassword, resetPasswordForEmail } from "@/lib/auth-client";
-import { Chrome } from "lucide-react";
+import { Chrome, User, Building2 } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (search: Record<string, unknown>): { tipo?: "clinica" } =>
@@ -52,6 +53,10 @@ const registerSchema = z
     email: z.string().email("Email inválido"),
     document: z.string().min(11, "Documento inválido").max(18, "Documento inválido"),
     phone: z.string().min(10, "Telefone inválido").max(20, "Telefone inválido"),
+    zipCode: z.string().min(8, "CEP inválido").max(9, "CEP inválido"),
+    address: z.string().min(3, "Logradouro obrigatório"),
+    city: z.string().min(2, "Cidade obrigatória"),
+    state: z.string().length(2, "UF deve ter 2 letras"),
     password: z.string().min(6, "Mínimo 6 caracteres"),
     confirmPassword: z.string().min(6, "Mínimo 6 caracteres"),
     role: z.enum(["patient", "clinic", "admin"]),
@@ -90,14 +95,18 @@ function AuthPage() {
       email: "",
       document: "",
       phone: "",
+      zipCode: "",
+      address: "",
+      city: "",
+      state: "",
       password: "",
       confirmPassword: "",
-      role: "admin", // FORÇADO PARA ADMIN PARA RECUPERAÇÃO
+      role: tipo === "clinica" ? "clinic" : "patient",
       clinicName: "",
     },
   });
 
-  const selectedRole = registerForm.watch("role");
+  const [selectedRole, setSelectedRole] = useState<"patient" | "clinic">(tipo === "clinica" ? "clinic" : "patient");
 
   async function onGoogleSignIn() {
     setError(null);
@@ -148,6 +157,7 @@ function AuthPage() {
   }
 
   async function onRegister(values: RegisterForm) {
+    console.log("[Auth] Registering with values:", values);
     setError(null);
     try {
       const { needsEmailConfirmation } = await signUpWithPassword({
@@ -156,6 +166,10 @@ function AuthPage() {
         fullName: values.fullName,
         document: values.document,
         phone: values.phone,
+        zipCode: values.zipCode,
+        address: values.address,
+        city: values.city,
+        state: values.state,
         role: values.role,
         clinicName: values.clinicName,
       });
@@ -170,6 +184,17 @@ function AuthPage() {
       setError(err instanceof Error ? err.message : "Erro ao criar conta");
     }
   }
+
+  const onRegisterError = (errors: Record<string, any>) => {
+    console.warn("[Auth] Register validation errors:", errors);
+    const firstKey = Object.keys(errors)[0];
+    const firstError = errors[firstKey];
+    if (firstError?.message) {
+      toast.error(firstError.message);
+    } else {
+      toast.error("Preencha todos os campos obrigatórios para continuar.");
+    }
+  };
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -329,25 +354,67 @@ function AuthPage() {
                   </div>
                 </div>
                 <Form {...registerForm}>
-                  <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
+                  <form onSubmit={registerForm.handleSubmit(onRegister, onRegisterError)} className="space-y-4">
                     <FormField
                       control={registerForm.control}
                       name="role"
                       render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="space-y-2">
                           <FormLabel>Tipo de conta</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione o tipo de conta" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="patient">Sou paciente</SelectItem>
-                              <SelectItem value="clinic">Sou clínica</SelectItem>
-                              <SelectItem value="admin">Administrador (Recuperação)</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <div className="grid grid-cols-2 gap-3">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                console.log("[Auth] Switching role to patient");
+                                setSelectedRole("patient");
+                                field.onChange("patient");
+                                registerForm.setValue("role", "patient");
+                              }}
+                              className={cn(
+                                "flex items-center justify-between rounded-lg border-2 p-3.5 text-sm font-semibold transition-all cursor-pointer",
+                                selectedRole === "patient"
+                                  ? "border-primary bg-primary/10 text-primary shadow-sm ring-2 ring-primary/20"
+                                  : "border-border bg-card text-muted-foreground hover:bg-muted/50"
+                              )}
+                            >
+                              <div className="flex items-center gap-2">
+                                <User size={18} />
+                                <span>Sou paciente</span>
+                              </div>
+                              <div className={cn(
+                                "h-4 w-4 rounded-full border flex items-center justify-center shrink-0",
+                                selectedRole === "patient" ? "border-primary bg-primary" : "border-muted-foreground/40"
+                              )}>
+                                {selectedRole === "patient" && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
+                              </div>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                console.log("[Auth] Switching role to clinic");
+                                setSelectedRole("clinic");
+                                field.onChange("clinic");
+                                registerForm.setValue("role", "clinic");
+                              }}
+                              className={cn(
+                                "flex items-center justify-between rounded-lg border-2 p-3.5 text-sm font-semibold transition-all cursor-pointer",
+                                selectedRole === "clinic"
+                                  ? "border-primary bg-primary/10 text-primary shadow-sm ring-2 ring-primary/20"
+                                  : "border-border bg-card text-muted-foreground hover:bg-muted/50"
+                              )}
+                            >
+                              <div className="flex items-center gap-2">
+                                <Building2 size={18} />
+                                <span>Sou clínica</span>
+                              </div>
+                              <div className={cn(
+                                "h-4 w-4 rounded-full border flex items-center justify-center shrink-0",
+                                selectedRole === "clinic" ? "border-primary bg-primary" : "border-muted-foreground/40"
+                              )}>
+                                {selectedRole === "clinic" && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
+                              </div>
+                            </button>
+                          </div>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -423,6 +490,60 @@ function AuthPage() {
                         )}
                       />
                     </div>
+                    <div className="grid grid-cols-4 gap-4">
+                      <FormField
+                        control={registerForm.control}
+                        name="zipCode"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>CEP</FormLabel>
+                            <FormControl>
+                              <Input placeholder="00000-000" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={registerForm.control}
+                        name="city"
+                        render={({ field }) => (
+                          <FormItem className="col-span-2">
+                            <FormLabel>Cidade</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Sua cidade" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={registerForm.control}
+                        name="state"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>UF</FormLabel>
+                            <FormControl>
+                              <Input placeholder="SP" maxLength={2} className="uppercase" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <FormField
+                      control={registerForm.control}
+                      name="address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Logradouro (Rua, Número)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Av. Principal, 123" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <FormField
                       control={registerForm.control}
                       name="password"

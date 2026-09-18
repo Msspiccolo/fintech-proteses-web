@@ -29,11 +29,19 @@ function ProfilePage() {
     document: string;
     phone: string;
     email: string;
+    address: string;
+    city: string;
+    state: string;
+    zip_code: string;
   }>({
     full_name: "",
     document: "",
     phone: "",
     email: "",
+    address: "",
+    city: "",
+    state: "",
+    zip_code: "",
   });
 
   useEffect(() => {
@@ -55,6 +63,10 @@ function ProfilePage() {
           document: data?.document || user.user_metadata?.document || "",
           phone: data?.phone || user.user_metadata?.phone || "",
           email: user.email || "",
+          address: data?.address || user.user_metadata?.address || "",
+          city: data?.city || user.user_metadata?.city || "",
+          state: data?.state || user.user_metadata?.state || "",
+          zip_code: data?.zip_code || user.user_metadata?.zip_code || "",
         });
       } catch (err: any) {
         toast.error("Erro ao carregar perfil: " + err.message);
@@ -78,6 +90,10 @@ function ProfilePage() {
           full_name: profile.full_name,
           document: profile.document,
           phone: profile.phone,
+          address: profile.address,
+          city: profile.city,
+          state: profile.state,
+          zip_code: profile.zip_code,
         })
         .eq("user_id", user.id);
 
@@ -89,6 +105,10 @@ function ProfilePage() {
           full_name: profile.full_name,
           document: profile.document,
           phone: profile.phone,
+          address: profile.address,
+          city: profile.city,
+          state: profile.state,
+          zip_code: profile.zip_code,
         }
       };
 
@@ -165,6 +185,43 @@ function ProfilePage() {
                         value={profile.phone}
                         onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
                         required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Endereço (Rua, Número, Bairro)</Label>
+                    <Input
+                      id="address"
+                      value={profile.address}
+                      onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="grid gap-6 md:grid-cols-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="city">Cidade</Label>
+                      <Input
+                        id="city"
+                        value={profile.city}
+                        onChange={(e) => setProfile({ ...profile, city: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="state">Estado (UF)</Label>
+                      <Input
+                        id="state"
+                        value={profile.state}
+                        onChange={(e) => setProfile({ ...profile, state: e.target.value })}
+                        maxLength={2}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="zip_code">CEP</Label>
+                      <Input
+                        id="zip_code"
+                        value={profile.zip_code}
+                        onChange={(e) => setProfile({ ...profile, zip_code: e.target.value })}
                       />
                     </div>
                   </div>
