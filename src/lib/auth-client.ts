@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { supabase } from "@/integrations/supabase/client";
 
 export interface SignUpInput {
@@ -6,15 +7,12 @@ export interface SignUpInput {
   fullName: string;
   document: string;
   phone: string;
-  zipCode: string;
-  address: string;
-  city: string;
-  state: string;
-  role: "patient" | "clinic" | "admin";
-  clinicName?: string;
   zipCode?: string;
   address?: string;
   city?: string;
+  state: string;
+  role: "patient" | "clinic" | "admin";
+  clinicName?: string;
 }
 
 export async function completeSignup(input: Omit<SignUpInput, "email" | "password">) {
@@ -90,9 +88,6 @@ export async function signUpWithPassword(input: SignUpInput) {
         app_role: input.role,
         tipo: input.role,
         clinic_name: input.clinicName,
-        zip_code: input.zipCode,
-        address: input.address,
-        city: input.city,
       },
     },
   });
@@ -254,7 +249,9 @@ export async function getAuthenticatedUserRole(): Promise<"patient" | "clinic" |
         }
         return "admin";
       }
-    } catch {}
+    } catch {
+      // ignore error
+    }
 
     const { data: rolesData } = await supabase
       .from("user_roles")
@@ -353,7 +350,9 @@ export async function getAuthenticatedUserRole(): Promise<"patient" | "clinic" |
         _role: "clinic",
       });
       if (isClinicRpc) return "clinic";
-    } catch {}
+    } catch {
+      // ignore error
+    }
 
     if (rolesData && rolesData.length > 0) {
       const roles = rolesData.map((r) => String(r.role).toLowerCase());
