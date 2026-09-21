@@ -62,9 +62,7 @@ function AdminSetupPage() {
               <p className="text-muted-foreground">Carregando...</p>
             ) : isAdmin ? (
               <>
-                <p className="text-muted-foreground">
-                  Sua conta já possui acesso administrativo.
-                </p>
+                <p className="text-muted-foreground">Sua conta já possui acesso administrativo.</p>
                 <Button onClick={() => router.navigate({ to: "/admin/dashboard" })}>
                   Ir para o painel administrativo
                 </Button>

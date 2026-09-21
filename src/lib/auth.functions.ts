@@ -71,7 +71,10 @@ export const getAllUsersForAdmin = createServerFn({ method: "GET" })
       .eq("user_id", context.userId);
 
     const metaRole = (context.claims?.user_metadata as any)?.role;
-    const isAdmin = roles?.some((r: any) => r.role === "admin") || profile?.role === "admin" || metaRole === "admin";
+    const isAdmin =
+      roles?.some((r: any) => r.role === "admin") ||
+      profile?.role === "admin" ||
+      metaRole === "admin";
     if (!isAdmin) throw new Error("Unauthorized");
 
     // Fetch all profiles using service role key to bypass RLS
@@ -124,18 +127,19 @@ export const updateUserRoleForAdmin = createServerFn({ method: "POST" })
       .eq("user_id", context.userId);
 
     const metaRole = (context.claims?.user_metadata as any)?.role;
-    const isAdmin = roles?.some((r: any) => r.role === "admin") || profile?.role === "admin" || metaRole === "admin";
+    const isAdmin =
+      roles?.some((r: any) => r.role === "admin") ||
+      profile?.role === "admin" ||
+      metaRole === "admin";
     if (!isAdmin) throw new Error("Unauthorized");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    
     const { error: deleteError } = await supabaseAdmin
       .from("user_roles")
       .delete()
       .eq("user_id", data.targetUserId);
 
     if (deleteError) throw new Error(deleteError.message);
-
 
     const { error: insertError } = await supabaseAdmin
       .from("user_roles")
@@ -154,9 +158,7 @@ export const updateUserRoleForAdmin = createServerFn({ method: "POST" })
 
 export const deleteUserByAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: unknown) =>
-    z.object({ targetUserId: z.string().uuid() }).parse(data)
-  )
+  .validator((data: unknown) => z.object({ targetUserId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     // Check if user is admin
     const { data: profile } = await context.supabase
@@ -171,7 +173,10 @@ export const deleteUserByAdmin = createServerFn({ method: "POST" })
       .eq("user_id", context.userId);
 
     const metaRole = (context.claims?.user_metadata as any)?.role;
-    const isAdmin = roles?.some((r: any) => r.role === "admin") || profile?.role === "admin" || metaRole === "admin";
+    const isAdmin =
+      roles?.some((r: any) => r.role === "admin") ||
+      profile?.role === "admin" ||
+      metaRole === "admin";
     if (!isAdmin) throw new Error("Unauthorized");
 
     // Call the RPC

@@ -24,9 +24,18 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell
+  Cell,
 } from "recharts";
-import { DollarSign, Activity, Users, CreditCard, TrendingUp, Package, AlertCircle, FileText } from "lucide-react";
+import {
+  DollarSign,
+  Activity,
+  Users,
+  CreditCard,
+  TrendingUp,
+  Package,
+  AlertCircle,
+  FileText,
+} from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/clinica/dashboard")({
   head: () => ({
@@ -47,15 +56,33 @@ const MOCK_PROSTHETICS_DATA = [
   { name: "Pé em Fibra de Carbono", vendas: 32, valor: 160000 },
   { name: "Braço Mioelétrico", vendas: 28, valor: 336000 },
   { name: "Prótese Transfemoral", vendas: 15, valor: 120000 },
-  { name: "Mão Robótica", vendas: 10, valor: 250000 }
+  { name: "Mão Robótica", vendas: 10, valor: 250000 },
 ];
 
 const MOCK_CLIENTS_DATA = [
   { id: 1, name: "João Carlos Silva", propostas: 2, statusPagamento: "Em dia", valorTotal: 150000 },
-  { id: 2, name: "Maria Fernanda Oliveira", propostas: 1, statusPagamento: "Em atraso", valorTotal: 45000 },
-  { id: 3, name: "Pedro Henrique Santos", propostas: 3, statusPagamento: "Em dia", valorTotal: 210000 },
+  {
+    id: 2,
+    name: "Maria Fernanda Oliveira",
+    propostas: 1,
+    statusPagamento: "Em atraso",
+    valorTotal: 45000,
+  },
+  {
+    id: 3,
+    name: "Pedro Henrique Santos",
+    propostas: 3,
+    statusPagamento: "Em dia",
+    valorTotal: 210000,
+  },
   { id: 4, name: "Ana Beatriz Costa", propostas: 1, statusPagamento: "Em dia", valorTotal: 85000 },
-  { id: 5, name: "Roberto Alves", propostas: 1, statusPagamento: "Inadimplente", valorTotal: 120000 },
+  {
+    id: 5,
+    name: "Roberto Alves",
+    propostas: 1,
+    statusPagamento: "Inadimplente",
+    valorTotal: 120000,
+  },
 ];
 
 const MOCK_KPIS = {
@@ -66,31 +93,25 @@ const MOCK_KPIS = {
   protesesVendidas: 130,
 };
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
 function ClinicDashboard() {
   const router = useRouter();
   useEffect(() => {
-<<<<<<< HEAD
     let isMounted = true;
-    getAuthenticatedUserRole().then((role) => {
+    getAuthenticatedUserRole().then(async (role) => {
       if (!isMounted) return;
+
       if (role === "patient") {
         router.navigate({ to: "/paciente/dashboard", replace: true });
         return;
       }
-=======
-    getAuthenticatedUserRole().then(async (role) => {
->>>>>>> 84345997d8ce49ba0373f13686756579e649f0bf
+
       if (role === "admin") {
         router.navigate({ to: "/admin/dashboard", replace: true });
         return;
       }
-<<<<<<< HEAD
 
-      if (role === "clinic") {
-        return; // already here
-=======
       if (role !== "clinic") {
         try {
           const { setAccountAsClinic } = await import("@/lib/auth-client");
@@ -98,10 +119,11 @@ function ClinicDashboard() {
         } catch {
           // Ignore
         }
->>>>>>> 84345997d8ce49ba0373f13686756579e649f0bf
       }
     });
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const fetchApplications = useServerFn(getClinicLoanApplications);
@@ -167,25 +189,28 @@ function ClinicDashboard() {
 
   // Business Intelligence KPIs
   const { totalRevenue, ticketMedio, conversionRate, monthlyData } = useMemo(() => {
-    const approvedApps = applications.filter((a: any) => a.status === 'approved');
-    const total = approvedApps.reduce((acc: number, curr: any) => acc + Number(curr.requested_amount || 0), 0);
+    const approvedApps = applications.filter((a: any) => a.status === "approved");
+    const total = approvedApps.reduce(
+      (acc: number, curr: any) => acc + Number(curr.requested_amount || 0),
+      0,
+    );
     const ticket = approvedApps.length > 0 ? total / approvedApps.length : 0;
     const rate = applications.length > 0 ? (approvedApps.length / applications.length) * 100 : 0;
 
     // Aggregate by month for chart
     const monthlyAcc: Record<string, number> = {};
     applications.forEach((app: any) => {
-      if (app.status === 'approved') {
+      if (app.status === "approved") {
         const date = new Date(app.created_at);
-        const month = date.toLocaleString('pt-BR', { month: 'short' });
+        const month = date.toLocaleString("pt-BR", { month: "short" });
         monthlyAcc[month] = (monthlyAcc[month] || 0) + Number(app.requested_amount || 0);
       }
     });
 
     // Format for Recharts
-    const chartData = Object.keys(monthlyAcc).map(month => ({
+    const chartData = Object.keys(monthlyAcc).map((month) => ({
       name: month,
-      Total: monthlyAcc[month]
+      Total: monthlyAcc[month],
     }));
 
     // Add mock months if real data is empty or too small
@@ -193,7 +218,7 @@ function ClinicDashboard() {
       chartData.push(
         { name: "Jan", Total: 150000 },
         { name: "Fev", Total: 280000 },
-        { name: "Mar", Total: 190000 }
+        { name: "Mar", Total: 190000 },
       );
     }
 
@@ -201,7 +226,7 @@ function ClinicDashboard() {
       totalRevenue: total,
       ticketMedio: ticket,
       conversionRate: rate,
-      monthlyData: chartData.reverse() // naive ordering for mock mix
+      monthlyData: chartData.reverse(), // naive ordering for mock mix
     };
   }, [applications]);
 
@@ -218,7 +243,7 @@ function ClinicDashboard() {
               </p>
             </div>
 
-            {clinics.length > 0 && clinics[0].status === 'approved' && (
+            {clinics.length > 0 && clinics[0].status === "approved" && (
               <div className="flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-primary">
                 <Activity size={18} />
                 <span className="text-sm font-medium">Clínica Ativa e Verificada</span>
@@ -234,11 +259,15 @@ function ClinicDashboard() {
                   Complete o Cadastro da Sua Clínica
                 </CardTitle>
                 <CardDescription>
-                  Para começar a receber propostas e analisar métricas reais, precisamos dos dados da sua empresa.
+                  Para começar a receber propostas e analisar métricas reais, precisamos dos dados
+                  da sua empresa.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleRegisterClinic} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <form
+                  onSubmit={handleRegisterClinic}
+                  className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                >
                   {[
                     { key: "name", label: "Nome da clínica", required: true },
                     { key: "legalName", label: "Razão social" },
@@ -277,9 +306,7 @@ function ClinicDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{MOCK_KPIS.clientesCadastrados}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Pacientes da clínica
-                </p>
+                <p className="text-xs text-muted-foreground mt-1">Pacientes da clínica</p>
               </CardContent>
             </Card>
 
@@ -289,10 +316,10 @@ function ClinicDashboard() {
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{formatCurrency(MOCK_KPIS.valoresASeremPagos)}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Total em financiamentos
-                </p>
+                <div className="text-2xl font-bold">
+                  {formatCurrency(MOCK_KPIS.valoresASeremPagos)}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Total em financiamentos</p>
               </CardContent>
             </Card>
 
@@ -303,9 +330,7 @@ function ClinicDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{formatCurrency(MOCK_KPIS.valoresAVencer)}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Próximos 30 dias
-                </p>
+                <p className="text-xs text-muted-foreground mt-1">Próximos 30 dias</p>
               </CardContent>
             </Card>
 
@@ -315,10 +340,10 @@ function ClinicDashboard() {
                 <AlertCircle className="h-4 w-4 text-destructive" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-destructive">{MOCK_KPIS.clientesInadimplentes}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Clientes que não pagaram
-                </p>
+                <div className="text-2xl font-bold text-destructive">
+                  {MOCK_KPIS.clientesInadimplentes}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Clientes que não pagaram</p>
               </CardContent>
             </Card>
 
@@ -329,9 +354,7 @@ function ClinicDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{MOCK_KPIS.protesesVendidas}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Unidades financiadas
-                </p>
+                <p className="text-xs text-muted-foreground mt-1">Unidades financiadas</p>
               </CardContent>
             </Card>
           </div>
@@ -349,27 +372,46 @@ function ClinicDashboard() {
               <CardContent className="px-2 sm:px-6">
                 <div className="h-[300px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={monthlyData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <BarChart
+                      data={monthlyData}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                    >
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
                       <XAxis
                         dataKey="name"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: '#6b7280', fontSize: 12 }}
+                        tick={{ fill: "#6b7280", fontSize: 12 }}
                         dy={10}
                       />
                       <YAxis
-                        tickFormatter={(value: number) => Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact', maximumFractionDigits: 1 }).format(value)}
+                        tickFormatter={(value: number) =>
+                          Intl.NumberFormat("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                            notation: "compact",
+                            maximumFractionDigits: 1,
+                          }).format(value)
+                        }
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: '#6b7280', fontSize: 12 }}
+                        tick={{ fill: "#6b7280", fontSize: 12 }}
                       />
                       <RechartsTooltip
                         formatter={(value: number) => formatCurrency(value)}
-                        cursor={{ fill: 'transparent' }}
-                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                        cursor={{ fill: "transparent" }}
+                        contentStyle={{
+                          borderRadius: "8px",
+                          border: "none",
+                          boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                        }}
                       />
-                      <Bar dataKey="Total" fill="var(--color-primary)" radius={[4, 4, 0, 0]} maxBarSize={50} />
+                      <Bar
+                        dataKey="Total"
+                        fill="var(--color-primary)"
+                        radius={[4, 4, 0, 0]}
+                        maxBarSize={50}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -382,7 +424,9 @@ function ClinicDashboard() {
                   <Package className="h-5 w-5 text-primary" />
                   Próteses Mais Vendidas
                 </CardTitle>
-                <CardDescription>Distribuição por volume de unidades (Dados Inteligentes)</CardDescription>
+                <CardDescription>
+                  Distribuição por volume de unidades (Dados Inteligentes)
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="h-[300px] w-full flex items-center justify-center">
@@ -402,8 +446,12 @@ function ClinicDashboard() {
                         ))}
                       </Pie>
                       <RechartsTooltip
-                        formatter={(value: number) => [`${value} unidades`, 'Vendas']}
-                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                        formatter={(value: number) => [`${value} unidades`, "Vendas"]}
+                        contentStyle={{
+                          borderRadius: "8px",
+                          border: "none",
+                          boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                        }}
                       />
                     </PieChart>
                   </ResponsiveContainer>
@@ -411,7 +459,10 @@ function ClinicDashboard() {
                 <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
                   {MOCK_PROSTHETICS_DATA.slice(0, 4).map((item, i) => (
                     <div key={item.name} className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }}></div>
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: COLORS[i % COLORS.length] }}
+                      ></div>
                       <span className="truncate text-muted-foreground">{item.name}</span>
                     </div>
                   ))}
@@ -440,9 +491,7 @@ function ClinicDashboard() {
                   <tbody className="divide-y">
                     {MOCK_CLIENTS_DATA.map((client) => (
                       <tr key={client.id} className="hover:bg-muted/30 transition-colors">
-                        <td className="px-6 py-4 font-medium text-foreground">
-                          {client.name}
-                        </td>
+                        <td className="px-6 py-4 font-medium text-foreground">{client.name}</td>
                         <td className="px-6 py-4 text-center">
                           <span className="inline-flex items-center justify-center bg-secondary w-8 h-8 rounded-full font-bold text-secondary-foreground">
                             {client.propostas}
@@ -452,11 +501,13 @@ function ClinicDashboard() {
                           {formatCurrency(client.valorTotal)}
                         </td>
                         <td className="px-6 py-4">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
-                            ${client.statusPagamento === 'Em dia' ? 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' : ''}
-                            ${client.statusPagamento === 'Em atraso' ? 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800' : ''}
-                            ${client.statusPagamento === 'Inadimplente' ? 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800' : ''}
-                          `}>
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
+                            ${client.statusPagamento === "Em dia" ? "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800" : ""}
+                            ${client.statusPagamento === "Em atraso" ? "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800" : ""}
+                            ${client.statusPagamento === "Inadimplente" ? "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800" : ""}
+                          `}
+                          >
                             {client.statusPagamento}
                           </span>
                         </td>
@@ -473,4 +524,3 @@ function ClinicDashboard() {
     </div>
   );
 }
-

@@ -5,13 +5,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getAllLoanApplications, updateLoanApplication } from "@/lib/loans.functions";
 import { getAllClinicsForAdmin, updateClinicStatus } from "@/lib/clinics.functions";
-import { getAllUsersForAdmin, updateUserRoleForAdmin, deleteUserByAdmin } from "@/lib/auth.functions";
+import {
+  getAllUsersForAdmin,
+  updateUserRoleForAdmin,
+  deleteUserByAdmin,
+} from "@/lib/auth.functions";
 import { StatusBadge } from "@/components/status-badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -54,7 +64,11 @@ function AdminDashboard() {
   const fetchClinics = useServerFn(getAllClinicsForAdmin);
   const updateClinic = useServerFn(updateClinicStatus);
 
-  const { data: clinicsData, isLoading: isLoadingClinics, refetch: refetchClinics } = useQuery({
+  const {
+    data: clinicsData,
+    isLoading: isLoadingClinics,
+    refetch: refetchClinics,
+  } = useQuery({
     queryKey: ["all-clinics-admin"],
     queryFn: () => fetchClinics({ data: undefined }),
   });
@@ -73,7 +87,12 @@ function AdminDashboard() {
 
   const fetchUsers = useServerFn(getAllUsersForAdmin);
   const updateUserRole = useServerFn(updateUserRoleForAdmin);
-  const { data: usersData, isLoading: isLoadingUsers, refetch: refetchUsers, error: usersError } = useQuery({
+  const {
+    data: usersData,
+    isLoading: isLoadingUsers,
+    refetch: refetchUsers,
+    error: usersError,
+  } = useQuery({
     queryKey: ["all-users-admin"],
     queryFn: () => fetchUsers({ data: undefined }),
   });
@@ -108,7 +127,6 @@ function AdminDashboard() {
     }
   }
 
-
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
@@ -129,7 +147,9 @@ function AdminDashboard() {
               <div className="grid gap-6 md:grid-cols-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      Total
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-3xl font-bold text-foreground">{applications.length}</p>
@@ -199,7 +219,9 @@ function AdminDashboard() {
                           </div>
                           <div>
                             <p className="text-sm text-muted-foreground">Valor</p>
-                            <p className="text-foreground">{formatCurrency(app.requested_amount)}</p>
+                            <p className="text-foreground">
+                              {formatCurrency(app.requested_amount)}
+                            </p>
                             <p className="text-xs text-muted-foreground">
                               {app.installments}x de {formatCurrency(app.monthly_payment)}
                             </p>
@@ -238,7 +260,9 @@ function AdminDashboard() {
               <div className="grid gap-6 md:grid-cols-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      Total
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-3xl font-bold text-foreground">{clinics.length}</p>
@@ -295,19 +319,13 @@ function AdminDashboard() {
                         <CardContent className="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between">
                           <div>
                             <p className="text-sm text-muted-foreground">Clínica</p>
-                            <p className="text-lg font-semibold text-foreground">
-                              {clinic.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {clinic.document}
-                            </p>
+                            <p className="text-lg font-semibold text-foreground">{clinic.name}</p>
+                            <p className="text-xs text-muted-foreground">{clinic.document}</p>
                           </div>
                           <div>
                             <p className="text-sm text-muted-foreground">Contato</p>
                             <p className="text-foreground">{clinic.email ?? "—"}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {clinic.phone ?? "—"}
-                            </p>
+                            <p className="text-xs text-muted-foreground">{clinic.phone ?? "—"}</p>
                           </div>
                           <div>
                             <p className="text-sm text-muted-foreground">Localização</p>
@@ -325,7 +343,10 @@ function AdminDashboard() {
                           </div>
                           {clinic.status === "pending" && (
                             <div className="flex gap-2">
-                              <Button size="sm" onClick={() => handleClinicStatus(clinic.id, "approved")}>
+                              <Button
+                                size="sm"
+                                onClick={() => handleClinicStatus(clinic.id, "approved")}
+                              >
                                 Aprovar
                               </Button>
                               <Button
@@ -373,13 +394,26 @@ function AdminDashboard() {
                                 {user.full_name || "Não informado"}
                               </td>
                               <td className="px-6 py-4">
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
-                                  ${(user.roles?.includes('admin') || user.role === 'admin') ? 'bg-purple-100 text-purple-800 border-purple-200' :
-                                    (user.roles?.includes('clinic') || user.role === 'clinic' || user.role === 'clinica') ? 'bg-blue-100 text-blue-800 border-blue-200' :
-                                      'bg-green-100 text-green-800 border-green-200'}
-                                `}>
-                                  {(user.roles?.includes('admin') || user.role === 'admin') ? 'Administrador' :
-                                    (user.roles?.includes('clinic') || user.role === 'clinic' || user.role === 'clinica') ? 'Clínica' : 'Paciente'}
+                                <span
+                                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
+                                  ${
+                                    user.roles?.includes("admin") || user.role === "admin"
+                                      ? "bg-purple-100 text-purple-800 border-purple-200"
+                                      : user.roles?.includes("clinic") ||
+                                          user.role === "clinic" ||
+                                          user.role === "clinica"
+                                        ? "bg-blue-100 text-blue-800 border-blue-200"
+                                        : "bg-green-100 text-green-800 border-green-200"
+                                  }
+                                `}
+                                >
+                                  {user.roles?.includes("admin") || user.role === "admin"
+                                    ? "Administrador"
+                                    : user.roles?.includes("clinic") ||
+                                        user.role === "clinic" ||
+                                        user.role === "clinica"
+                                      ? "Clínica"
+                                      : "Paciente"}
                                 </span>
                               </td>
                               <td className="px-6 py-4 text-muted-foreground">
@@ -395,7 +429,9 @@ function AdminDashboard() {
                                 <div className="flex items-center gap-2">
                                   <Select
                                     defaultValue={user.roles?.[0] || user.role || "patient"}
-                                    onValueChange={(val: "patient" | "clinic" | "admin") => handleRoleChange(user.user_id, val)}
+                                    onValueChange={(val: "patient" | "clinic" | "admin") =>
+                                      handleRoleChange(user.user_id, val)
+                                    }
                                   >
                                     <SelectTrigger className="w-[140px] h-8 text-xs">
                                       <SelectValue placeholder="Cargo" />
@@ -406,9 +442,9 @@ function AdminDashboard() {
                                       <SelectItem value="admin">Administrador</SelectItem>
                                     </SelectContent>
                                   </Select>
-                                  <Button 
-                                    variant="destructive" 
-                                    size="sm" 
+                                  <Button
+                                    variant="destructive"
+                                    size="sm"
                                     className="h-8 px-2"
                                     onClick={() => handleDeleteUser(user.user_id)}
                                   >
@@ -428,7 +464,9 @@ function AdminDashboard() {
 
             <TabsContent value="settings" className="mt-6 space-y-6">
               <div>
-                <h2 className="text-xl font-semibold text-foreground mb-4">Configurações do Sistema</h2>
+                <h2 className="text-xl font-semibold text-foreground mb-4">
+                  Configurações do Sistema
+                </h2>
                 <div className="grid gap-6 md:grid-cols-2 max-w-4xl">
                   <Card>
                     <CardHeader>
@@ -447,7 +485,10 @@ function AdminDashboard() {
                         <Label htmlFor="downPaymentMin">Entrada Mínima (%)</Label>
                         <Input id="downPaymentMin" type="number" defaultValue="20" />
                       </div>
-                      <Button className="w-full mt-2" onClick={() => toast.success("Configurações salvas")}>
+                      <Button
+                        className="w-full mt-2"
+                        onClick={() => toast.success("Configurações salvas")}
+                      >
                         Salvar Taxas
                       </Button>
                     </CardContent>

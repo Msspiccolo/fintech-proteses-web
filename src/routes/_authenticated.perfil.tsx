@@ -47,9 +47,11 @@ function ProfilePage() {
   useEffect(() => {
     async function loadProfile() {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (!user) return;
-        
+
         const { data, error } = await supabase
           .from("profiles")
           .select("*")
@@ -57,7 +59,7 @@ function ProfilePage() {
           .maybeSingle();
 
         if (error) throw error;
-        
+
         setProfile({
           full_name: data?.full_name || user.user_metadata?.full_name || "",
           document: data?.document || user.user_metadata?.document || "",
@@ -81,7 +83,9 @@ function ProfilePage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
       const { error } = await supabase
@@ -98,7 +102,7 @@ function ProfilePage() {
         .eq("user_id", user.id);
 
       if (error) throw error;
-      
+
       // Update auth metadata and email optionally
       const updateData: any = {
         data: {
@@ -109,7 +113,7 @@ function ProfilePage() {
           city: profile.city,
           state: profile.state,
           zip_code: profile.zip_code,
-        }
+        },
       };
 
       if (profile.email !== user.email) {
@@ -135,9 +139,7 @@ function ProfilePage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-2xl font-bold">Meu Perfil</CardTitle>
-              <CardDescription>
-                Atualize suas informações pessoais abaixo.
-              </CardDescription>
+              <CardDescription>Atualize suas informações pessoais abaixo.</CardDescription>
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -155,9 +157,11 @@ function ProfilePage() {
                       onChange={(e) => setProfile({ ...profile, email: e.target.value })}
                       required
                     />
-                    <p className="text-xs text-muted-foreground">Ao alterar o email, pode ser necessário confirmar o novo endereço.</p>
+                    <p className="text-xs text-muted-foreground">
+                      Ao alterar o email, pode ser necessário confirmar o novo endereço.
+                    </p>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="full_name">Nome Completo</Label>
                     <Input
@@ -231,8 +235,12 @@ function ProfilePage() {
                       type="button"
                       variant="destructive"
                       onClick={async () => {
-                        if (confirm("Tem certeza que deseja apagar sua conta? Isso não pode ser desfeito.")) {
-                            try {
+                        if (
+                          confirm(
+                            "Tem certeza que deseja apagar sua conta? Isso não pode ser desfeito.",
+                          )
+                        ) {
+                          try {
                             await deleteAccount({ data: undefined });
                             await supabase.auth.signOut();
                             window.location.href = "/";

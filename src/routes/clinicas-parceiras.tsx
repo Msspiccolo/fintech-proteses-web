@@ -175,7 +175,9 @@ function ClinicasParceirasPage() {
               </div>
             ) : (
               <>
-                <h2 className="mb-6 text-xl font-semibold text-foreground">Cadastre sua clínica:</h2>
+                <h2 className="mb-6 text-xl font-semibold text-foreground">
+                  Cadastre sua clínica:
+                </h2>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <FormField

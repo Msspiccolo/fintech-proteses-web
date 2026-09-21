@@ -77,7 +77,9 @@ type RegisterForm = z.infer<typeof registerSchema>;
 function AuthPage() {
   const navigate = useNavigate();
   const { tipo } = Route.useSearch();
-  const [mode, setMode] = useState<"login" | "register" | "forgot_password">(tipo === "clinica" ? "register" : "login");
+  const [mode, setMode] = useState<"login" | "register" | "forgot_password">(
+    tipo === "clinica" ? "register" : "login",
+  );
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -112,7 +114,9 @@ function AuthPage() {
     },
   });
 
-  const [selectedRole, setSelectedRole] = useState<"patient" | "clinic">(tipo === "clinica" ? "clinic" : "patient");
+  const [selectedRole, setSelectedRole] = useState<"patient" | "clinic">(
+    tipo === "clinica" ? "clinic" : "patient",
+  );
 
   async function onGoogleSignIn() {
     setError(null);
@@ -336,7 +340,9 @@ function AuthPage() {
                       )}
                     />
                     {error && <p className="text-sm text-destructive">{error}</p>}
-                    {success && <p className="text-sm text-green-600 dark:text-green-400">{success}</p>}
+                    {success && (
+                      <p className="text-sm text-green-600 dark:text-green-400">{success}</p>
+                    )}
                     <Button type="submit" className="w-full">
                       Enviar link
                     </Button>
@@ -372,29 +378,16 @@ function AuthPage() {
                   </div>
                 </div>
                 <Form {...registerForm}>
-                  <form onSubmit={registerForm.handleSubmit(onRegister, onRegisterError)} className="space-y-4">
+                  <form
+                    onSubmit={registerForm.handleSubmit(onRegister, onRegisterError)}
+                    className="space-y-4"
+                  >
                     <FormField
                       control={registerForm.control}
                       name="role"
                       render={({ field }) => (
                         <FormItem className="space-y-2">
                           <FormLabel>Tipo de conta</FormLabel>
-<<<<<<< HEAD
-                          <Select 
-                            onValueChange={(val) => registerForm.setValue("role", val as "patient" | "clinic", { shouldValidate: true })} 
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione o tipo de conta" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="patient">Sou paciente</SelectItem>
-                              <SelectItem value="clinic">Sou clínica</SelectItem>
-                            </SelectContent>
-                          </Select>
-=======
                           <div className="grid grid-cols-2 gap-3">
                             <button
                               type="button"
@@ -408,18 +401,24 @@ function AuthPage() {
                                 "flex items-center justify-between rounded-lg border-2 p-3.5 text-sm font-semibold transition-all cursor-pointer",
                                 selectedRole === "patient"
                                   ? "border-primary bg-primary/10 text-primary shadow-sm ring-2 ring-primary/20"
-                                  : "border-border bg-card text-muted-foreground hover:bg-muted/50"
+                                  : "border-border bg-card text-muted-foreground hover:bg-muted/50",
                               )}
                             >
                               <div className="flex items-center gap-2">
                                 <User size={18} />
                                 <span>Sou paciente</span>
                               </div>
-                              <div className={cn(
-                                "h-4 w-4 rounded-full border flex items-center justify-center shrink-0",
-                                selectedRole === "patient" ? "border-primary bg-primary" : "border-muted-foreground/40"
-                              )}>
-                                {selectedRole === "patient" && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
+                              <div
+                                className={cn(
+                                  "h-4 w-4 rounded-full border flex items-center justify-center shrink-0",
+                                  selectedRole === "patient"
+                                    ? "border-primary bg-primary"
+                                    : "border-muted-foreground/40",
+                                )}
+                              >
+                                {selectedRole === "patient" && (
+                                  <div className="h-1.5 w-1.5 rounded-full bg-white" />
+                                )}
                               </div>
                             </button>
                             <button
@@ -434,22 +433,27 @@ function AuthPage() {
                                 "flex items-center justify-between rounded-lg border-2 p-3.5 text-sm font-semibold transition-all cursor-pointer",
                                 selectedRole === "clinic"
                                   ? "border-primary bg-primary/10 text-primary shadow-sm ring-2 ring-primary/20"
-                                  : "border-border bg-card text-muted-foreground hover:bg-muted/50"
+                                  : "border-border bg-card text-muted-foreground hover:bg-muted/50",
                               )}
                             >
                               <div className="flex items-center gap-2">
                                 <Building2 size={18} />
                                 <span>Sou clínica</span>
                               </div>
-                              <div className={cn(
-                                "h-4 w-4 rounded-full border flex items-center justify-center shrink-0",
-                                selectedRole === "clinic" ? "border-primary bg-primary" : "border-muted-foreground/40"
-                              )}>
-                                {selectedRole === "clinic" && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
+                              <div
+                                className={cn(
+                                  "h-4 w-4 rounded-full border flex items-center justify-center shrink-0",
+                                  selectedRole === "clinic"
+                                    ? "border-primary bg-primary"
+                                    : "border-muted-foreground/40",
+                                )}
+                              >
+                                {selectedRole === "clinic" && (
+                                  <div className="h-1.5 w-1.5 rounded-full bg-white" />
+                                )}
                               </div>
                             </button>
                           </div>
->>>>>>> 84345997d8ce49ba0373f13686756579e649f0bf
                           <FormMessage />
                         </FormItem>
                       )}
@@ -499,7 +503,7 @@ function AuthPage() {
                         )}
                       />
                     </div>
-                    
+
                     <FormField
                       control={registerForm.control}
                       name="address"
@@ -602,7 +606,12 @@ function AuthPage() {
                           <FormItem>
                             <FormLabel>UF</FormLabel>
                             <FormControl>
-                              <Input placeholder="SP" maxLength={2} className="uppercase" {...field} />
+                              <Input
+                                placeholder="SP"
+                                maxLength={2}
+                                className="uppercase"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

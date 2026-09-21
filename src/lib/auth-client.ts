@@ -17,34 +17,12 @@ export interface SignUpInput {
   city?: string;
 }
 
-
 export async function completeSignup(input: Omit<SignUpInput, "email" | "password">) {
   const { error } = await supabase.rpc("complete_signup" as any, {
     _full_name: input.fullName,
     _document: input.document,
     _phone: input.phone,
     _role: input.role,
-<<<<<<< HEAD
-    _clinic_name: input.clinicName ?? undefined,
-    _zip_code: input.zipCode ?? undefined,
-    _address: input.address ?? undefined,
-    _city: input.city ?? undefined,
-  });
-  if (error) throw new Error(error.message);
-
-  if (input.role === "clinic" && (input.zipCode || input.address || input.city)) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data: affiliations } = await supabase.from("clinic_affiliations").select("clinic_id").eq("user_id", user.id);
-      if (affiliations && affiliations[0]) {
-        await supabase.from("clinics").update({ 
-          zip_code: input.zipCode, 
-          address: input.address,
-          city: input.city
-        }).eq("id", affiliations[0].clinic_id);
-      }
-    }
-=======
     _clinic_name: input.clinicName || "",
     _zip_code: input.zipCode || "",
     _address: input.address || "",
@@ -55,15 +33,35 @@ export async function completeSignup(input: Omit<SignUpInput, "email" | "passwor
 
   if (input.role === "clinic") {
     await setAccountAsClinic().catch(() => {});
->>>>>>> 84345997d8ce49ba0373f13686756579e649f0bf
+    if (input.zipCode || input.address || input.city) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        const { data: affiliations } = await supabase
+          .from("clinic_affiliations")
+          .select("clinic_id")
+          .eq("user_id", user.id);
+        if (affiliations && affiliations[0]) {
+          await supabase
+            .from("clinics")
+            .update({
+              zip_code: input.zipCode,
+              address: input.address,
+              city: input.city,
+            })
+            .eq("id", affiliations[0].clinic_id);
+        }
+      }
+    }
   }
 }
 
 export async function signUpWithPassword(input: SignUpInput) {
-<<<<<<< HEAD
   if (!input.password) {
     throw new Error("Password is required for sign up");
-=======
+  }
+
   // Save the intended role to localStorage IMMEDIATELY, before any async operations.
   // This is the ONLY reliable source of truth because:
   // 1. GoTrue strips the 'role' field from user_metadata
@@ -73,7 +71,6 @@ export async function signUpWithPassword(input: SignUpInput) {
     localStorage.setItem("pending_signup_role", "clinic");
     localStorage.setItem("user_role_hint", "clinic");
     localStorage.setItem(`user_role_email_${input.email.toLowerCase().trim()}`, "clinic");
->>>>>>> 84345997d8ce49ba0373f13686756579e649f0bf
   }
 
   const { data, error } = await supabase.auth.signUp({
@@ -185,7 +182,10 @@ export async function setAccountAsClinic(): Promise<void> {
     // Use SECURITY DEFINER RPC to bypass RLS (user_roles only allows admin inserts)
     const { error: rpcError } = await supabase.rpc("set_own_role_to_clinic" as any);
     if (rpcError) {
-      console.warn("[Auth] set_own_role_to_clinic RPC failed, falling back to direct updates:", rpcError.message);
+      console.warn(
+        "[Auth] set_own_role_to_clinic RPC failed, falling back to direct updates:",
+        rpcError.message,
+      );
       // Fallback: try direct updates (may fail silently due to RLS)
       await supabase.from("profiles").update({ role: "clinic" }).eq("user_id", user.id);
       try {
@@ -216,13 +216,12 @@ export async function getAuthenticatedUserRole(): Promise<"patient" | "clinic" |
 
     console.log("[Auth] Checking role for user:", user.email, "metadata:", user.user_metadata);
 
-<<<<<<< HEAD
     if (typeof window !== "undefined") {
       const pendingRole = localStorage.getItem("oauth_signup_role");
       if (pendingRole) {
         if (pendingRole === "clinic") {
           await setAccountAsClinic().catch(() => {});
-          // If we just updated it, we can return clinic directly to avoid race conditions 
+          // If we just updated it, we can return clinic directly to avoid race conditions
           // where the session hasn't been reloaded yet in this function execution
           return "clinic";
         }
@@ -230,13 +229,10 @@ export async function getAuthenticatedUserRole(): Promise<"patient" | "clinic" |
       }
     }
 
-    // 1. Check for Admin
-=======
     // ========================================================
     // PRIORITY 0: ADMIN CHECK (Must ALWAYS take precedence!)
     // If the account is an admin, it must NEVER be overridden!
     // ========================================================
->>>>>>> 84345997d8ce49ba0373f13686756579e649f0bf
     const metaRole = (user.user_metadata?.role as string)?.toLowerCase();
     if (metaRole === "admin") {
       if (typeof window !== "undefined") {
@@ -258,7 +254,7 @@ export async function getAuthenticatedUserRole(): Promise<"patient" | "clinic" |
         }
         return "admin";
       }
-    } catch { }
+    } catch {}
 
     const { data: rolesData } = await supabase
       .from("user_roles")
@@ -296,9 +292,15 @@ export async function getAuthenticatedUserRole(): Promise<"patient" | "clinic" |
     if (typeof window !== "undefined") {
       const pendingRole = localStorage.getItem("pending_signup_role");
       const userSpecificRole = localStorage.getItem(`user_role_${user.id}`);
-      const emailSpecificRole = user.email ? localStorage.getItem(`user_role_email_${user.email.toLowerCase().trim()}`) : null;
-      
-      if (pendingRole === "clinic" || userSpecificRole === "clinic" || emailSpecificRole === "clinic") {
+      const emailSpecificRole = user.email
+        ? localStorage.getItem(`user_role_email_${user.email.toLowerCase().trim()}`)
+        : null;
+
+      if (
+        pendingRole === "clinic" ||
+        userSpecificRole === "clinic" ||
+        emailSpecificRole === "clinic"
+      ) {
         console.log("[Auth] User-specific hint indicates clinic! Returning clinic.");
         localStorage.setItem(`user_role_${user.id}`, "clinic");
         if (user.email) {
@@ -323,7 +325,7 @@ export async function getAuthenticatedUserRole(): Promise<"patient" | "clinic" |
           city: user.user_metadata.city || "",
           role: user.user_metadata.role || "patient",
           clinicName: user.user_metadata.clinic_name,
-          state: user.user_metadata.state || ""
+          state: user.user_metadata.state || "",
         });
       } catch (e) {
         console.error("Failed to recover user profile", e);
@@ -332,9 +334,16 @@ export async function getAuthenticatedUserRole(): Promise<"patient" | "clinic" |
 
     const appRole = (user.user_metadata?.app_role as string)?.toLowerCase();
     const tipo = (user.user_metadata?.tipo as string)?.toLowerCase();
-    if (metaRole === "clinic" || metaRole === "clinica" || appRole === "clinic" || tipo === "clinic" || tipo === "clinica" || user.user_metadata?.tipo === "clinica") {
+    if (
+      metaRole === "clinic" ||
+      metaRole === "clinica" ||
+      appRole === "clinic" ||
+      tipo === "clinic" ||
+      tipo === "clinica" ||
+      user.user_metadata?.tipo === "clinica"
+    ) {
       console.log("[Auth] User metadata matches clinic! Returning clinic.");
-      await setAccountAsClinic().catch(() => { });
+      await setAccountAsClinic().catch(() => {});
       return "clinic";
     }
 
@@ -344,14 +353,18 @@ export async function getAuthenticatedUserRole(): Promise<"patient" | "clinic" |
         _role: "clinic",
       });
       if (isClinicRpc) return "clinic";
-    } catch { }
+    } catch {}
 
     if (rolesData && rolesData.length > 0) {
       const roles = rolesData.map((r) => String(r.role).toLowerCase());
       if (roles.includes("clinic") || roles.includes("clinica")) return "clinic";
     }
 
-    if (profile && (String(profile.role).toLowerCase() === "clinic" || String(profile.role).toLowerCase() === "clinica")) {
+    if (
+      profile &&
+      (String(profile.role).toLowerCase() === "clinic" ||
+        String(profile.role).toLowerCase() === "clinica")
+    ) {
       return "clinic";
     }
 
@@ -369,11 +382,10 @@ export async function getAuthenticatedUserRole(): Promise<"patient" | "clinic" |
         .eq("email", user.email)
         .maybeSingle();
       if (clinicByEmail) {
-        await setAccountAsClinic().catch(() => { });
+        await setAccountAsClinic().catch(() => {});
         return "clinic";
       }
     }
-
 
     recordKnownUser({
       user_id: user.id,
@@ -383,7 +395,7 @@ export async function getAuthenticatedUserRole(): Promise<"patient" | "clinic" |
       phone: profile?.phone || (user.user_metadata?.phone as string) || null,
       address: (profile as any)?.address || (user.user_metadata?.address as string) || null,
       city: (profile as any)?.city || (user.user_metadata?.city as string) || null,
-      zip_code: (profile as any)?.zip_code || (user.user_metadata?.zip_code as string) || null,  
+      zip_code: (profile as any)?.zip_code || (user.user_metadata?.zip_code as string) || null,
       role: "patient",
       clinic_name: (user.user_metadata?.clinic_name as string) || null,
       created_at: profile?.created_at || user.created_at,
