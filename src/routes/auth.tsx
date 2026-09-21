@@ -59,8 +59,11 @@ const registerSchema = z
     state: z.string().length(2, "UF deve ter 2 letras"),
     password: z.string().min(6, "Mínimo 6 caracteres"),
     confirmPassword: z.string().min(6, "Mínimo 6 caracteres"),
-    role: z.enum(["patient", "clinic", "admin"]),
+    role: z.enum(["patient", "clinic"]),
     clinicName: z.string().optional(),
+    zipCode: z.string().optional(),
+    address: z.string().optional(),
+    city: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Senhas não conferem",
@@ -103,6 +106,9 @@ function AuthPage() {
       confirmPassword: "",
       role: tipo === "clinica" ? "clinic" : "patient",
       clinicName: "",
+      zipCode: "",
+      address: "",
+      city: "",
     },
   });
 
@@ -111,6 +117,9 @@ function AuthPage() {
   async function onGoogleSignIn() {
     setError(null);
     try {
+      if (mode === "register") {
+        localStorage.setItem("oauth_signup_role", selectedRole);
+      }
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
       });
@@ -137,7 +146,7 @@ function AuthPage() {
     try {
       await signInWithPassword(values.email, values.password);
       const { redirectUserByRole, getAuthenticatedUserRole } = await import("@/lib/auth-client");
-      
+
       const role = await getAuthenticatedUserRole();
       redirectUserByRole(role, navigate);
     } catch (err) {
@@ -160,6 +169,12 @@ function AuthPage() {
     console.log("[Auth] Registering with values:", values);
     setError(null);
     try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("oauth_signup_role", values.role);
+        if (values.role === "clinic") {
+          localStorage.setItem("user_role_hint", "clinic");
+        }
+      }
       const { needsEmailConfirmation } = await signUpWithPassword({
         email: values.email,
         password: values.password,
@@ -172,6 +187,9 @@ function AuthPage() {
         state: values.state,
         role: values.role,
         clinicName: values.clinicName,
+        zipCode: values.zipCode,
+        address: values.address,
+        city: values.city,
       });
       if (needsEmailConfirmation) {
         setMode("login");
@@ -361,6 +379,22 @@ function AuthPage() {
                       render={({ field }) => (
                         <FormItem className="space-y-2">
                           <FormLabel>Tipo de conta</FormLabel>
+<<<<<<< HEAD
+                          <Select 
+                            onValueChange={(val) => registerForm.setValue("role", val as "patient" | "clinic", { shouldValidate: true })} 
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione o tipo de conta" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="patient">Sou paciente</SelectItem>
+                              <SelectItem value="clinic">Sou clínica</SelectItem>
+                            </SelectContent>
+                          </Select>
+=======
                           <div className="grid grid-cols-2 gap-3">
                             <button
                               type="button"
@@ -415,6 +449,7 @@ function AuthPage() {
                               </div>
                             </button>
                           </div>
+>>>>>>> 84345997d8ce49ba0373f13686756579e649f0bf
                           <FormMessage />
                         </FormItem>
                       )}
@@ -435,6 +470,49 @@ function AuthPage() {
                         )}
                       />
                     )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={registerForm.control}
+                        name="zipCode"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>CEP</FormLabel>
+                            <FormControl>
+                              <Input placeholder="00000-000" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={registerForm.control}
+                        name="city"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Cidade</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Sua Cidade" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <FormField
+                      control={registerForm.control}
+                      name="address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Endereço Completo</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Rua, Número, Bairro" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
                     <FormField
                       control={registerForm.control}

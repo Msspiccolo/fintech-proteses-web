@@ -1,7 +1,7 @@
 import { Link, useRouter } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 
 export function Header() {
@@ -63,23 +63,19 @@ export function Header() {
         <div className="hidden items-center gap-4 md:flex">
           {user ? (
             <>
-              <Link to="/dashboard">
-                <Button variant="ghost" size="sm">
-                  Meu painel
-                </Button>
+              <Link to="/dashboard" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+                Meu painel
               </Link>
-              <Link to="/perfil">
-                <Button variant="ghost" size="sm">
-                  Meu perfil
-                </Button>
+              <Link to="/perfil" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+                Meu perfil
               </Link>
               <Button variant="outline" size="sm" onClick={handleSignOut}>
                 Sair
               </Button>
             </>
           ) : (
-            <Link to="/auth">
-              <Button size="sm">Entrar</Button>
+            <Link to="/auth" className={buttonVariants({ size: "sm" })}>
+              Entrar
             </Link>
           )}
         </div>

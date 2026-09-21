@@ -29,7 +29,9 @@ export const Route = createFileRoute("/_authenticated/paciente/dashboard")({
 function PatientDashboard() {
   const router = useRouter();
   useEffect(() => {
+    let isMounted = true;
     getAuthenticatedUserRole().then((role) => {
+      if (!isMounted) return;
       if (role === "clinic") {
         router.navigate({ to: "/clinica/dashboard", replace: true });
         return;
@@ -38,8 +40,18 @@ function PatientDashboard() {
         router.navigate({ to: "/admin/dashboard", replace: true });
         return;
       }
+<<<<<<< HEAD
+
+      if (role === "patient") {
+        return; // already here, no need to navigate
+      }
+    })
+    return () => { isMounted = false; };
+  }, []);
+=======
     });
   }, [router]);
+>>>>>>> 84345997d8ce49ba0373f13686756579e649f0bf
 
   const fetchApplications = useServerFn(getMyLoanApplications);
   const queryClient = useQueryClient();
@@ -50,6 +62,10 @@ function PatientDashboard() {
 
   const applications = data?.applications ?? [];
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 84345997d8ce49ba0373f13686756579e649f0bf
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />

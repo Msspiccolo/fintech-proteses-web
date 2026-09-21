@@ -1,8 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type SignUpInput = {
+export interface SignUpInput {
   email: string;
-  password: string;
+  password?: string;
   fullName: string;
   document: string;
   phone: string;
@@ -12,7 +12,10 @@ export type SignUpInput = {
   state: string;
   role: "patient" | "clinic" | "admin";
   clinicName?: string;
-};
+  zipCode?: string;
+  address?: string;
+  city?: string;
+}
 
 
 export async function completeSignup(input: Omit<SignUpInput, "email" | "password">) {
@@ -21,6 +24,27 @@ export async function completeSignup(input: Omit<SignUpInput, "email" | "passwor
     _document: input.document,
     _phone: input.phone,
     _role: input.role,
+<<<<<<< HEAD
+    _clinic_name: input.clinicName ?? undefined,
+    _zip_code: input.zipCode ?? undefined,
+    _address: input.address ?? undefined,
+    _city: input.city ?? undefined,
+  });
+  if (error) throw new Error(error.message);
+
+  if (input.role === "clinic" && (input.zipCode || input.address || input.city)) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: affiliations } = await supabase.from("clinic_affiliations").select("clinic_id").eq("user_id", user.id);
+      if (affiliations && affiliations[0]) {
+        await supabase.from("clinics").update({ 
+          zip_code: input.zipCode, 
+          address: input.address,
+          city: input.city
+        }).eq("id", affiliations[0].clinic_id);
+      }
+    }
+=======
     _clinic_name: input.clinicName || "",
     _zip_code: input.zipCode || "",
     _address: input.address || "",
@@ -31,10 +55,15 @@ export async function completeSignup(input: Omit<SignUpInput, "email" | "passwor
 
   if (input.role === "clinic") {
     await setAccountAsClinic().catch(() => {});
+>>>>>>> 84345997d8ce49ba0373f13686756579e649f0bf
   }
 }
 
 export async function signUpWithPassword(input: SignUpInput) {
+<<<<<<< HEAD
+  if (!input.password) {
+    throw new Error("Password is required for sign up");
+=======
   // Save the intended role to localStorage IMMEDIATELY, before any async operations.
   // This is the ONLY reliable source of truth because:
   // 1. GoTrue strips the 'role' field from user_metadata
@@ -44,6 +73,7 @@ export async function signUpWithPassword(input: SignUpInput) {
     localStorage.setItem("pending_signup_role", "clinic");
     localStorage.setItem("user_role_hint", "clinic");
     localStorage.setItem(`user_role_email_${input.email.toLowerCase().trim()}`, "clinic");
+>>>>>>> 84345997d8ce49ba0373f13686756579e649f0bf
   }
 
   const { data, error } = await supabase.auth.signUp({
@@ -63,6 +93,9 @@ export async function signUpWithPassword(input: SignUpInput) {
         app_role: input.role,
         tipo: input.role,
         clinic_name: input.clinicName,
+        zip_code: input.zipCode,
+        address: input.address,
+        city: input.city,
       },
     },
   });
@@ -183,10 +216,27 @@ export async function getAuthenticatedUserRole(): Promise<"patient" | "clinic" |
 
     console.log("[Auth] Checking role for user:", user.email, "metadata:", user.user_metadata);
 
+<<<<<<< HEAD
+    if (typeof window !== "undefined") {
+      const pendingRole = localStorage.getItem("oauth_signup_role");
+      if (pendingRole) {
+        if (pendingRole === "clinic") {
+          await setAccountAsClinic().catch(() => {});
+          // If we just updated it, we can return clinic directly to avoid race conditions 
+          // where the session hasn't been reloaded yet in this function execution
+          return "clinic";
+        }
+        localStorage.removeItem("oauth_signup_role");
+      }
+    }
+
+    // 1. Check for Admin
+=======
     // ========================================================
     // PRIORITY 0: ADMIN CHECK (Must ALWAYS take precedence!)
     // If the account is an admin, it must NEVER be overridden!
     // ========================================================
+>>>>>>> 84345997d8ce49ba0373f13686756579e649f0bf
     const metaRole = (user.user_metadata?.role as string)?.toLowerCase();
     if (metaRole === "admin") {
       if (typeof window !== "undefined") {

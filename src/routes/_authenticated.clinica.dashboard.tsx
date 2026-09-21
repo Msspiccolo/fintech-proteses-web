@@ -71,11 +71,26 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 function ClinicDashboard() {
   const router = useRouter();
   useEffect(() => {
+<<<<<<< HEAD
+    let isMounted = true;
+    getAuthenticatedUserRole().then((role) => {
+      if (!isMounted) return;
+      if (role === "patient") {
+        router.navigate({ to: "/paciente/dashboard", replace: true });
+        return;
+      }
+=======
     getAuthenticatedUserRole().then(async (role) => {
+>>>>>>> 84345997d8ce49ba0373f13686756579e649f0bf
       if (role === "admin") {
         router.navigate({ to: "/admin/dashboard", replace: true });
         return;
       }
+<<<<<<< HEAD
+
+      if (role === "clinic") {
+        return; // already here
+=======
       if (role !== "clinic") {
         try {
           const { setAccountAsClinic } = await import("@/lib/auth-client");
@@ -83,9 +98,11 @@ function ClinicDashboard() {
         } catch {
           // Ignore
         }
+>>>>>>> 84345997d8ce49ba0373f13686756579e649f0bf
       }
     });
-  }, [router]);
+    return () => { isMounted = false; };
+  }, []);
 
   const fetchApplications = useServerFn(getClinicLoanApplications);
   const fetchMyClinics = useServerFn(getClinicByUser);
