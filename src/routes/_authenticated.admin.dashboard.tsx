@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -132,8 +132,15 @@ function AdminDashboard() {
       <Header />
       <main className="flex-1 px-4 py-12">
         <div className="mx-auto max-w-6xl">
-          <h1 className="text-3xl font-bold text-foreground">Painel Administrativo</h1>
-          <p className="mt-2 text-muted-foreground">Analise e aprove propostas de financiamento.</p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Painel Administrativo</h1>
+              <p className="mt-2 text-muted-foreground">Analise e aprove propostas de financiamento.</p>
+            </div>
+            <Button asChild>
+              <Link to="/admin/modelos-3d">Acessar Simulador 3D (Akool)</Link>
+            </Button>
+          </div>
 
           <Tabs defaultValue="applications" className="mt-8">
             <TabsList className="grid w-full grid-cols-4 max-w-[800px]">
