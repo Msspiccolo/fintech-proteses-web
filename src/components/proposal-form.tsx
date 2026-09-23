@@ -16,13 +16,16 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Box, Loader2, Sparkles, Download } from "lucide-react";
-import { flushSync } from "react-dom";
 import { streamImage } from "@/lib/streamImage";
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls, Environment, Center, useGLTF } from "@react-three/drei";
+import { Suspense } from "react";
 import {
   Prosthesis3DPreview,
   PROSTHESIS_MODELS,
   type ProsthesisModelId,
 } from "@/components/prosthesis-3d-preview";
+import { ModelViewer } from "@/components/3d-model-viewer";
 import { useServerFn } from "@tanstack/react-start";
 import { createLoanApplication } from "@/lib/loans.functions";
 import { getApprovedClinics } from "@/lib/clinics.functions";
@@ -63,6 +66,9 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewFinal, setPreviewFinal] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [model3dUrl, setModel3dUrl] = useState<string | null>(null);
+  const [generating3D, setGenerating3D] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState<number>(0);
   const modeling3DCost = 1500;
   const interestRate = 1.99;
 
@@ -87,20 +93,75 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
         (Math.pow(1 + monthlyRate, installments) - 1);
   const totalCost = monthlyPayment * installments + downPayment;
 
+  async function start3DGeneration(imageUrl: string, description: string) {
+    setGenerating3D(true);
+    setGenerationProgress(10);
+    try {
+      const res = await fetch("/api/generate-3d-model", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl, description }),
+      });
+      if (!res.ok) throw new Error("Erro ao iniciar geração 3D");
+      const data = await res.json();
+      const taskId = data.result;
+
+      // Poll every 5 seconds
+      const pollInterval = setInterval(async () => {
+        try {
+          const pollRes = await fetch(`/api/generate-3d-model?taskId=${taskId}`);
+          if (!pollRes.ok) return;
+          const pollData = await pollRes.json();
+          
+          if (pollData.progress) {
+             setGenerationProgress(pollData.progress);
+          }
+
+          if (pollData.status === "SUCCEEDED") {
+            clearInterval(pollInterval);
+            setModel3dUrl(pollData.model_urls.glb);
+            setGenerating3D(false);
+            setGenerationProgress(100);
+          } else if (pollData.status === "FAILED" || pollData.status === "EXPIRED") {
+            clearInterval(pollInterval);
+            setGenerating3D(false);
+            toast.error("Falha ao converter imagem para 3D");
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }, 5000);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro na geração 3D");
+      setGenerating3D(false);
+    }
+  }
+
   async function handleGeneratePreview() {
-    const description = form.getValues("purpose") || "";
+    const purposeText = form.getValues("purpose");
+    const selected = PROSTHESIS_MODELS.find((m) => m.id === selectedModel);
+    
+    // Concatena a finalidade escrita pelo usuário com o modelo selecionado no catálogo
+    const description = [
+      purposeText,
+      selected ? `Modelo base: ${selected.name} (${selected.category})` : null
+    ].filter(Boolean).join(" - ") || "";
+
     setGenerating(true);
     setPreviewUrl(null);
     setPreviewFinal(false);
+    setModel3dUrl(null);
     try {
       await streamImage("/api/generate-3d-preview", { description }, (dataUrl, isFinal) => {
-        flushSync(() => {
-          setPreviewUrl(dataUrl);
-          if (isFinal) setPreviewFinal(true);
-        });
+        // We use flushSync to ensure the DOM updates immediately for the image stream
+        setPreviewUrl(dataUrl);
+        if (isFinal) {
+          setPreviewFinal(true);
+          start3DGeneration(dataUrl, description);
+        }
       });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao gerar prévia 3D");
+      toast.error(err instanceof Error ? err.message : "Erro ao gerar prévia");
     } finally {
       setGenerating(false);
     }
@@ -284,6 +345,8 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
                 if (v !== true) {
                   setPreviewUrl(null);
                   setPreviewFinal(false);
+                  setModel3dUrl(null);
+                  setGenerating3D(false);
                 }
               }}
               className="mt-1"
@@ -331,20 +394,44 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
                   </Button>
                   {previewUrl && (
                     <div className="overflow-hidden rounded-lg border border-border bg-background">
-                      <img
-                        src={previewUrl}
-                        alt="Prévia da prótese modelada em 3D"
-                        className={
-                          "w-full transition-[filter] duration-500 " +
-                          (previewFinal ? "blur-0" : "blur-2xl")
-                        }
-                      />
+                      {model3dUrl ? (
+                        <ModelViewer src={model3dUrl} className="!h-[300px] border-0" />
+                      ) : (
+                        <img
+                          src={previewUrl}
+                          alt="Prévia da prótese"
+                          className={
+                            "w-full transition-[filter] duration-500 " +
+                            (previewFinal && !generating3D ? "blur-0" : "blur-2xl")
+                          }
+                        />
+                      )}
                       <div className="flex items-center justify-between gap-2 border-t border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-                        <span>Prévia ilustrativa • Arquivo STL final entregue após aprovação</span>
-                        {previewFinal && (
+                        <span className="flex items-center gap-2">
+                          {generating3D ? (
+                            <>
+                              <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                              Convertendo para arquivo 3D real... {generationProgress}%
+                            </>
+                          ) : model3dUrl ? (
+                            "Modelo 3D gerado com sucesso! Gire com o mouse."
+                          ) : (
+                            "Prévia ilustrativa em 2D • Arquivo 3D gerado a seguir"
+                          )}
+                        </span>
+                        {model3dUrl && (
+                          <a
+                            href={model3dUrl}
+                            download="modelo-protese.glb"
+                            className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+                          >
+                            <Download className="h-3 w-3" /> GLB (3D)
+                          </a>
+                        )}
+                        {!model3dUrl && previewFinal && !generating3D && (
                           <a
                             href={previewUrl}
-                            download="prevía-protese-3d.png"
+                            download="previa-protese.png"
                             className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
                           >
                             <Download className="h-3 w-3" /> PNG
@@ -382,5 +469,15 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
         Enviar proposta
       </Button>
     </form>
+  );
+}
+
+// Component to render the generated GLB URL
+function GeneratedModel({ url }: { url: string }) {
+  const { scene } = useGLTF(url);
+  return (
+    <Center>
+      <primitive object={scene} />
+    </Center>
   );
 }

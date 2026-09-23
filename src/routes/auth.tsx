@@ -174,6 +174,8 @@ function AuthPage() {
         localStorage.setItem("oauth_signup_role", values.role);
         if (values.role === "clinic") {
           localStorage.setItem("user_role_hint", "clinic");
+        } else {
+          localStorage.removeItem("user_role_hint");
         }
       }
       const { needsEmailConfirmation } = await signUpWithPassword({

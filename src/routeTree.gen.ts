@@ -19,6 +19,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as ApiGenerate3dPreviewRouteImport } from './routes/api/generate-3d-preview'
+import { Route as ApiGenerate3dModelRouteImport } from './routes/api/generate-3d-model'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated.perfil'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedClinicaIndexRouteImport } from './routes/_authenticated.clinica.index'
@@ -77,6 +78,11 @@ const ApiGenerate3dPreviewRoute = ApiGenerate3dPreviewRouteImport.update({
   path: '/api/generate-3d-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGenerate3dModelRoute = ApiGenerate3dModelRouteImport.update({
+  id: '/api/generate-3d-model',
+  path: '/api/generate-3d-model',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
@@ -133,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/perfil': typeof AuthenticatedPerfilRoute
+  '/api/generate-3d-model': typeof ApiGenerate3dModelRoute
   '/api/generate-3d-preview': typeof ApiGenerate3dPreviewRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/perfil': typeof AuthenticatedPerfilRoute
+  '/api/generate-3d-model': typeof ApiGenerate3dModelRoute
   '/api/generate-3d-preview': typeof ApiGenerate3dPreviewRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
@@ -173,6 +181,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
+  '/api/generate-3d-model': typeof ApiGenerate3dModelRoute
   '/api/generate-3d-preview': typeof ApiGenerate3dPreviewRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
@@ -194,6 +203,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/dashboard'
     | '/perfil'
+    | '/api/generate-3d-model'
     | '/api/generate-3d-preview'
     | '/auth/reset-password'
     | '/admin/dashboard'
@@ -213,6 +223,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/dashboard'
     | '/perfil'
+    | '/api/generate-3d-model'
     | '/api/generate-3d-preview'
     | '/auth/reset-password'
     | '/admin/dashboard'
@@ -233,6 +244,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/_authenticated/dashboard'
     | '/_authenticated/perfil'
+    | '/api/generate-3d-model'
     | '/api/generate-3d-preview'
     | '/auth/reset-password'
     | '/_authenticated/admin/dashboard'
@@ -252,6 +264,7 @@ export interface RootRouteChildren {
   ComoFuncionaRoute: typeof ComoFuncionaRoute
   SimularRoute: typeof SimularRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiGenerate3dModelRoute: typeof ApiGenerate3dModelRoute
   ApiGenerate3dPreviewRoute: typeof ApiGenerate3dPreviewRoute
 }
 
@@ -325,6 +338,13 @@ declare module '@tanstack/react-router' {
       path: '/api/generate-3d-preview'
       fullPath: '/api/generate-3d-preview'
       preLoaderRoute: typeof ApiGenerate3dPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/generate-3d-model': {
+      id: '/api/generate-3d-model'
+      path: '/api/generate-3d-model'
+      fullPath: '/api/generate-3d-model'
+      preLoaderRoute: typeof ApiGenerate3dModelRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/perfil': {
@@ -431,6 +451,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComoFuncionaRoute: ComoFuncionaRoute,
   SimularRoute: SimularRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiGenerate3dModelRoute: ApiGenerate3dModelRoute,
   ApiGenerate3dPreviewRoute: ApiGenerate3dPreviewRoute,
 }
 export const routeTree = rootRouteImport

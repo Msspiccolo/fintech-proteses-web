@@ -77,67 +77,14 @@ export const getAllUsersForAdmin = createServerFn({ method: "GET" })
       metaRole === "admin";
     if (!isAdmin) throw new Error("Unauthorized");
 
-    // Fetch all profiles using service role key to bypass RLS
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    
-    // Fetch all auth users using raw fetch to avoid issues with client.server.ts custom fetch
-    // stripping the Authorization header which GoTrue requires
-    const SUPABASE_URL = process.env.SUPABASE_URL;
-    const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-      throw new Error("Missing Supabase environment variables");
+    // We now use an RPC function instead of service_role_key fetch which fails in Lovable Edge Proxy
+    const { data: users, error } = await context.supabase.rpc("get_all_users_for_admin");
+
+    if (error) {
+      throw new Error(error.message);
     }
-    
-    const response = await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, {
-      headers: {
-        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        apikey: SUPABASE_SERVICE_ROLE_KEY,
-      },
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch auth users: ${response.statusText}`);
-    }
-    
-    const authData = await response.json();
-    const authUsers = authData.users || [];
 
-    const { data: profiles, error: profilesError } = await supabaseAdmin
-      .from("profiles")
-      .select("*");
-
-    if (profilesError) throw new Error(profilesError.message);
-
-    // Fetch all roles to map to profiles
-    const { data: allRoles, error: allRolesError } = await supabaseAdmin
-      .from("user_roles")
-      .select("*");
-
-    if (allRolesError) throw new Error(allRolesError.message);
-
-    const users = authUsers.map((authUser) => {
-      const profile = (profiles || []).find((p: any) => p.user_id === authUser.id);
-      const userRoles = (allRoles || [])
-        .filter((r: any) => r.user_id === authUser.id)
-        .map((r: any) => r.role);
-        
-      const rawMeta = authUser.user_metadata || {};
-      const fallbackRole = rawMeta.role || "patient";
-      
-      return {
-        user_id: authUser.id,
-        email: authUser.email,
-        full_name: profile?.full_name || rawMeta.full_name || rawMeta.name || "",
-        document: profile?.document || rawMeta.document || "",
-        phone: profile?.phone || rawMeta.phone || authUser.phone || "",
-        role: profile?.role || fallbackRole,
-        roles: userRoles.length > 0 ? userRoles : [profile?.role || fallbackRole],
-        created_at: authUser.created_at,
-      };
-    }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-    return { users };
+    return { users: users || [] };
   });
 
 export const updateUserRoleForAdmin = createServerFn({ method: "POST" })
@@ -169,26 +116,16 @@ export const updateUserRoleForAdmin = createServerFn({ method: "POST" })
       profile?.role === "admin" ||
       metaRole === "admin";
     if (!isAdmin) throw new Error("Unauthorized");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const { error: deleteError } = await supabaseAdmin
-      .from("user_roles")
-      .delete()
-      .eq("user_id", data.targetUserId);
+    // Call the RPC to update roles securely without needing service role keys
+    const { error } = await context.supabase.rpc("update_user_role_by_admin", {
+      target_user_id: data.targetUserId,
+      new_role: data.newRole,
+    });
 
-    if (deleteError) throw new Error(deleteError.message);
-
-    const { error: insertError } = await supabaseAdmin
-      .from("user_roles")
-      .insert({ user_id: data.targetUserId, role: data.newRole });
-
-    if (insertError) throw new Error(insertError.message);
-
-    // Update profiles role as well to keep them in sync
-    await supabaseAdmin
-      .from("profiles")
-      .update({ role: data.newRole })
-      .eq("user_id", data.targetUserId);
+    if (error) {
+      throw new Error(error.message);
+    }
 
     return { ok: true };
   });

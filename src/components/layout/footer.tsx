@@ -32,6 +32,11 @@ export function Footer() {
                   Clínicas parceiras
                 </Link>
               </li>
+              <li>
+                <Link to="/admin/setup" className="hover:text-foreground">
+                  Setup de Admin
+                </Link>
+              </li>
             </ul>
           </div>
 

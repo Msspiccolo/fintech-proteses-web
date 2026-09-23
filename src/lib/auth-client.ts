@@ -65,10 +65,16 @@ export async function signUpWithPassword(input: SignUpInput) {
   // 1. GoTrue strips the 'role' field from user_metadata
   // 2. The database trigger defaults to 'patient'
   // 3. RLS policies block user_roles updates for non-admins
-  if (typeof window !== "undefined" && input.role === "clinic") {
-    localStorage.setItem("pending_signup_role", "clinic");
-    localStorage.setItem("user_role_hint", "clinic");
-    localStorage.setItem(`user_role_email_${input.email.toLowerCase().trim()}`, "clinic");
+  if (typeof window !== "undefined") {
+    if (input.role === "clinic") {
+      localStorage.setItem("pending_signup_role", "clinic");
+      localStorage.setItem("user_role_hint", "clinic");
+      localStorage.setItem(`user_role_email_${input.email.toLowerCase().trim()}`, "clinic");
+    } else {
+      localStorage.removeItem("pending_signup_role");
+      localStorage.removeItem("user_role_hint");
+      localStorage.removeItem(`user_role_email_${input.email.toLowerCase().trim()}`);
+    }
   }
 
   const { data, error } = await supabase.auth.signUp({
@@ -214,13 +220,13 @@ export async function getAuthenticatedUserRole(): Promise<"patient" | "clinic" |
     if (typeof window !== "undefined") {
       const pendingRole = localStorage.getItem("oauth_signup_role");
       if (pendingRole) {
+        localStorage.removeItem("oauth_signup_role");
         if (pendingRole === "clinic") {
           await setAccountAsClinic().catch(() => {});
           // If we just updated it, we can return clinic directly to avoid race conditions
           // where the session hasn't been reloaded yet in this function execution
           return "clinic";
         }
-        localStorage.removeItem("oauth_signup_role");
       }
     }
 
@@ -287,14 +293,16 @@ export async function getAuthenticatedUserRole(): Promise<"patient" | "clinic" |
     // PRIORITY 1: CLINIC CHECK
     // ========================================================
     if (typeof window !== "undefined") {
-      const pendingRole = localStorage.getItem("pending_signup_role");
       const userSpecificRole = localStorage.getItem(`user_role_${user.id}`);
       const emailSpecificRole = user.email
         ? localStorage.getItem(`user_role_email_${user.email.toLowerCase().trim()}`)
         : null;
 
+      // Always clean up pending roles to avoid polluting other logins
+      localStorage.removeItem("pending_signup_role");
+      localStorage.removeItem("user_role_hint");
+
       if (
-        pendingRole === "clinic" ||
         userSpecificRole === "clinic" ||
         emailSpecificRole === "clinic"
       ) {
@@ -303,8 +311,6 @@ export async function getAuthenticatedUserRole(): Promise<"patient" | "clinic" |
         if (user.email) {
           localStorage.setItem(`user_role_email_${user.email.toLowerCase().trim()}`, "clinic");
         }
-        localStorage.removeItem("pending_signup_role");
-        localStorage.removeItem("user_role_hint");
         setAccountAsClinic().catch(() => {});
         return "clinic";
       }

@@ -387,6 +387,7 @@ function AdminDashboard() {
                         <thead className="bg-muted/50 text-muted-foreground text-xs uppercase">
                           <tr>
                             <th className="px-6 py-4 font-medium">Nome</th>
+                            <th className="px-6 py-4 font-medium">Email</th>
                             <th className="px-6 py-4 font-medium">Tipo de Conta</th>
                             <th className="px-6 py-4 font-medium">Documento</th>
                             <th className="px-6 py-4 font-medium">Contato</th>
@@ -399,6 +400,9 @@ function AdminDashboard() {
                             <tr key={user.user_id} className="hover:bg-muted/30 transition-colors">
                               <td className="px-6 py-4 font-medium text-foreground">
                                 {user.full_name || "Não informado"}
+                              </td>
+                              <td className="px-6 py-4 text-muted-foreground">
+                                {user.email || "—"}
                               </td>
                               <td className="px-6 py-4">
                                 <span

@@ -1,6 +1,6 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Environment, ContactShadows, Center } from "@react-three/drei";
+import { OrbitControls, Environment, ContactShadows, Center, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 
 export type ProsthesisModelId = "knee" | "hip" | "hand" | "leg" | "foot" | "arm";
@@ -242,6 +242,24 @@ function ArmMesh() {
 }
 
 function ModelMesh({ id }: { id: ProsthesisModelId }) {
+  const [modelExists, setModelExists] = useState<boolean | null>(null);
+
+  // Check if the actual GLB file exists in the public/models directory
+  useEffect(() => {
+    fetch(`/models/${id}.glb`, { method: "HEAD" })
+      .then((res) => setModelExists(res.ok))
+      .catch(() => setModelExists(false));
+  }, [id]);
+
+  if (modelExists === null) {
+    return null; // Loading state
+  }
+
+  if (modelExists) {
+    return <RealGltfModel id={id} />;
+  }
+
+  // Fallback to primitive geometric shapes if the user hasn't added the .glb files yet
   switch (id) {
     case "knee":
       return <KneeMesh />;
@@ -256,6 +274,12 @@ function ModelMesh({ id }: { id: ProsthesisModelId }) {
     case "arm":
       return <ArmMesh />;
   }
+}
+
+// Component to load the actual GLB file
+function RealGltfModel({ id }: { id: ProsthesisModelId }) {
+  const { scene } = useGLTF(`/models/${id}.glb`);
+  return <primitive object={scene} />;
 }
 
 interface Prosthesis3DPreviewProps {

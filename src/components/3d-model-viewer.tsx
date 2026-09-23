@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 
 // Register custom element types for TypeScript
-declare global {
+declare module "react" {
   namespace JSX {
     interface IntrinsicElements {
       "model-viewer": React.DetailedHTMLProps<
