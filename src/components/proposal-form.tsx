@@ -357,86 +357,119 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
                 className="flex cursor-pointer items-center gap-2 text-base font-semibold text-foreground"
               >
                 <Box className="h-4 w-4 text-primary" />
-                Modelagem 3D personalizada da prótese
+                Prévia 2D Personalizada com Inteligência Artificial
               </Label>
               <p className="mt-1 text-sm text-muted-foreground">
-                Modelo 3D sob medida, com arquivo{" "}
-                <span className="font-semibold text-foreground">.STL</span> compatível com
-                impressoras 3D médicas (FDM/SLA/SLS). Entregue após aprovação, junto de renderização
-                técnica. Acréscimo de{" "}
+                Gere uma imagem hiper-realista da sua prótese usando o poder do Gemini. Acréscimo de{" "}
                 <span className="font-semibold text-foreground">
                   {formatCurrency(modeling3DCost)}
                 </span>{" "}
-                ao valor financiado.
+                ao valor financiado para modelagem técnica posterior.
               </p>
 
               {include3D && (
-                <div className="mt-4 space-y-3">
+                <div className="mt-4 space-y-4 rounded-xl border border-border bg-background p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Material</Label>
+                      <Select 
+                        value={form.watch("purpose")?.includes("titânio") ? "titânio aeroespacial" : "fibra de carbono"} 
+                        onValueChange={(val) => { 
+                          // Just a simple state hack for now to avoid refactoring the whole form schema
+                          const current = form.getValues("purpose") || "";
+                          form.setValue("purpose", current + " | Material: " + val);
+                        }}
+                      >
+                        <SelectTrigger><SelectValue placeholder="Material" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="fibra de carbono">Fibra de Carbono</SelectItem>
+                          <SelectItem value="titânio aeroespacial">Titânio</SelectItem>
+                          <SelectItem value="silicone realista">Silicone</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Cor</Label>
+                      <Select 
+                        value="preto" 
+                        onValueChange={(val) => {
+                          const current = form.getValues("purpose") || "";
+                          form.setValue("purpose", current + " | Cor: " + val);
+                        }}
+                      >
+                        <SelectTrigger><SelectValue placeholder="Cor" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="preto">Preto</SelectItem>
+                          <SelectItem value="branco">Branco</SelectItem>
+                          <SelectItem value="cromado">Cromado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
                   <Button
                     type="button"
                     variant="secondary"
                     size="sm"
-                    onClick={handleGeneratePreview}
+                    onClick={async () => {
+                      setGenerating(true);
+                      setPreviewUrl(null);
+                      try {
+                        const purposeStr = form.getValues("purpose") || "";
+                        const mat = purposeStr.includes("titânio") ? "titânio" : "fibra de carbono";
+                        const c = purposeStr.includes("branco") ? "branco" : "preto";
+                        const tipo = PROSTHESIS_MODELS.find(m => m.id === selectedModel)?.name || "prótese ortopédica";
+                        
+                        const res = await fetch("/api/generate-image-preview", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ tipo: tipo, material: mat, cor: c }), 
+                        });
+                        const data = await res.json();
+                        if (data.imageUrl) {
+                          setPreviewUrl(data.imageUrl);
+                          setPreviewFinal(true);
+                        } else {
+                          toast.error(data.error || "Erro ao gerar imagem");
+                        }
+                      } catch(e) {
+                        toast.error("Falha ao se conectar com o Gemini");
+                      } finally {
+                        setGenerating(false);
+                      }
+                    }}
                     disabled={generating}
-                    className="gap-2"
+                    className="w-full gap-2"
                   >
                     {generating ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        Gerando prévia...
+                        Gerando com Gemini...
                       </>
                     ) : (
                       <>
                         <Sparkles className="h-4 w-4" />
-                        {previewUrl ? "Gerar novamente" : "Gerar prévia 3D com IA"}
+                        Gerar Prévia 2D
                       </>
                     )}
                   </Button>
+                  
                   {previewUrl && (
-                    <div className="overflow-hidden rounded-lg border border-border bg-background">
-                      {model3dUrl ? (
-                        <ModelViewer src={model3dUrl} className="!h-[300px] border-0" />
-                      ) : (
-                        <img
-                          src={previewUrl}
-                          alt="Prévia da prótese"
-                          className={
-                            "w-full transition-[filter] duration-500 " +
-                            (previewFinal && !generating3D ? "blur-0" : "blur-2xl")
-                          }
-                        />
-                      )}
+                    <div className="overflow-hidden rounded-lg border border-border bg-background mt-4">
+                      <img
+                        src={previewUrl}
+                        alt="Prévia da prótese"
+                        className="w-full aspect-square object-cover"
+                      />
                       <div className="flex items-center justify-between gap-2 border-t border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-2">
-                          {generating3D ? (
-                            <>
-                              <Loader2 className="h-3 w-3 animate-spin text-primary" />
-                              Convertendo para arquivo 3D real... {generationProgress}%
-                            </>
-                          ) : model3dUrl ? (
-                            "Modelo 3D gerado com sucesso! Gire com o mouse."
-                          ) : (
-                            "Prévia ilustrativa em 2D • Arquivo 3D gerado a seguir"
-                          )}
-                        </span>
-                        {model3dUrl && (
-                          <a
-                            href={model3dUrl}
-                            download="modelo-protese.glb"
-                            className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
-                          >
-                            <Download className="h-3 w-3" /> GLB (3D)
-                          </a>
-                        )}
-                        {!model3dUrl && previewFinal && !generating3D && (
-                          <a
-                            href={previewUrl}
-                            download="previa-protese.png"
-                            className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
-                          >
-                            <Download className="h-3 w-3" /> PNG
-                          </a>
-                        )}
+                        <span>Imagem gerada pelo Gemini (Imagen 3)</span>
+                        <a
+                          href={previewUrl}
+                          download="previa-protese.jpg"
+                          className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+                        >
+                          <Download className="h-3 w-3" /> JPG
+                        </a>
                       </div>
                     </div>
                   )}

@@ -137,9 +137,6 @@ function AdminDashboard() {
               <h1 className="text-3xl font-bold text-foreground">Painel Administrativo</h1>
               <p className="mt-2 text-muted-foreground">Analise e aprove propostas de financiamento.</p>
             </div>
-            <Button asChild>
-              <Link to="/admin/modelos-3d">Acessar Simulador 3D (Akool)</Link>
-            </Button>
           </div>
 
           <Tabs defaultValue="applications" className="mt-8">

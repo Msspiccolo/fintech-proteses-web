@@ -6,36 +6,36 @@ export const Route = createFileRoute("/api/generate-3d-model")({
       // POST starts the 3D generation task
       POST: async ({ request }: { request: Request }) => {
         const { imageUrl } = (await request.json()) as { imageUrl: string; description?: string };
-        const apiKey = process.env.MESHY_API_KEY;
+        const apiKey = process.env.FAL_KEY;
 
-        if (!apiKey || apiKey.startsWith("http")) {
-          // Mock mode: immediately return a fake task ID se a chave não estiver configurada corretamente
+        if (!apiKey) {
+          // Mock mode: immediately return a fake task ID se a chave não estiver configurada
           return new Response(JSON.stringify({ result: "mock-123" }), {
             headers: { "Content-Type": "application/json" },
           });
         }
 
         try {
-          const response = await fetch("https://api.meshy.ai/v1/image-to-3d", {
+          // Send to Fal.ai Queue API (Stable Fast 3D model)
+          const response = await fetch("https://queue.fal.run/fal-ai/stable-fast-3d", {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${apiKey}`,
+              Authorization: `Key ${apiKey}`,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
               image_url: imageUrl,
-              enable_pbr: true,
             }),
           });
 
           if (!response.ok) {
             const err = await response.text();
-            throw new Error(`Meshy API Error: ${err}`);
+            throw new Error(`Fal.ai API Error: ${err}`);
           }
 
           const data = await response.json();
-          // data.result contains the task ID
-          return new Response(JSON.stringify(data), {
+          // data.request_id contains the task ID
+          return new Response(JSON.stringify({ result: data.request_id }), {
             headers: { "Content-Type": "application/json" },
           });
         } catch (error) {
@@ -50,13 +50,13 @@ export const Route = createFileRoute("/api/generate-3d-model")({
       GET: async ({ request }: { request: Request }) => {
         const url = new URL(request.url);
         const taskId = url.searchParams.get("taskId");
-        const apiKey = process.env.MESHY_API_KEY;
+        const apiKey = process.env.FAL_KEY;
 
         if (!taskId) {
           return new Response("Missing taskId", { status: 400 });
         }
 
-        if (!apiKey || taskId.startsWith("mock-") || apiKey.startsWith("http")) {
+        if (!apiKey || taskId.startsWith("mock-")) {
           // Mock mode: simulate success with a placeholder GLB
           return new Response(
             JSON.stringify({
@@ -71,29 +71,49 @@ export const Route = createFileRoute("/api/generate-3d-model")({
         }
 
         try {
-          const response = await fetch(`https://api.meshy.ai/v1/image-to-3d/${taskId}`, {
+          // 1. Get Status
+          const statusResponse = await fetch(`https://queue.fal.run/fal-ai/stable-fast-3d/requests/${taskId}/status`, {
             method: "GET",
             headers: {
-              Authorization: `Bearer ${apiKey}`,
+              Authorization: `Key ${apiKey}`,
             },
           });
 
-          if (!response.ok) {
-            const err = await response.text();
-            throw new Error(`Meshy API Error: ${err}`);
+          if (!statusResponse.ok) {
+            const err = await statusResponse.text();
+            throw new Error(`Fal.ai Status API Error: ${err}`);
           }
 
-          const data = await response.json();
-          // Map to standard format
+          const statusData = await statusResponse.json();
+          const falStatus = statusData.status; // IN_QUEUE, IN_PROGRESS, COMPLETED
+
           let frontendStatus = "IN_PROGRESS";
-          if (data.status === "SUCCEEDED") frontendStatus = "SUCCEEDED";
-          if (data.status === "FAILED") frontendStatus = "FAILED";
+          let progress = 50;
+          let glbUrl = "";
+
+          if (falStatus === "IN_QUEUE") progress = 10;
+          if (falStatus === "IN_PROGRESS") progress = 50;
+
+          if (falStatus === "COMPLETED") {
+            frontendStatus = "SUCCEEDED";
+            progress = 100;
+            
+            // 2. Fetch the actual result
+            const resultResponse = await fetch(`https://queue.fal.run/fal-ai/stable-fast-3d/requests/${taskId}`, {
+              method: "GET",
+              headers: {
+                Authorization: `Key ${apiKey}`,
+              },
+            });
+            const resultData = await resultResponse.json();
+            glbUrl = resultData?.model_file?.url || resultData?.model_mesh?.url || "";
+          }
 
           return new Response(JSON.stringify({
             status: frontendStatus,
-            progress: data.progress || 50,
+            progress: progress,
             model_urls: {
-              glb: data.model_urls?.glb || ""
+              glb: glbUrl
             }
           }), {
             headers: { "Content-Type": "application/json" },

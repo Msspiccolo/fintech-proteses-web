@@ -18,6 +18,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
+import { Route as ApiGenerateImagePreviewRouteImport } from './routes/api/generate-image-preview'
 import { Route as ApiGenerate3dPreviewRouteImport } from './routes/api/generate-3d-preview'
 import { Route as ApiGenerate3dModelRouteImport } from './routes/api/generate-3d-model'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated.perfil'
@@ -26,7 +27,6 @@ import { Route as AuthenticatedClinicaIndexRouteImport } from './routes/_authent
 import { Route as AuthenticatedPacienteDashboardRouteImport } from './routes/_authenticated.paciente.dashboard'
 import { Route as AuthenticatedClinicaDashboardRouteImport } from './routes/_authenticated.clinica.dashboard'
 import { Route as AuthenticatedAdminSetupRouteImport } from './routes/_authenticated.admin.setup'
-import { Route as AuthenticatedAdminModelos3dRouteImport } from './routes/_authenticated.admin.modelos-3d'
 import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated.admin.dashboard'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -73,6 +73,11 @@ const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => AuthRoute,
 } as any)
+const ApiGenerateImagePreviewRoute = ApiGenerateImagePreviewRouteImport.update({
+  id: '/api/generate-image-preview',
+  path: '/api/generate-image-preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiGenerate3dPreviewRoute = ApiGenerate3dPreviewRouteImport.update({
   id: '/api/generate-3d-preview',
   path: '/api/generate-3d-preview',
@@ -116,12 +121,6 @@ const AuthenticatedAdminSetupRoute = AuthenticatedAdminSetupRouteImport.update({
   path: '/admin/setup',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedAdminModelos3dRoute =
-  AuthenticatedAdminModelos3dRouteImport.update({
-    id: '/admin/modelos-3d',
-    path: '/admin/modelos-3d',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
 const AuthenticatedAdminDashboardRoute =
   AuthenticatedAdminDashboardRouteImport.update({
     id: '/admin/dashboard',
@@ -141,9 +140,9 @@ export interface FileRoutesByFullPath {
   '/perfil': typeof AuthenticatedPerfilRoute
   '/api/generate-3d-model': typeof ApiGenerate3dModelRoute
   '/api/generate-3d-preview': typeof ApiGenerate3dPreviewRoute
+  '/api/generate-image-preview': typeof ApiGenerateImagePreviewRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
-  '/admin/modelos-3d': typeof AuthenticatedAdminModelos3dRoute
   '/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/clinica/dashboard': typeof AuthenticatedClinicaDashboardRoute
   '/paciente/dashboard': typeof AuthenticatedPacienteDashboardRoute
@@ -161,9 +160,9 @@ export interface FileRoutesByTo {
   '/perfil': typeof AuthenticatedPerfilRoute
   '/api/generate-3d-model': typeof ApiGenerate3dModelRoute
   '/api/generate-3d-preview': typeof ApiGenerate3dPreviewRoute
+  '/api/generate-image-preview': typeof ApiGenerateImagePreviewRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
-  '/admin/modelos-3d': typeof AuthenticatedAdminModelos3dRoute
   '/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/clinica/dashboard': typeof AuthenticatedClinicaDashboardRoute
   '/paciente/dashboard': typeof AuthenticatedPacienteDashboardRoute
@@ -183,9 +182,9 @@ export interface FileRoutesById {
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/api/generate-3d-model': typeof ApiGenerate3dModelRoute
   '/api/generate-3d-preview': typeof ApiGenerate3dPreviewRoute
+  '/api/generate-image-preview': typeof ApiGenerateImagePreviewRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
-  '/_authenticated/admin/modelos-3d': typeof AuthenticatedAdminModelos3dRoute
   '/_authenticated/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/_authenticated/clinica/dashboard': typeof AuthenticatedClinicaDashboardRoute
   '/_authenticated/paciente/dashboard': typeof AuthenticatedPacienteDashboardRoute
@@ -205,9 +204,9 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/api/generate-3d-model'
     | '/api/generate-3d-preview'
+    | '/api/generate-image-preview'
     | '/auth/reset-password'
     | '/admin/dashboard'
-    | '/admin/modelos-3d'
     | '/admin/setup'
     | '/clinica/dashboard'
     | '/paciente/dashboard'
@@ -225,9 +224,9 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/api/generate-3d-model'
     | '/api/generate-3d-preview'
+    | '/api/generate-image-preview'
     | '/auth/reset-password'
     | '/admin/dashboard'
-    | '/admin/modelos-3d'
     | '/admin/setup'
     | '/clinica/dashboard'
     | '/paciente/dashboard'
@@ -246,9 +245,9 @@ export interface FileRouteTypes {
     | '/_authenticated/perfil'
     | '/api/generate-3d-model'
     | '/api/generate-3d-preview'
+    | '/api/generate-image-preview'
     | '/auth/reset-password'
     | '/_authenticated/admin/dashboard'
-    | '/_authenticated/admin/modelos-3d'
     | '/_authenticated/admin/setup'
     | '/_authenticated/clinica/dashboard'
     | '/_authenticated/paciente/dashboard'
@@ -266,6 +265,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiGenerate3dModelRoute: typeof ApiGenerate3dModelRoute
   ApiGenerate3dPreviewRoute: typeof ApiGenerate3dPreviewRoute
+  ApiGenerateImagePreviewRoute: typeof ApiGenerateImagePreviewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -333,6 +333,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthResetPasswordRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/api/generate-image-preview': {
+      id: '/api/generate-image-preview'
+      path: '/api/generate-image-preview'
+      fullPath: '/api/generate-image-preview'
+      preLoaderRoute: typeof ApiGenerateImagePreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/generate-3d-preview': {
       id: '/api/generate-3d-preview'
       path: '/api/generate-3d-preview'
@@ -389,13 +396,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSetupRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/admin/modelos-3d': {
-      id: '/_authenticated/admin/modelos-3d'
-      path: '/admin/modelos-3d'
-      fullPath: '/admin/modelos-3d'
-      preLoaderRoute: typeof AuthenticatedAdminModelos3dRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/admin/dashboard': {
       id: '/_authenticated/admin/dashboard'
       path: '/admin/dashboard'
@@ -410,7 +410,6 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
-  AuthenticatedAdminModelos3dRoute: typeof AuthenticatedAdminModelos3dRoute
   AuthenticatedAdminSetupRoute: typeof AuthenticatedAdminSetupRoute
   AuthenticatedClinicaDashboardRoute: typeof AuthenticatedClinicaDashboardRoute
   AuthenticatedPacienteDashboardRoute: typeof AuthenticatedPacienteDashboardRoute
@@ -421,7 +420,6 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedAdminDashboardRoute: AuthenticatedAdminDashboardRoute,
-  AuthenticatedAdminModelos3dRoute: AuthenticatedAdminModelos3dRoute,
   AuthenticatedAdminSetupRoute: AuthenticatedAdminSetupRoute,
   AuthenticatedClinicaDashboardRoute: AuthenticatedClinicaDashboardRoute,
   AuthenticatedPacienteDashboardRoute: AuthenticatedPacienteDashboardRoute,
@@ -453,6 +451,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiGenerate3dModelRoute: ApiGenerate3dModelRoute,
   ApiGenerate3dPreviewRoute: ApiGenerate3dPreviewRoute,
+  ApiGenerateImagePreviewRoute: ApiGenerateImagePreviewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

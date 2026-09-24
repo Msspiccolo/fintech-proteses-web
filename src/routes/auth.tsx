@@ -105,9 +105,6 @@ function AuthPage() {
       confirmPassword: "",
       role: tipo === "clinica" ? "clinic" : "patient",
       clinicName: "",
-      zipCode: "",
-      address: "",
-      city: "",
     },
   });
 
@@ -190,9 +187,6 @@ function AuthPage() {
         state: values.state,
         role: values.role,
         clinicName: values.clinicName,
-        zipCode: values.zipCode,
-        address: values.address,
-        city: values.city,
       });
       if (needsEmailConfirmation) {
         setMode("login");
