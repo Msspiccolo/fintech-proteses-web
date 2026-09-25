@@ -5,47 +5,53 @@ export const Route = createFileRoute("/api/generate-3d-preview")({
     handlers: {
       POST: async ({ request }: { request: Request }) => {
         const { description } = (await request.json()) as { description?: string };
-        const englishPrompt = `High quality 3D CAD render of a medical orthopedic prosthesis on a clean white background. ${description ? description : "High-tech custom prosthetic limb"}. Made of titanium and carbon fiber, studio lighting, professional medical device.`;
+        const englishPrompt = `Isolated 3D CAD render of a purely mechanical robotic component. ${description ? description : "High-tech carbon fiber structure"}. Pure white background. Professional industrial product photography. Object only, isolated, no skin, no clothing.`;
         
         let imageUrl = "";
 
-        if (process.env.GEMINI_API_KEY) {
-          // Use Gemini API (Imagen 3) if key is available
+        if (process.env.OPENAI_API_KEY) {
           try {
-            const response = await fetch(
-              `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-images:predict?key=${process.env.GEMINI_API_KEY}`,
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  instances: [{ prompt: englishPrompt }],
-                  parameters: { sampleCount: 1, outputOptions: { mimeType: "image/jpeg" } },
-                }),
-              }
-            );
+            const response = await fetch("https://api.openai.com/v1/images/generations", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+              },
+              body: JSON.stringify({
+                model: "dall-e-3",
+                prompt: englishPrompt,
+                n: 1,
+                size: "1024x1024",
+                response_format: "b64_json",
+              }),
+            });
+
             if (!response.ok) {
               const errText = await response.text();
-              console.error("Gemini Image API Error:", errText);
-              throw new Error("Gemini Image API failed");
+              console.error("OpenAI Error:", response.status, errText);
+              throw new Error(`OpenAI API returned ${response.status}`);
             }
+
             const data = await response.json();
-            const base64Image = data.predictions?.[0]?.bytesBase64Encoded;
-            if (base64Image) {
-              imageUrl = `data:image/jpeg;base64,${base64Image}`;
+            if (data.data && data.data[0] && data.data[0].b64_json) {
+              imageUrl = `data:image/jpeg;base64,${data.data[0].b64_json}`;
             }
           } catch (error) {
-            console.error("Failed to use Gemini API, falling back to Pollinations", error);
+            console.error("OpenAI falhou, usando Pollinations:", error);
           }
         }
 
         if (!imageUrl) {
-          // Fallback to Pollinations.ai if Gemini fails or key is not provided
+          // Fallback para Pollinations.ai com negative_prompt MUITO forte
           const encodedPrompt = encodeURIComponent(englishPrompt);
+          const negativePrompt = "human, person, hand, arm, leg, body, skin, wearing, attached, face, mannequin, background, messy, text, watermark";
+          const encodedNeg = encodeURIComponent(negativePrompt);
           const randomSeed = Math.floor(Math.random() * 1000000);
-          imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${randomSeed}&model=flux`;
+          // Usando model=flux-3d que é mais adequado para renders
+          imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${randomSeed}&model=flux-3d&negative_prompt=${encodedNeg}`;
         }
 
-        // Simula o formato Server-Sent Events (SSE) que o frontend (streamImage.ts) espera
+        // Formato SSE que o frontend (streamImage.ts) espera
         const sseStream = new ReadableStream({
           start(controller) {
             const data = JSON.stringify({

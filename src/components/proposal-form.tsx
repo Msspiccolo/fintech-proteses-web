@@ -69,6 +69,9 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
   const [model3dUrl, setModel3dUrl] = useState<string | null>(null);
   const [generating3D, setGenerating3D] = useState(false);
   const [generationProgress, setGenerationProgress] = useState<number>(0);
+  const [previewMaterial, setPreviewMaterial] = useState("fibra de carbono");
+  const [previewCor, setPreviewCor] = useState("preto");
+  const [previewSource, setPreviewSource] = useState<string>("openai");
   const modeling3DCost = 1500;
   const interestRate = 1.99;
 
@@ -372,13 +375,9 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Material</Label>
-                      <Select 
-                        value={form.watch("purpose")?.includes("titânio") ? "titânio aeroespacial" : "fibra de carbono"} 
-                        onValueChange={(val) => { 
-                          // Just a simple state hack for now to avoid refactoring the whole form schema
-                          const current = form.getValues("purpose") || "";
-                          form.setValue("purpose", current + " | Material: " + val);
-                        }}
+                      <Select
+                        value={previewMaterial}
+                        onValueChange={setPreviewMaterial}
                       >
                         <SelectTrigger><SelectValue placeholder="Material" /></SelectTrigger>
                         <SelectContent>
@@ -390,12 +389,9 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
                     </div>
                     <div className="space-y-2">
                       <Label>Cor</Label>
-                      <Select 
-                        value="preto" 
-                        onValueChange={(val) => {
-                          const current = form.getValues("purpose") || "";
-                          form.setValue("purpose", current + " | Cor: " + val);
-                        }}
+                      <Select
+                        value={previewCor}
+                        onValueChange={setPreviewCor}
                       >
                         <SelectTrigger><SelectValue placeholder="Cor" /></SelectTrigger>
                         <SelectContent>
@@ -415,19 +411,16 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
                       setGenerating(true);
                       setPreviewUrl(null);
                       try {
-                        const purposeStr = form.getValues("purpose") || "";
-                        const mat = purposeStr.includes("titânio") ? "titânio" : "fibra de carbono";
-                        const c = purposeStr.includes("branco") ? "branco" : "preto";
                         const tipo = PROSTHESIS_MODELS.find(m => m.id === selectedModel)?.name || "prótese ortopédica";
-                        
                         const res = await fetch("/api/generate-image-preview", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ tipo: tipo, material: mat, cor: c }), 
+                          body: JSON.stringify({ tipo, material: previewMaterial, cor: previewCor }),
                         });
                         const data = await res.json();
                         if (data.imageUrl) {
                           setPreviewUrl(data.imageUrl);
+                          setPreviewSource(data.source || "gemini");
                           setPreviewFinal(true);
                         } else {
                           toast.error(data.error || "Erro ao gerar imagem");
@@ -444,7 +437,7 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
                     {generating ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        Gerando com Gemini...
+                        Gerando com OpenAI...
                       </>
                     ) : (
                       <>
@@ -462,7 +455,7 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
                         className="w-full aspect-square object-cover"
                       />
                       <div className="flex items-center justify-between gap-2 border-t border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-                        <span>Imagem gerada pelo Gemini (Imagen 3)</span>
+                        <span>Imagem gerada por {previewSource === "openai" ? "OpenAI (DALL-E 3)" : "IA (Pollinations)"}</span>
                         <a
                           href={previewUrl}
                           download="previa-protese.jpg"
