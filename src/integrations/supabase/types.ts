@@ -161,37 +161,49 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string | null
           birth_date: string | null
+          city: string | null
           created_at: string
           document: string | null
           full_name: string | null
           id: string
           phone: string | null
           role: Database["public"]["Enums"]["app_role"]
+          state: string | null
           updated_at: string
           user_id: string
+          zip_code: string | null
         }
         Insert: {
+          address?: string | null
           birth_date?: string | null
+          city?: string | null
           created_at?: string
           document?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
           role?: Database["public"]["Enums"]["app_role"]
+          state?: string | null
           updated_at?: string
           user_id: string
+          zip_code?: string | null
         }
         Update: {
+          address?: string | null
           birth_date?: string | null
+          city?: string | null
           created_at?: string
           document?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
           role?: Database["public"]["Enums"]["app_role"]
+          state?: string | null
           updated_at?: string
           user_id?: string
+          zip_code?: string | null
         }
         Relationships: []
       }
@@ -230,6 +242,21 @@ export type Database = {
         }
         Returns: undefined
       }
+      delete_own_account: { Args: never; Returns: undefined }
+      delete_user_by_admin: {
+        Args: { target_user_id: string }
+        Returns: undefined
+      }
+      get_all_users_for_admin: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          full_name: string
+          role: string
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -240,6 +267,13 @@ export type Database = {
       is_clinic_member: {
         Args: { _clinic_id: string; _user_id: string }
         Returns: boolean
+      }
+      update_user_role_by_admin: {
+        Args: {
+          new_role: Database["public"]["Enums"]["app_role"]
+          target_user_id: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
