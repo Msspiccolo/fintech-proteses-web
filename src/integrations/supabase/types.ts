@@ -94,6 +94,50 @@ export type Database = {
         }
         Relationships: []
       }
+      fabrication_orders: {
+        Row: {
+          application_id: string
+          created_at: string
+          id: string
+          material: string | null
+          model: string
+          notes: string | null
+          patient_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          id?: string
+          material?: string | null
+          model: string
+          notes?: string | null
+          patient_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          id?: string
+          material?: string | null
+          model?: string
+          notes?: string | null
+          patient_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fabrication_orders_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "loan_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       loan_applications: {
         Row: {
           clinic_id: string | null
@@ -155,6 +199,44 @@ export type Database = {
             columns: ["clinic_id"]
             isOneToOne: false
             referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loan_documents: {
+        Row: {
+          application_id: string
+          created_at: string
+          doc_type: string
+          file_name: string
+          id: string
+          patient_id: string
+          storage_path: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          doc_type?: string
+          file_name: string
+          id?: string
+          patient_id: string
+          storage_path: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          doc_type?: string
+          file_name?: string
+          id?: string
+          patient_id?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loan_documents_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "loan_applications"
             referencedColumns: ["id"]
           },
         ]
