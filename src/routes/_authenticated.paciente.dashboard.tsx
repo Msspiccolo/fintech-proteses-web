@@ -10,6 +10,7 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { ProposalForm } from "@/components/proposal-form";
+import { PatientApplicationExtras } from "@/components/application-extras";
 
 import { toast } from "sonner";
 
@@ -162,6 +163,7 @@ function PatientDashboard() {
                           <p className="text-foreground">{formatDate(app.created_at)}</p>
                         </div>
                       </CardContent>
+                      <PatientApplicationExtras app={app} />
                     </Card>
                   ))}
                 </div>
