@@ -3,7 +3,7 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Environment, ContactShadows, Center, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 
-export type ProsthesisModelId = "knee" | "hip" | "hand" | "leg" | "foot" | "arm";
+export type ProsthesisModelId = "knee" | "hip" | "hand" | "leg" | "foot" | "arm" | "knee_2" | "hip_2" | "leg_2" | "foot_2" | "hand_2" | "arm_2" | "knee_3" | "hip_3" | "leg_3" | "hand_3";
 
 export interface ProsthesisModel {
   id: ProsthesisModelId;
@@ -24,7 +24,7 @@ export const PROSTHESIS_MODELS: ProsthesisModel[] = [
   },
   {
     id: "hip",
-    name: "Quadril Anatômico Biolox  Delta",
+    name: "Quadril Anatômico Biolox Delta",
     description: "Cabeça esférica com haste femoral e acabamento poroso para osteointegração.",
     category: "Membro inferior",
     basePrice: 24900,
@@ -57,6 +57,76 @@ export const PROSTHESIS_MODELS: ProsthesisModel[] = [
     description: "Possui um soquete de encaixe com terminal universal para ferramentas modulares.",
     category: "Membro superior",
     basePrice: 19800,
+  },
+  {
+    id: "knee_2",
+    name: "Joelho Biônico Inteligente",
+    description: "Articulação computadorizada com sensores de movimento.",
+    category: "Membro inferior",
+    basePrice: 35000,
+  },
+  {
+    id: "hip_2",
+    name: "Quadril Titânio Premium",
+    description: "Prótese de quadril de alta performance.",
+    category: "Membro inferior",
+    basePrice: 28000,
+  },
+  {
+    id: "leg_2",
+    name: "Perna Esportiva L4",
+    description: "Desenhada para corrida e atividades de alto impacto.",
+    category: "Membro inferior",
+    basePrice: 29500,
+  },
+  {
+    id: "foot_2",
+    name: "Pé de Fibra de Carbono Max",
+    description: "Máximo retorno de energia para esportistas.",
+    category: "Membro inferior",
+    basePrice: 17500,
+  },
+  {
+    id: "hand_2",
+    name: "Mão Mioelétrica Avançada",
+    description: "Resposta rápida e precisa aos impulsos musculares.",
+    category: "Membro superior",
+    basePrice: 42000,
+  },
+  {
+    id: "arm_2",
+    name: "Braço Modular com Cotovelo",
+    description: "Inclui articulação de cotovelo com trava mecânica.",
+    category: "Membro superior",
+    basePrice: 26000,
+  },
+  {
+    id: "knee_3",
+    name: "Joelho Hidráulico Compacto",
+    description: "Amortecimento aprimorado para terrenos irregulares.",
+    category: "Membro inferior",
+    basePrice: 22000,
+  },
+  {
+    id: "hip_3",
+    name: "Quadril Polímero Avançado",
+    description: "Haste ultraleve com liga de titânio e polímero.",
+    category: "Membro inferior",
+    basePrice: 26500,
+  },
+  {
+    id: "leg_3",
+    name: "Perna Infantil Adaptável",
+    description: "Design modular que acompanha o crescimento infantil.",
+    category: "Membro inferior",
+    basePrice: 18000,
+  },
+  {
+    id: "hand_3",
+    name: "Mão Estética Silicone",
+    description: "Acabamento realista em silicone médico.",
+    category: "Membro superior",
+    basePrice: 9500,
   },
 ];
 
@@ -262,16 +332,26 @@ function ModelMesh({ id }: { id: ProsthesisModelId }) {
   // Fallback to primitive geometric shapes if the user hasn't added the .glb files yet
   switch (id) {
     case "knee":
+    case "knee_2":
+    case "knee_3":
       return <KneeMesh />;
     case "hip":
+    case "hip_2":
+    case "hip_3":
       return <HipMesh />;
     case "leg":
+    case "leg_2":
+    case "leg_3":
       return <LegMesh />;
     case "foot":
+    case "foot_2":
       return <FootMesh />;
     case "hand":
+    case "hand_2":
+    case "hand_3":
       return <HandMesh />;
     case "arm":
+    case "arm_2":
       return <ArmMesh />;
   }
 }

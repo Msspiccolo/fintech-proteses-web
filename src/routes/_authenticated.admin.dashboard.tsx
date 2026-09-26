@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { getAllLoanApplications, updateLoanApplication } from "@/lib/loans.functions";
+import { getAllLoanApplications, updateLoanApplication, updateFabricationOrder } from "@/lib/loans.functions";
 import { getAllClinicsForAdmin, updateClinicStatus } from "@/lib/clinics.functions";
 import {
   getAllUsersForAdmin,
@@ -24,6 +24,8 @@ import {
 } from "@/components/ui/select";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Header } from "@/components/layout/header";
+import { openDocument, DOC_TYPES } from "@/components/application-extras";
+import { FileText } from "lucide-react";
 import { Footer } from "@/components/layout/footer";
 import { toast } from "sonner";
 
@@ -50,6 +52,33 @@ function AdminDashboard() {
   });
 
   const applications: any[] = data?.applications ?? [];
+
+  const updateOrder = useServerFn(updateFabricationOrder);
+
+  async function handleOrderStatus(id: string, status: string) {
+    try {
+      await updateOrder({ data: { id, status } });
+      toast.success("Status de fabricação atualizado com sucesso!");
+      refetch();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao atualizar status");
+    }
+  }
+
+  // Reports calculations
+  const approvedApps = applications.filter((a) => a.status === "approved");
+  const approvalRate = applications.length > 0 ? (approvedApps.length / applications.length) * 100 : 0;
+  const creditVolume = approvedApps.reduce((acc, app) => acc + app.requested_amount, 0);
+
+  const clinicCounts = applications.reduce((acc, app) => {
+    const name = (app.clinics as any)?.name ?? "Sem Clínica";
+    acc[name] = (acc[name] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const topClinics = Object.entries(clinicCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
 
   async function handleStatus(id: string, status: "approved" | "rejected") {
     try {
@@ -139,13 +168,60 @@ function AdminDashboard() {
             </div>
           </div>
 
-          <Tabs defaultValue="applications" className="mt-8">
-            <TabsList className="grid w-full grid-cols-4 max-w-[800px]">
+          <Tabs defaultValue="reports" className="mt-8">
+            <TabsList className="grid w-full grid-cols-5 max-w-[1000px]">
+              <TabsTrigger value="reports">Relatórios</TabsTrigger>
               <TabsTrigger value="applications">Propostas</TabsTrigger>
               <TabsTrigger value="clinics">Clínicas Parceiras</TabsTrigger>
               <TabsTrigger value="users">Usuários</TabsTrigger>
               <TabsTrigger value="settings">Configurações</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="reports" className="mt-6 space-y-6">
+              <div className="grid gap-6 md:grid-cols-3">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Taxa de Aprovação</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-foreground">{approvalRate.toFixed(1)}%</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Volume de Crédito (Aprovado)</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-foreground">{formatCurrency(creditVolume)}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Total de Propostas</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-foreground">{applications.length}</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div>
+                <h2 className="text-xl font-semibold text-foreground mb-4">Clínicas Mais Ativas</h2>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {topClinics.map(([name, count]) => (
+                    <Card key={name}>
+                      <CardContent className="p-4 flex items-center justify-between">
+                        <span className="font-medium text-foreground">{name}</span>
+                        <span className="text-sm text-muted-foreground">{count} proposta{count !== 1 ? 's' : ''}</span>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  {topClinics.length === 0 && (
+                    <p className="text-sm text-muted-foreground">Nenhuma clínica encontrada.</p>
+                  )}
+                </div>
+              </div>
+            </TabsContent>
 
             <TabsContent value="applications" className="mt-6 space-y-6">
               <div className="grid gap-6 md:grid-cols-4">
@@ -207,49 +283,100 @@ function AdminDashboard() {
                   <div className="mt-4 space-y-4">
                     {applications.map((app) => (
                       <Card key={app.id}>
-                        <CardContent className="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between">
-                          <div>
-                            <p className="text-sm text-muted-foreground">Paciente</p>
-                            <p className="text-lg font-semibold text-foreground">
-                              {(app.profiles as unknown as { full_name: string | null } | null)
-                                ?.full_name ?? "Não informado"}
-                            </p>
+                        <CardContent className="flex flex-col gap-4 p-6">
+                          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                            <div>
+                              <p className="text-sm text-muted-foreground">Paciente</p>
+                              <p className="text-lg font-semibold text-foreground">
+                                {(app.profiles as unknown as { full_name: string | null } | null)
+                                  ?.full_name ?? "Não informado"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-muted-foreground">Clínica</p>
+                              <p className="text-foreground">
+                                {(app.clinics as { name: string } | null)?.name ?? "Não informada"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-muted-foreground">Valor</p>
+                              <p className="text-foreground">
+                                {formatCurrency(app.requested_amount)}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {app.installments}x de {formatCurrency(app.monthly_payment)}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-muted-foreground">Status</p>
+                              <StatusBadge status={app.status} />
+                            </div>
+                            <div>
+                              <p className="text-sm text-muted-foreground">Data</p>
+                              <p className="text-foreground">{formatDate(app.created_at)}</p>
+                            </div>
+                            {app.status === "pending" && (
+                              <div className="flex gap-2">
+                                <Button size="sm" onClick={() => handleStatus(app.id, "approved")}>
+                                  Aprovar
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleStatus(app.id, "rejected")}
+                                >
+                                  Reprovar
+                                </Button>
+                              </div>
+                            )}
                           </div>
-                          <div>
-                            <p className="text-sm text-muted-foreground">Clínica</p>
-                            <p className="text-foreground">
-                              {(app.clinics as { name: string } | null)?.name ?? "Não informada"}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-muted-foreground">Valor</p>
-                            <p className="text-foreground">
-                              {formatCurrency(app.requested_amount)}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {app.installments}x de {formatCurrency(app.monthly_payment)}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-muted-foreground">Status</p>
-                            <StatusBadge status={app.status} />
-                          </div>
-                          <div>
-                            <p className="text-sm text-muted-foreground">Data</p>
-                            <p className="text-foreground">{formatDate(app.created_at)}</p>
-                          </div>
-                          {app.status === "pending" && (
-                            <div className="flex gap-2">
-                              <Button size="sm" onClick={() => handleStatus(app.id, "approved")}>
-                                Aprovar
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleStatus(app.id, "rejected")}
-                              >
-                                Reprovar
-                              </Button>
+                          
+                          {/* Details Section */}
+                          {(app.loan_documents?.length > 0 || app.fabrication_orders?.length > 0) && (
+                            <div className="w-full mt-2 pt-4 border-t flex flex-col md:flex-row gap-8">
+                              {app.loan_documents && app.loan_documents.length > 0 && (
+                                <div className="flex-1">
+                                  <p className="text-sm font-semibold mb-3">Documentos Enviados</p>
+                                  <ul className="space-y-2">
+                                    {app.loan_documents.map((doc: any) => (
+                                      <li key={doc.id} className="flex items-center gap-2 text-sm">
+                                        <FileText className="h-4 w-4 text-primary" />
+                                        <button className="truncate text-left hover:underline text-primary" onClick={() => openDocument(doc.storage_path)}>
+                                          {DOC_TYPES[doc.doc_type] ?? doc.doc_type} — {doc.file_name}
+                                        </button>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+
+                              {app.fabrication_orders && app.fabrication_orders.length > 0 && (
+                                <div className="flex-1">
+                                  <p className="text-sm font-semibold mb-3">Pedidos de Fabricação</p>
+                                  <div className="space-y-3">
+                                    {app.fabrication_orders.map((order: any) => (
+                                      <div key={order.id} className="flex flex-wrap items-center justify-between gap-4 text-sm bg-muted/40 p-3 rounded-lg">
+                                        <div className="flex-1 min-w-[200px]">
+                                          <p className="font-medium text-foreground">{order.model}</p>
+                                          <p className="text-xs text-muted-foreground">{order.material}</p>
+                                        </div>
+                                        <Select defaultValue={order.status} onValueChange={(v) => handleOrderStatus(order.id, v)}>
+                                          <SelectTrigger className="w-[160px] h-8 text-xs bg-background">
+                                             <SelectValue placeholder="Status" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                             <SelectItem value="requested">Solicitada</SelectItem>
+                                             <SelectItem value="in_production">Em produção</SelectItem>
+                                             <SelectItem value="shipped">Enviada</SelectItem>
+                                             <SelectItem value="delivered">Entregue</SelectItem>
+                                             <SelectItem value="cancelled">Cancelada</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           )}
                         </CardContent>

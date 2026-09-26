@@ -110,35 +110,20 @@ function PatientDashboard() {
             </Card>
           </div>
 
-          <div className="mt-12 grid gap-8 lg:grid-cols-2">
-            <div>
-              <h2 className="text-xl font-semibold text-foreground">Nova proposta</h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Ajuste o valor e envie uma nova proposta de financiamento.
+          <div className="mt-12">
+            <h2 className="text-xl font-semibold text-foreground">Minhas propostas</h2>
+            {isLoading ? (
+              <p className="mt-4 text-muted-foreground">Carregando...</p>
+            ) : applications.length === 0 ? (
+              <p className="mt-4 text-muted-foreground">
+                Você ainda não tem propostas. Simule e solicite uma abaixo.
               </p>
-              <Card className="mt-4">
-                <CardContent className="p-6">
-                  <ProposalForm
-                    onSuccess={() =>
-                      queryClient.invalidateQueries({ queryKey: ["my-loan-applications"] })
-                    }
-                  />
-                </CardContent>
-              </Card>
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-foreground">Minhas propostas</h2>
-              {isLoading ? (
-                <p className="mt-4 text-muted-foreground">Carregando...</p>
-              ) : applications.length === 0 ? (
-                <p className="mt-4 text-muted-foreground">
-                  Você ainda não tem propostas. Simule e solicite uma.
-                </p>
-              ) : (
-                <div className="mt-4 space-y-4">
-                  {applications.map((app: any) => (
-                    <Card key={app.id}>
-                      <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+            ) : (
+              <div className="mt-4 grid gap-6 lg:grid-cols-2">
+                {applications.map((app: any) => (
+                  <Card key={app.id}>
+                    <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 flex-1">
                         <div>
                           <p className="text-sm text-muted-foreground">Valor solicitado</p>
                           <p className="text-lg font-semibold text-foreground">
@@ -162,13 +147,32 @@ function PatientDashboard() {
                           <p className="text-sm text-muted-foreground">Data</p>
                           <p className="text-foreground">{formatDate(app.created_at)}</p>
                         </div>
-                      </CardContent>
-                      <PatientApplicationExtras app={app} />
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </div>
+                      </div>
+                    </CardContent>
+                    <PatientApplicationExtras app={app} />
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Form area expanded to full width */}
+        <div className="mt-16 w-full bg-muted/20 border-t py-12 px-4 lg:px-12">
+          <div className="mx-auto max-w-[1400px]">
+            <h2 className="text-2xl font-semibold text-foreground text-center">Nova proposta</h2>
+            <p className="mt-2 text-muted-foreground text-center mb-10">
+              Ajuste o valor, configure as parcelas e selecione sua prótese em nosso catálogo.
+            </p>
+            <Card>
+              <CardContent className="p-6 md:p-8">
+                <ProposalForm
+                  onSuccess={() =>
+                    queryClient.invalidateQueries({ queryKey: ["my-loan-applications"] })
+                  }
+                />
+              </CardContent>
+            </Card>
           </div>
         </div>
       </main>

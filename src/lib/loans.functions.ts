@@ -107,7 +107,7 @@ export const getAllLoanApplications = createServerFn({ method: "GET" })
 
     const { data, error } = await context.supabase
       .from("loan_applications")
-      .select("*, clinics(name), profiles!loan_applications_patient_id_fkey(full_name)")
+      .select("*, clinics(name), profiles!loan_applications_patient_id_fkey(full_name), loan_documents(*), fabrication_orders(*)")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -147,4 +147,39 @@ export const updateLoanApplication = createServerFn({ method: "POST" })
     }
 
     return { application };
+  });
+
+const updateFabricationOrderSchema = z.object({
+  id: z.string().uuid(),
+  status: z.string(),
+});
+
+export const updateFabricationOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: unknown) => updateFabricationOrderSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin, error: adminError } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+
+    if (adminError || !isAdmin) {
+      throw new Error("Forbidden");
+    }
+
+    const { data: order, error } = await context.supabase
+      .from("fabrication_orders")
+      .update({
+        status: data.status,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", data.id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return { order };
   });
