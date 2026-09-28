@@ -44,7 +44,10 @@ import {
   FileText,
   Eye,
   History,
+  Send,
+  MessageCircle,
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const Route = createFileRoute("/_authenticated/clinica/dashboard")({
   head: () => ({
@@ -80,6 +83,10 @@ const MOCK_CLIENTS_DATA = [
     parcelasRestantes: 12,
     parcelasAtrasadas: 0,
     historicoBoletos: [],
+    mensagens: [
+      { id: 1, sender: "clinica", text: "Olá João, o boleto deste mês já está disponível.", date: "2023-10-10T10:00:00Z" },
+      { id: 2, sender: "cliente", text: "Obrigado por avisar! Já vou realizar o pagamento.", date: "2023-10-10T10:15:00Z" },
+    ],
   },
   {
     id: 2,
@@ -95,6 +102,11 @@ const MOCK_CLIENTS_DATA = [
       { data: "2023-10-15T10:00:00Z", tipo: "Mensagem de cobrança" },
       { data: "2023-10-18T14:30:00Z", tipo: "Boleto 2ª via gerado" },
     ],
+    mensagens: [
+      { id: 1, sender: "clinica", text: "Olá Maria, notamos que a parcela deste mês está em atraso. Podemos ajudar?", date: "2023-10-15T10:00:00Z" },
+      { id: 2, sender: "cliente", text: "Tive um imprevisto, vou pagar até sexta-feira. Desculpe a demora.", date: "2023-10-16T14:20:00Z" },
+      { id: 3, sender: "clinica", text: "Sem problemas, geramos um novo boleto para sexta. Segue o link.", date: "2023-10-18T14:30:00Z" },
+    ],
   },
   {
     id: 3,
@@ -107,6 +119,7 @@ const MOCK_CLIENTS_DATA = [
     parcelasRestantes: 6,
     parcelasAtrasadas: 0,
     historicoBoletos: [],
+    mensagens: [],
   },
   {
     id: 4,
@@ -119,6 +132,9 @@ const MOCK_CLIENTS_DATA = [
     parcelasRestantes: 22,
     parcelasAtrasadas: 0,
     historicoBoletos: [],
+    mensagens: [
+      { id: 1, sender: "clinica", text: "Bem-vinda, Ana! Sua primeira parcela vence na próxima semana.", date: "2023-11-01T09:00:00Z" },
+    ],
   },
   {
     id: 5,
@@ -134,6 +150,10 @@ const MOCK_CLIENTS_DATA = [
       { data: "2023-09-01T09:15:00Z", tipo: "Mensagem de cobrança" },
       { data: "2023-09-10T11:20:00Z", tipo: "Boleto 2ª via gerado" },
       { data: "2023-09-25T16:45:00Z", tipo: "Aviso de inadimplência" },
+    ],
+    mensagens: [
+      { id: 1, sender: "clinica", text: "Olá Roberto, não identificamos o pagamento das últimas parcelas. Por favor, entre em contato conosco.", date: "2023-09-01T09:15:00Z" },
+      { id: 2, sender: "clinica", text: "Roberto, seu aviso de inadimplência foi registrado. Para regularizar, acesse o link.", date: "2023-09-25T16:45:00Z" },
     ],
   },
 ];
@@ -202,6 +222,38 @@ function ClinicDashboard() {
   const [clients, setClients] = useState(MOCK_CLIENTS_DATA);
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
+  const [newMessage, setNewMessage] = useState("");
+
+  function handleSendMessage(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newMessage.trim() || !selectedClient) return;
+
+    const newMsg = {
+      id: Date.now(),
+      sender: "clinica",
+      text: newMessage,
+      date: new Date().toISOString()
+    };
+
+    setClients((prev) =>
+      prev.map((c) => {
+        if (c.id === selectedClient.id) {
+          return {
+            ...c,
+            mensagens: [...(c.mensagens || []), newMsg],
+          };
+        }
+        return c;
+      })
+    );
+
+    setSelectedClient((prev: any) => ({
+      ...prev,
+      mensagens: [...(prev.mensagens || []), newMsg],
+    }));
+
+    setNewMessage("");
+  }
 
   function handleAction(clientId: number, actionType: string, message: string) {
     setClients((prev) =>
@@ -648,113 +700,163 @@ function ClinicDashboard() {
                 <DialogDescription>Detalhes do cliente e histórico de pagamentos.</DialogDescription>
               </DialogHeader>
 
-              <div className="grid gap-6 py-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <Card className="col-span-2 md:col-span-4 bg-muted/30">
-                    <CardContent className="p-4 flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Produto Comprado</p>
-                        <p className="text-lg font-semibold flex items-center gap-2">
-                          <Package className="h-5 w-5 text-primary" />
-                          {selectedClient.produto}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium text-muted-foreground">Status</p>
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border mt-1
-                          ${selectedClient.statusPagamento === "Em dia" ? "bg-green-100 text-green-800 border-green-200" : ""}
-                          ${selectedClient.statusPagamento === "Em atraso" ? "bg-yellow-100 text-yellow-800 border-yellow-200" : ""}
-                          ${selectedClient.statusPagamento === "Inadimplente" ? "bg-red-100 text-red-800 border-red-200" : ""}
-                        `}
-                        >
-                          {selectedClient.statusPagamento}
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
+              <Tabs defaultValue="visao-geral" className="w-full mt-4">
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsTrigger value="visao-geral">Visão Geral</TabsTrigger>
+                  <TabsTrigger value="mensagens" className="flex items-center gap-2">
+                    <MessageCircle className="h-4 w-4" />
+                    Mensagens
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="visao-geral">
+                  <div className="grid gap-6 py-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <Card className="col-span-2 md:col-span-4 bg-muted/30">
+                        <CardContent className="p-4 flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Produto Comprado</p>
+                            <p className="text-lg font-semibold flex items-center gap-2">
+                              <Package className="h-5 w-5 text-primary" />
+                              {selectedClient.produto}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-medium text-muted-foreground">Status</p>
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border mt-1
+                              ${selectedClient.statusPagamento === "Em dia" ? "bg-green-100 text-green-800 border-green-200" : ""}
+                              ${selectedClient.statusPagamento === "Em atraso" ? "bg-yellow-100 text-yellow-800 border-yellow-200" : ""}
+                              ${selectedClient.statusPagamento === "Inadimplente" ? "bg-red-100 text-red-800 border-red-200" : ""}
+                            `}
+                            >
+                              {selectedClient.statusPagamento}
+                            </span>
+                          </div>
+                        </CardContent>
+                      </Card>
 
-                  <Card>
-                    <CardContent className="p-4 flex flex-col items-center justify-center text-center">
-                      <p className="text-sm font-medium text-muted-foreground mb-1">Parcelas Pagas</p>
-                      <p className="text-3xl font-bold text-primary">{selectedClient.parcelasPagas}</p>
-                    </CardContent>
-                  </Card>
+                      <Card>
+                        <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+                          <p className="text-sm font-medium text-muted-foreground mb-1">Parcelas Pagas</p>
+                          <p className="text-3xl font-bold text-primary">{selectedClient.parcelasPagas}</p>
+                        </CardContent>
+                      </Card>
 
-                  <Card>
-                    <CardContent className="p-4 flex flex-col items-center justify-center text-center">
-                      <p className="text-sm font-medium text-muted-foreground mb-1">Restantes</p>
-                      <p className="text-3xl font-bold">{selectedClient.parcelasRestantes}</p>
-                    </CardContent>
-                  </Card>
+                      <Card>
+                        <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+                          <p className="text-sm font-medium text-muted-foreground mb-1">Restantes</p>
+                          <p className="text-3xl font-bold">{selectedClient.parcelasRestantes}</p>
+                        </CardContent>
+                      </Card>
 
-                  <Card className={selectedClient.parcelasAtrasadas > 0 ? "border-destructive/50" : ""}>
-                    <CardContent className="p-4 flex flex-col items-center justify-center text-center">
-                      <p className="text-sm font-medium text-muted-foreground mb-1">Atrasadas</p>
-                      <p className={`text-3xl font-bold ${selectedClient.parcelasAtrasadas > 0 ? "text-destructive" : ""}`}>
-                        {selectedClient.parcelasAtrasadas}
-                      </p>
-                    </CardContent>
-                  </Card>
+                      <Card className={selectedClient.parcelasAtrasadas > 0 ? "border-destructive/50" : ""}>
+                        <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+                          <p className="text-sm font-medium text-muted-foreground mb-1">Atrasadas</p>
+                          <p className={`text-3xl font-bold ${selectedClient.parcelasAtrasadas > 0 ? "text-destructive" : ""}`}>
+                            {selectedClient.parcelasAtrasadas}
+                          </p>
+                        </CardContent>
+                      </Card>
 
-                  <Card>
-                    <CardContent className="p-4 flex flex-col items-center justify-center text-center">
-                      <p className="text-sm font-medium text-muted-foreground mb-1">Valor Total</p>
-                      <p className="text-xl font-bold">{formatCurrency(selectedClient.valorTotal)}</p>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <History className="h-5 w-5 text-primary" />
-                    Histórico de Ações (Mensagens / Boletos)
-                  </h3>
-                  
-                  {selectedClient.historicoBoletos && selectedClient.historicoBoletos.length > 0 ? (
-                    <div className="rounded-md border">
-                      <table className="w-full text-sm">
-                        <thead className="bg-muted/50 text-muted-foreground">
-                          <tr>
-                            <th className="px-4 py-2 font-medium text-left">Data e Hora</th>
-                            <th className="px-4 py-2 font-medium text-left">Ação Executada</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                          {selectedClient.historicoBoletos.map((h: any, i: number) => (
-                            <tr key={i}>
-                              <td className="px-4 py-3">{formatDate(h.data)} - {new Date(h.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit'})}</td>
-                              <td className="px-4 py-3 font-medium text-foreground">{h.tipo}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                      <Card>
+                        <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+                          <p className="text-sm font-medium text-muted-foreground mb-1">Valor Total</p>
+                          <p className="text-xl font-bold">{formatCurrency(selectedClient.valorTotal)}</p>
+                        </CardContent>
+                      </Card>
                     </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground bg-muted/30 p-4 rounded-md text-center">
-                      Nenhuma ação registrada para este cliente.
-                    </p>
-                  )}
-                </div>
 
-                {selectedClient.statusPagamento === "Em atraso" && (
-                  <div className="flex gap-3 mt-4 pt-4 border-t">
-                    <Button 
-                      variant="outline" 
-                      className="flex-1"
-                      onClick={() => handleAction(selectedClient.id, "Mensagem de cobrança", `Mensagem de cobrança enviada para ${selectedClient.name}!`)}
-                    >
-                      Enviar nova mensagem
-                    </Button>
-                    <Button 
-                      className="flex-1"
-                      onClick={() => handleAction(selectedClient.id, "Boleto 2ª via gerado", `Boleto gerado e enviado para ${selectedClient.name}!`)}
-                    >
-                      Gerar novo boleto
-                    </Button>
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <History className="h-5 w-5 text-primary" />
+                        Histórico de Ações (Mensagens / Boletos)
+                      </h3>
+                      
+                      {selectedClient.historicoBoletos && selectedClient.historicoBoletos.length > 0 ? (
+                        <div className="rounded-md border">
+                          <table className="w-full text-sm">
+                            <thead className="bg-muted/50 text-muted-foreground">
+                              <tr>
+                                <th className="px-4 py-2 font-medium text-left">Data e Hora</th>
+                                <th className="px-4 py-2 font-medium text-left">Ação Executada</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y">
+                              {selectedClient.historicoBoletos.map((h: any, i: number) => (
+                                <tr key={i}>
+                                  <td className="px-4 py-3">{formatDate(h.data)} - {new Date(h.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit'})}</td>
+                                  <td className="px-4 py-3 font-medium text-foreground">{h.tipo}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground bg-muted/30 p-4 rounded-md text-center">
+                          Nenhuma ação registrada para este cliente.
+                        </p>
+                      )}
+                    </div>
+
+                    {selectedClient.statusPagamento === "Em atraso" && (
+                      <div className="flex gap-3 mt-4 pt-4 border-t">
+                        <Button 
+                          variant="outline" 
+                          className="flex-1"
+                          onClick={() => handleAction(selectedClient.id, "Mensagem de cobrança", `Mensagem de cobrança enviada para ${selectedClient.name}!`)}
+                        >
+                          Enviar nova mensagem de cobrança
+                        </Button>
+                        <Button 
+                          className="flex-1"
+                          onClick={() => handleAction(selectedClient.id, "Boleto 2ª via gerado", `Boleto gerado e enviado para ${selectedClient.name}!`)}
+                        >
+                          Gerar novo boleto
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </TabsContent>
+
+                <TabsContent value="mensagens" className="h-[50vh] flex flex-col">
+                  <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/20 rounded-md border mb-4">
+                    {(!selectedClient.mensagens || selectedClient.mensagens.length === 0) ? (
+                      <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
+                        Nenhuma mensagem encontrada.
+                      </div>
+                    ) : (
+                      selectedClient.mensagens.map((msg: any) => (
+                        <div key={msg.id} className={`flex ${msg.sender === "clinica" ? "justify-end" : "justify-start"}`}>
+                          <div 
+                            className={`max-w-[80%] rounded-lg p-3 ${
+                              msg.sender === "clinica" 
+                                ? "bg-primary text-primary-foreground rounded-tr-none" 
+                                : "bg-muted text-foreground rounded-tl-none"
+                            }`}
+                          >
+                            <p className="text-sm mb-1">{msg.text}</p>
+                            <span className="text-[10px] opacity-70">
+                              {new Date(msg.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit'})}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  <form onSubmit={handleSendMessage} className="flex gap-2">
+                    <Input 
+                      placeholder="Digite sua mensagem..." 
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button type="submit" disabled={!newMessage.trim()}>
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </form>
+                </TabsContent>
+              </Tabs>
             </>
           )}
         </DialogContent>
