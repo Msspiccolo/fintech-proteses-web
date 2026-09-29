@@ -48,6 +48,8 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Banknote, Calendar as CalendarIcon } from "lucide-react";
+import { BoletoPreview } from "@/components/application-extras";
 
 export const Route = createFileRoute("/_authenticated/clinica/dashboard")({
   head: () => ({
@@ -223,6 +225,16 @@ function ClinicDashboard() {
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
   const [newMessage, setNewMessage] = useState("");
+  const [newDueDate, setNewDueDate] = useState("");
+
+  function handleChangeDate(clientId: number) {
+    if (!newDueDate) {
+      toast.error("Selecione uma data válida.");
+      return;
+    }
+    handleAction(clientId, `Data de vencimento alterada para ${newDueDate}`, `A data de vencimento foi atualizada com sucesso!`);
+    setNewDueDate("");
+  }
 
   function handleSendMessage(e: React.FormEvent) {
     e.preventDefault();
@@ -701,11 +713,15 @@ function ClinicDashboard() {
               </DialogHeader>
 
               <Tabs defaultValue="visao-geral" className="w-full mt-4">
-                <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsList className="grid w-full grid-cols-3 mb-4">
                   <TabsTrigger value="visao-geral">Visão Geral</TabsTrigger>
                   <TabsTrigger value="mensagens" className="flex items-center gap-2">
                     <MessageCircle className="h-4 w-4" />
                     Mensagens
+                  </TabsTrigger>
+                  <TabsTrigger value="boletos" className="flex items-center gap-2">
+                    <Banknote className="h-4 w-4" />
+                    Boletos
                   </TabsTrigger>
                 </TabsList>
                 
@@ -855,6 +871,51 @@ function ClinicDashboard() {
                       <Send className="h-4 w-4" />
                     </Button>
                   </form>
+                </TabsContent>
+                <TabsContent value="boletos">
+                  <div className="grid gap-6 py-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Banknote className="h-5 w-5 text-primary" />
+                          Gerenciar Boleto Atual
+                        </CardTitle>
+                        <CardDescription>
+                          Visualize o boleto ou altere a data de vencimento.
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div className="flex gap-4 items-end">
+                          <div className="flex-1 space-y-2">
+                            <Label htmlFor="newDate">Nova data de vencimento</Label>
+                            <Input
+                              id="newDate"
+                              type="date"
+                              value={newDueDate}
+                              onChange={(e) => setNewDueDate(e.target.value)}
+                            />
+                          </div>
+                          <Button onClick={() => handleChangeDate(selectedClient.id)}>
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            Alterar Data
+                          </Button>
+                        </div>
+                        
+                        <div className="border-t pt-6">
+                          <h4 className="text-sm font-semibold mb-3">Ações Rápidas</h4>
+                          <div className="flex flex-wrap gap-3">
+                            <BoletoPreview app={{ status: "approved", monthly_payment: selectedClient.valorTotal / (selectedClient.parcelasPagas + selectedClient.parcelasRestantes || 1), profiles: { full_name: selectedClient.name } }} />
+                            <Button 
+                              variant="outline"
+                              onClick={() => handleAction(selectedClient.id, "Boleto 2ª via gerado", `Boleto gerado e enviado para ${selectedClient.name}!`)}
+                            >
+                              Gerar 2ª Via
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </TabsContent>
               </Tabs>
             </>

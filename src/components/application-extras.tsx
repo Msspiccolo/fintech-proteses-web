@@ -10,8 +10,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Check, Circle, FileText, Upload, Download, X, Printer } from "lucide-react";
-import { formatDate } from "@/lib/utils";
+import { Check, Circle, FileText, Upload, Download, X, Printer, Banknote } from "lucide-react";
+import { formatDate, formatCurrency } from "@/lib/utils";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const db = supabase as any;
 
@@ -294,6 +295,77 @@ export function FabricationRequest({ applicationId, status }: { applicationId: s
   );
 }
 
+export function BoletoPreview({ app }: { app: any }) {
+  if (app.status !== "approved") return null;
+
+  const boletoCode = "34191.09008 61000.000000 00000.000000 1 90000000000000";
+
+  return (
+    <div className="mt-4">
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant="outline" className="w-full sm:w-auto">
+            <Banknote className="mr-2 h-4 w-4" />
+            Visualizar Boleto
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Prévia do Boleto</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex justify-between items-center border-b pb-2">
+              <span className="font-bold text-lg">Banco PrótesePay</span>
+              <span className="font-bold text-lg">341-7</span>
+            </div>
+            
+            <div className="space-y-3">
+              <div>
+                <p className="text-xs text-muted-foreground uppercase">Local de Pagamento</p>
+                <p className="text-sm font-medium">Pagável em qualquer banco até o vencimento</p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase">Data de Vencimento</p>
+                  <p className="text-sm font-medium">{formatDate(new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString())}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase">Valor do Documento</p>
+                  <p className="text-sm font-medium">{formatCurrency(app.monthly_payment)}</p>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs text-muted-foreground uppercase">Pagador</p>
+                <p className="text-sm font-medium">
+                  {(app.profiles as any)?.full_name || "Nome do Paciente"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs text-muted-foreground uppercase">Código de Barras</p>
+                <div className="mt-1 p-2 bg-muted rounded font-mono text-xs text-center break-all">
+                  {boletoCode}
+                </div>
+              </div>
+            </div>
+            
+            <div className="pt-4 flex gap-2">
+              <Button className="w-full" onClick={() => {
+                navigator.clipboard.writeText(boletoCode);
+                toast.success("Código de barras copiado!");
+              }}>
+                Copiar Código
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
 export function PatientApplicationExtras({ app }: { app: any }) {
   const { data: docs = [] } = useApplicationDocuments(app.id);
   return (
@@ -301,6 +373,7 @@ export function PatientApplicationExtras({ app }: { app: any }) {
       <ApplicationTimeline status={app.status} createdAt={app.created_at} reviewedAt={app.reviewed_at} hasDocs={docs.length > 0} />
       <ApplicationDocuments applicationId={app.id} canUpload={app.status === "pending"} />
       <FabricationRequest applicationId={app.id} status={app.status} />
+      <BoletoPreview app={app} />
     </div>
   );
 }

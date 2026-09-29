@@ -67,18 +67,15 @@ function AdminDashboard() {
 
   // Reports calculations
   const approvedApps = applications.filter((a) => a.status === "approved");
+  const pendingApps = applications.filter((a) => a.status === "pending");
+  const rejectedApps = applications.filter((a) => a.status === "rejected");
+  
   const approvalRate = applications.length > 0 ? (approvedApps.length / applications.length) * 100 : 0;
   const creditVolume = approvedApps.reduce((acc, app) => acc + app.requested_amount, 0);
+  const pendingCredit = pendingApps.reduce((acc, app) => acc + app.requested_amount, 0);
 
-  const clinicCounts = applications.reduce((acc, app) => {
-    const name = (app.clinics as any)?.name ?? "Sem Clínica";
-    acc[name] = (acc[name] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
 
-  const topClinics = Object.entries(clinicCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
+
 
   async function handleStatus(id: string, status: "approved" | "rejected") {
     try {
@@ -133,6 +130,47 @@ function AdminDashboard() {
   const users: any[] = usersData?.users ?? [];
   console.log("Usuários carregados:", users);
 
+  const totalPatients = users.filter((u) => u.role === "patient").length;
+  const totalPartnerClinics = clinics.length;
+
+  // Build clinic stats using the loaded clinics array as base
+  const clinicDetailedStats = clinics.reduce((acc, clinic) => {
+    acc[clinic.name] = { count: 0, totalValue: 0, approvedValue: 0, uniquePatients: new Set<string>() };
+    return acc;
+  }, {} as Record<string, { count: number; totalValue: number; approvedValue: number; uniquePatients: Set<string> }>);
+
+  // Then populate with applications data
+  applications.forEach((app) => {
+    const name = (app.clinics as any)?.name ?? "Sem Clínica";
+    if (!clinicDetailedStats[name]) {
+      clinicDetailedStats[name] = { count: 0, totalValue: 0, approvedValue: 0, uniquePatients: new Set<string>() };
+    }
+    clinicDetailedStats[name].count += 1;
+    clinicDetailedStats[name].totalValue += app.requested_amount || 0;
+    if (app.status === "approved") {
+      clinicDetailedStats[name].approvedValue += app.requested_amount || 0;
+    }
+    if (app.patient_id) {
+      clinicDetailedStats[name].uniquePatients.add(app.patient_id);
+    }
+  });
+
+  const clinicStatsArray = Object.entries(clinicDetailedStats)
+    .map(([name, stats]) => ({
+      name,
+      count: stats.count,
+      totalValue: stats.totalValue,
+      approvedValue: stats.approvedValue,
+      patientsCount: stats.uniquePatients.size,
+    }))
+    .sort((a, b) => b.totalValue - a.totalValue);
+
+  const totalProposalsValue = clinicStatsArray.reduce((acc, c) => acc + c.totalValue, 0);
+  const averagePatientsPerClinic =
+    clinics.length > 0
+      ? (clinicStatsArray.reduce((acc, c) => acc + c.patientsCount, 0) / clinics.length).toFixed(1)
+      : "0";
+
   const deleteUser = useServerFn(deleteUserByAdmin);
 
   async function handleRoleChange(userId: string, newRole: "patient" | "clinic" | "admin") {
@@ -178,21 +216,21 @@ function AdminDashboard() {
             </TabsList>
 
             <TabsContent value="reports" className="mt-6 space-y-6">
-              <div className="grid gap-6 md:grid-cols-3">
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Taxa de Aprovação</CardTitle>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Total de Pacientes</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-3xl font-bold text-foreground">{approvalRate.toFixed(1)}%</p>
+                    <p className="text-3xl font-bold text-foreground">{totalPatients}</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Volume de Crédito (Aprovado)</CardTitle>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Clínicas Parceiras</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-3xl font-bold text-foreground">{formatCurrency(creditVolume)}</p>
+                    <p className="text-3xl font-bold text-foreground">{totalPartnerClinics}</p>
                   </CardContent>
                 </Card>
                 <Card>
@@ -203,22 +241,80 @@ function AdminDashboard() {
                     <p className="text-3xl font-bold text-foreground">{applications.length}</p>
                   </CardContent>
                 </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Taxa de Aprovação</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-foreground">{approvalRate.toFixed(1)}%</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Crédito Aprovado</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-foreground">{formatCurrency(creditVolume)}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Crédito Pendente (Análise)</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-foreground">{formatCurrency(pendingCredit)}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Valor Total de Propostas</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-foreground">{formatCurrency(totalProposalsValue)}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Média Pacientes/Clínica</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-foreground">{averagePatientsPerClinic}</p>
+                  </CardContent>
+                </Card>
               </div>
 
               <div>
-                <h2 className="text-xl font-semibold text-foreground mb-4">Clínicas Mais Ativas</h2>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {topClinics.map(([name, count]) => (
-                    <Card key={name}>
-                      <CardContent className="p-4 flex items-center justify-between">
-                        <span className="font-medium text-foreground">{name}</span>
-                        <span className="text-sm text-muted-foreground">{count} proposta{count !== 1 ? 's' : ''}</span>
-                      </CardContent>
-                    </Card>
-                  ))}
-                  {topClinics.length === 0 && (
-                    <p className="text-sm text-muted-foreground">Nenhuma clínica encontrada.</p>
-                  )}
+                <h2 className="text-xl font-semibold text-foreground mb-4">Desempenho Detalhado das Clínicas</h2>
+                <div className="overflow-x-auto rounded-md border">
+                  <table className="w-full text-sm text-left text-muted-foreground">
+                    <thead className="text-xs uppercase bg-muted/50 text-foreground">
+                      <tr>
+                        <th className="px-6 py-3">Clínica</th>
+                        <th className="px-6 py-3">Propostas</th>
+                        <th className="px-6 py-3">Pacientes Únicos</th>
+                        <th className="px-6 py-3">Valor Solicitado</th>
+                        <th className="px-6 py-3">Valor Aprovado</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {clinicStatsArray.map((c) => (
+                        <tr key={c.name} className="border-b last:border-0 hover:bg-muted/30">
+                          <td className="px-6 py-4 font-medium text-foreground">{c.name}</td>
+                          <td className="px-6 py-4">{c.count}</td>
+                          <td className="px-6 py-4">{c.patientsCount}</td>
+                          <td className="px-6 py-4">{formatCurrency(c.totalValue)}</td>
+                          <td className="px-6 py-4 text-green-600 font-medium">{formatCurrency(c.approvedValue)}</td>
+                        </tr>
+                      ))}
+                      {clinicStatsArray.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="px-6 py-4 text-center">
+                            Nenhuma clínica encontrada.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </TabsContent>
