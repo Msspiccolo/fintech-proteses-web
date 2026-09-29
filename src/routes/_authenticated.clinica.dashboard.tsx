@@ -64,110 +64,6 @@ export const Route = createFileRoute("/_authenticated/clinica/dashboard")({
   component: ClinicDashboard,
 });
 
-// Mock data for most sold prosthetics, since we don't have a products table yet
-const MOCK_PROSTHETICS_DATA = [
-  { name: "Joelho Biônico (Gen 3)", vendas: 45, valor: 450000 },
-  { name: "Pé em Fibra de Carbono", vendas: 32, valor: 160000 },
-  { name: "Braço Mioelétrico", vendas: 28, valor: 336000 },
-  { name: "Prótese Transfemoral", vendas: 15, valor: 120000 },
-  { name: "Mão Robótica", vendas: 10, valor: 250000 },
-];
-
-const MOCK_CLIENTS_DATA = [
-  {
-    id: 1,
-    name: "João Carlos Silva",
-    propostas: 2,
-    statusPagamento: "Em dia",
-    valorTotal: 150000,
-    produto: "Joelho Biônico (Gen 3)",
-    parcelasPagas: 12,
-    parcelasRestantes: 12,
-    parcelasAtrasadas: 0,
-    historicoBoletos: [],
-    mensagens: [
-      { id: 1, sender: "clinica", text: "Olá João, o boleto deste mês já está disponível.", date: "2023-10-10T10:00:00Z" },
-      { id: 2, sender: "cliente", text: "Obrigado por avisar! Já vou realizar o pagamento.", date: "2023-10-10T10:15:00Z" },
-    ],
-  },
-  {
-    id: 2,
-    name: "Maria Fernanda Oliveira",
-    propostas: 1,
-    statusPagamento: "Em atraso",
-    valorTotal: 45000,
-    produto: "Pé em Fibra de Carbono",
-    parcelasPagas: 4,
-    parcelasRestantes: 20,
-    parcelasAtrasadas: 2,
-    historicoBoletos: [
-      { data: "2023-10-15T10:00:00Z", tipo: "Mensagem de cobrança" },
-      { data: "2023-10-18T14:30:00Z", tipo: "Boleto 2ª via gerado" },
-    ],
-    mensagens: [
-      { id: 1, sender: "clinica", text: "Olá Maria, notamos que a parcela deste mês está em atraso. Podemos ajudar?", date: "2023-10-15T10:00:00Z" },
-      { id: 2, sender: "cliente", text: "Tive um imprevisto, vou pagar até sexta-feira. Desculpe a demora.", date: "2023-10-16T14:20:00Z" },
-      { id: 3, sender: "clinica", text: "Sem problemas, geramos um novo boleto para sexta. Segue o link.", date: "2023-10-18T14:30:00Z" },
-    ],
-  },
-  {
-    id: 3,
-    name: "Pedro Henrique Santos",
-    propostas: 3,
-    statusPagamento: "Em dia",
-    valorTotal: 210000,
-    produto: "Braço Mioelétrico",
-    parcelasPagas: 18,
-    parcelasRestantes: 6,
-    parcelasAtrasadas: 0,
-    historicoBoletos: [],
-    mensagens: [],
-  },
-  {
-    id: 4,
-    name: "Ana Beatriz Costa",
-    propostas: 1,
-    statusPagamento: "Em dia",
-    valorTotal: 85000,
-    produto: "Prótese Transfemoral",
-    parcelasPagas: 2,
-    parcelasRestantes: 22,
-    parcelasAtrasadas: 0,
-    historicoBoletos: [],
-    mensagens: [
-      { id: 1, sender: "clinica", text: "Bem-vinda, Ana! Sua primeira parcela vence na próxima semana.", date: "2023-11-01T09:00:00Z" },
-    ],
-  },
-  {
-    id: 5,
-    name: "Roberto Alves",
-    propostas: 1,
-    statusPagamento: "Inadimplente",
-    valorTotal: 120000,
-    produto: "Mão Robótica",
-    parcelasPagas: 1,
-    parcelasRestantes: 23,
-    parcelasAtrasadas: 5,
-    historicoBoletos: [
-      { data: "2023-09-01T09:15:00Z", tipo: "Mensagem de cobrança" },
-      { data: "2023-09-10T11:20:00Z", tipo: "Boleto 2ª via gerado" },
-      { data: "2023-09-25T16:45:00Z", tipo: "Aviso de inadimplência" },
-    ],
-    mensagens: [
-      { id: 1, sender: "clinica", text: "Olá Roberto, não identificamos o pagamento das últimas parcelas. Por favor, entre em contato conosco.", date: "2023-09-01T09:15:00Z" },
-      { id: 2, sender: "clinica", text: "Roberto, seu aviso de inadimplência foi registrado. Para regularizar, acesse o link.", date: "2023-09-25T16:45:00Z" },
-    ],
-  },
-];
-
-const MOCK_KPIS = {
-  clientesCadastrados: 124,
-  valoresASeremPagos: 2850000,
-  valoresAVencer: 340000,
-  clientesInadimplentes: 12,
-  protesesVendidas: 130,
-};
-
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
 function ClinicDashboard() {
@@ -221,7 +117,7 @@ function ClinicDashboard() {
 
   const clinics: any[] = clinicData?.clinics ?? [];
 
-  const [clients, setClients] = useState(MOCK_CLIENTS_DATA);
+  const [clients, setClients] = useState<any[]>([]);
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
   const [newMessage, setNewMessage] = useState("");
@@ -336,23 +232,64 @@ function ClinicDashboard() {
 
   const applications = data?.applications ?? [];
 
+  useEffect(() => {
+    if (!applications.length) return;
+    
+    const clientsMap: Record<string, any> = {};
+
+    applications.forEach((app: any) => {
+      const patientId = app.patient_id;
+      if (!patientId) return;
+
+      if (!clientsMap[patientId]) {
+        clientsMap[patientId] = {
+          id: patientId,
+          name: app.profiles?.full_name || "Cliente sem nome",
+          propostas: 0,
+          statusPagamento: app.status === "approved" ? "Em dia" : (app.status === "rejected" ? "Inadimplente" : "Aguardando"), 
+          valorTotal: 0,
+          produto: app.purpose || "Tratamento Prótese",
+          parcelasPagas: 0,
+          parcelasRestantes: 0,
+          parcelasAtrasadas: 0,
+          historicoBoletos: [],
+          mensagens: [],
+        };
+      }
+
+      clientsMap[patientId].propostas += 1;
+      clientsMap[patientId].valorTotal += app.requested_amount || 0;
+      clientsMap[patientId].parcelasRestantes += app.installments || 0;
+    });
+
+    setClients(Object.values(clientsMap));
+  }, [applications]);
+
   // Business Intelligence KPIs
-  const { totalRevenue, ticketMedio, conversionRate, monthlyData } = useMemo(() => {
+  const { kpis, monthlyData, prostheticsData } = useMemo(() => {
     const approvedApps = applications.filter((a: any) => a.status === "approved");
-    const total = approvedApps.reduce(
+    const rejectedApps = applications.filter((a: any) => a.status === "rejected");
+    const totalRevenue = approvedApps.reduce(
       (acc: number, curr: any) => acc + Number(curr.requested_amount || 0),
       0,
     );
-    const ticket = approvedApps.length > 0 ? total / approvedApps.length : 0;
-    const rate = applications.length > 0 ? (approvedApps.length / applications.length) * 100 : 0;
 
     // Aggregate by month for chart
     const monthlyAcc: Record<string, number> = {};
+    const purposeAcc: Record<string, { vendas: number; valor: number }> = {};
+
     applications.forEach((app: any) => {
       if (app.status === "approved") {
         const date = new Date(app.created_at);
         const month = date.toLocaleString("pt-BR", { month: "short" });
         monthlyAcc[month] = (monthlyAcc[month] || 0) + Number(app.requested_amount || 0);
+
+        const purpose = app.purpose || "Prótese Padrão";
+        if (!purposeAcc[purpose]) {
+          purposeAcc[purpose] = { vendas: 0, valor: 0 };
+        }
+        purposeAcc[purpose].vendas += 1;
+        purposeAcc[purpose].valor += Number(app.requested_amount || 0);
       }
     });
 
@@ -362,20 +299,26 @@ function ClinicDashboard() {
       Total: monthlyAcc[month],
     }));
 
-    // Add mock months if real data is empty or too small
-    if (chartData.length < 3) {
-      chartData.push(
-        { name: "Jan", Total: 150000 },
-        { name: "Fev", Total: 280000 },
-        { name: "Mar", Total: 190000 },
-      );
-    }
+    const prostheticsChartData = Object.keys(purposeAcc)
+      .map((purpose) => ({
+        name: purpose,
+        vendas: purposeAcc[purpose].vendas,
+        valor: purposeAcc[purpose].valor,
+      }))
+      .sort((a, b) => b.vendas - a.vendas);
+
+    const uniquePatients = new Set(applications.filter((a: any) => a.patient_id).map((app: any) => app.patient_id)).size;
 
     return {
-      totalRevenue: total,
-      ticketMedio: ticket,
-      conversionRate: rate,
-      monthlyData: chartData.reverse(), // naive ordering for mock mix
+      kpis: {
+        clientesCadastrados: uniquePatients,
+        valoresASeremPagos: totalRevenue,
+        valoresAVencer: totalRevenue, // For now, we mirror totalRevenue since we lack future installment tracking
+        clientesInadimplentes: rejectedApps.length,
+        protesesVendidas: approvedApps.length,
+      },
+      monthlyData: chartData,
+      prostheticsData: prostheticsChartData.length > 0 ? prostheticsChartData : [{ name: "Sem vendas", vendas: 1, valor: 0 }],
     };
   }, [applications]);
 
@@ -454,7 +397,7 @@ function ClinicDashboard() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{MOCK_KPIS.clientesCadastrados}</div>
+                <div className="text-2xl font-bold">{kpis.clientesCadastrados}</div>
                 <p className="text-xs text-muted-foreground mt-1">Pacientes da clínica</p>
               </CardContent>
             </Card>
@@ -466,7 +409,7 @@ function ClinicDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {formatCurrency(MOCK_KPIS.valoresASeremPagos)}
+                  {formatCurrency(kpis.valoresASeremPagos)}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">Total em financiamentos</p>
               </CardContent>
@@ -478,7 +421,7 @@ function ClinicDashboard() {
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{formatCurrency(MOCK_KPIS.valoresAVencer)}</div>
+                <div className="text-2xl font-bold">{formatCurrency(kpis.valoresAVencer)}</div>
                 <p className="text-xs text-muted-foreground mt-1">Próximos 30 dias</p>
               </CardContent>
             </Card>
@@ -490,7 +433,7 @@ function ClinicDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-destructive">
-                  {MOCK_KPIS.clientesInadimplentes}
+                  {kpis.clientesInadimplentes}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">Clientes que não pagaram</p>
               </CardContent>
@@ -502,7 +445,7 @@ function ClinicDashboard() {
                 <Package className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{MOCK_KPIS.protesesVendidas}</div>
+                <div className="text-2xl font-bold">{kpis.protesesVendidas}</div>
                 <p className="text-xs text-muted-foreground mt-1">Unidades financiadas</p>
               </CardContent>
             </Card>
@@ -582,7 +525,7 @@ function ClinicDashboard() {
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
-                        data={MOCK_PROSTHETICS_DATA}
+                        data={prostheticsData}
                         cx="50%"
                         cy="50%"
                         innerRadius={60}
@@ -590,7 +533,7 @@ function ClinicDashboard() {
                         paddingAngle={5}
                         dataKey="vendas"
                       >
-                        {MOCK_PROSTHETICS_DATA.map((entry, index) => (
+                        {prostheticsData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
@@ -606,7 +549,7 @@ function ClinicDashboard() {
                   </ResponsiveContainer>
                 </div>
                 <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-                  {MOCK_PROSTHETICS_DATA.slice(0, 4).map((item, i) => (
+                  {prostheticsData.slice(0, 4).map((item, i) => (
                     <div key={item.name} className="flex items-center gap-2">
                       <div
                         className="w-3 h-3 rounded-full"
