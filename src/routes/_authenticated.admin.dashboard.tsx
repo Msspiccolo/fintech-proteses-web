@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getAllLoanApplications, updateLoanApplication, updateFabricationOrder } from "@/lib/loans.functions";
-import { getAllClinicsForAdmin, updateClinicStatus } from "@/lib/clinics.functions";
+import { getAllClinicsForAdmin, updateClinicStatus, deleteClinicByAdmin } from "@/lib/clinics.functions";
 import {
   getAllUsersForAdmin,
   updateUserRoleForAdmin,
@@ -101,6 +101,8 @@ function AdminDashboard() {
 
   const clinics: any[] = clinicsData?.clinics ?? [];
 
+  const deleteClinic = useServerFn(deleteClinicByAdmin);
+
   async function handleClinicStatus(id: string, status: "approved" | "rejected") {
     try {
       await updateClinic({ data: { id, status } });
@@ -108,6 +110,17 @@ function AdminDashboard() {
       refetchClinics();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao atualizar clínica");
+    }
+  }
+
+  async function handleDeleteClinic(id: string) {
+    if (!confirm("Tem certeza que deseja apagar esta clínica definitivamente? Todas as propostas vinculadas ficarão sem clínica associada.")) return;
+    try {
+      await deleteClinic({ data: { targetClinicId: id } });
+      toast.success("Clínica apagada com sucesso!");
+      refetchClinics();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao apagar clínica");
     }
   }
 
@@ -559,7 +572,7 @@ function AdminDashboard() {
                           <div>
                             <p className="text-sm text-muted-foreground">Localização</p>
                             <p className="text-foreground">
-                              {clinic.city ? `${clinic.city}, ${clinic.state}` : "—"}
+                              {[clinic.city, clinic.state].filter(Boolean).join(", ") || "—"}
                             </p>
                           </div>
                           <div>
@@ -570,23 +583,33 @@ function AdminDashboard() {
                             <p className="text-sm text-muted-foreground">Data</p>
                             <p className="text-foreground">{formatDate(clinic.created_at)}</p>
                           </div>
-                          {clinic.status === "pending" && (
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                onClick={() => handleClinicStatus(clinic.id, "approved")}
-                              >
-                                Aprovar
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleClinicStatus(clinic.id, "rejected")}
-                              >
-                                Reprovar
-                              </Button>
-                            </div>
-                          )}
+                          <div className="flex gap-2">
+                            {clinic.status === "pending" && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleClinicStatus(clinic.id, "approved")}
+                                >
+                                  Aprovar
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleClinicStatus(clinic.id, "rejected")}
+                                >
+                                  Reprovar
+                                </Button>
+                              </>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              className="px-2 h-8"
+                              onClick={() => handleDeleteClinic(clinic.id)}
+                            >
+                              Apagar
+                            </Button>
+                          </div>
                         </CardContent>
                       </Card>
                     ))}

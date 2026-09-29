@@ -19,6 +19,10 @@ const updateClinicStatusSchema = z.object({
   status: z.enum(["pending", "approved", "rejected"]),
 });
 
+const deleteClinicSchema = z.object({
+  targetClinicId: z.string(),
+});
+
 export const getApprovedClinics = createServerFn({ method: "GET" }).handler(async () => {
   const { createClient } = await import("@supabase/supabase-js");
   const supabasePublic = createClient(
@@ -77,6 +81,23 @@ export const updateClinicStatus = createServerFn({ method: "POST" })
     }
 
     return { clinic };
+  });
+
+export const deleteClinicByAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: unknown) => deleteClinicSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    // Optional: add strict admin role check here if needed
+    const { error } = await context.supabase
+      .from("clinics")
+      .delete()
+      .eq("id", data.targetClinicId);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return { success: true };
   });
 
 export const getClinicByUser = createServerFn({ method: "GET" })
