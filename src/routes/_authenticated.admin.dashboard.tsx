@@ -142,9 +142,9 @@ function AdminDashboard() {
 
   // Then populate with applications data
   applications.forEach((app) => {
-    const name = (app.clinics as any)?.name ?? "Sem Clínica";
-    if (!clinicDetailedStats[name]) {
-      clinicDetailedStats[name] = { count: 0, totalValue: 0, approvedValue: 0, uniquePatients: new Set<string>() };
+    const name = (app.clinics as any)?.name;
+    if (!name || !clinicDetailedStats[name]) {
+      return;
     }
     clinicDetailedStats[name].count += 1;
     clinicDetailedStats[name].totalValue += app.requested_amount || 0;
@@ -164,6 +164,7 @@ function AdminDashboard() {
       approvedValue: stats.approvedValue,
       patientsCount: stats.uniquePatients.size,
     }))
+    .filter(c => c.count > 0)
     .sort((a, b) => b.totalValue - a.totalValue);
 
   const totalProposalsValue = clinicStatsArray.reduce((acc, c) => acc + c.totalValue, 0);
