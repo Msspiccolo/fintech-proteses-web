@@ -134,10 +134,11 @@ function AdminDashboard() {
   const totalPartnerClinics = clinics.length;
 
   // Build clinic stats using the loaded clinics array as base
-  const clinicDetailedStats = clinics.reduce((acc, clinic) => {
+  type ClinicStats = { count: number; totalValue: number; approvedValue: number; uniquePatients: Set<string> };
+  const clinicDetailedStats = clinics.reduce<Record<string, ClinicStats>>((acc, clinic) => {
     acc[clinic.name] = { count: 0, totalValue: 0, approvedValue: 0, uniquePatients: new Set<string>() };
     return acc;
-  }, {} as Record<string, { count: number; totalValue: number; approvedValue: number; uniquePatients: Set<string> }>);
+  }, {});
 
   // Then populate with applications data
   applications.forEach((app) => {
