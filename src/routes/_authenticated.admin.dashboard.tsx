@@ -156,7 +156,7 @@ function AdminDashboard() {
   });
 
   const clinicStatsArray = Object.entries(clinicDetailedStats)
-    .map(([name, stats]) => ({
+    .map(([name, stats]: [string, any]) => ({
       name,
       count: stats.count,
       totalValue: stats.totalValue,
