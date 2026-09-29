@@ -163,3 +163,27 @@ export const registerClinic = createServerFn({ method: "POST" })
 
     return { clinic };
   });
+
+const affiliateSchema = z.object({
+  clinicId: z.string().uuid(),
+});
+
+export const affiliateWithExistingClinic = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: unknown) => affiliateSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.from("clinic_affiliations").upsert(
+      {
+        user_id: context.userId,
+        clinic_id: data.clinicId,
+        role: "owner",
+      },
+      { onConflict: "user_id,clinic_id" },
+    );
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return { success: true };
+  });
