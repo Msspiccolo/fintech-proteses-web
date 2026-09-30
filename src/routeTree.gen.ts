@@ -26,6 +26,7 @@ import { Route as ApiGenerate3dModelRouteImport } from './routes/api/generate-3d
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated.perfil'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedClinicaIndexRouteImport } from './routes/_authenticated.clinica.index'
+import { Route as AuthenticatedParceiroDashboardRouteImport } from './routes/_authenticated.parceiro.dashboard'
 import { Route as AuthenticatedPacienteDashboardRouteImport } from './routes/_authenticated.paciente.dashboard'
 import { Route as AuthenticatedClinicaFinanceiroRouteImport } from './routes/_authenticated.clinica.financeiro'
 import { Route as AuthenticatedClinicaDashboardRouteImport } from './routes/_authenticated.clinica.dashboard'
@@ -119,6 +120,12 @@ const AuthenticatedClinicaIndexRoute =
     path: '/clinica/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedParceiroDashboardRoute =
+  AuthenticatedParceiroDashboardRouteImport.update({
+    id: '/parceiro/dashboard',
+    path: '/parceiro/dashboard',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedPacienteDashboardRoute =
   AuthenticatedPacienteDashboardRouteImport.update({
     id: '/paciente/dashboard',
@@ -182,6 +189,7 @@ export interface FileRoutesByFullPath {
   '/clinica/dashboard': typeof AuthenticatedClinicaDashboardRoute
   '/clinica/financeiro': typeof AuthenticatedClinicaFinanceiroRoute
   '/paciente/dashboard': typeof AuthenticatedPacienteDashboardRoute
+  '/parceiro/dashboard': typeof AuthenticatedParceiroDashboardRoute
   '/clinica/': typeof AuthenticatedClinicaIndexRoute
   '/clinica/produtos/cadastro': typeof AuthenticatedClinicaProdutosCadastroRoute
   '/clinica/produtos/': typeof AuthenticatedClinicaProdutosIndexRoute
@@ -207,6 +215,7 @@ export interface FileRoutesByTo {
   '/clinica/dashboard': typeof AuthenticatedClinicaDashboardRoute
   '/clinica/financeiro': typeof AuthenticatedClinicaFinanceiroRoute
   '/paciente/dashboard': typeof AuthenticatedPacienteDashboardRoute
+  '/parceiro/dashboard': typeof AuthenticatedParceiroDashboardRoute
   '/clinica': typeof AuthenticatedClinicaIndexRoute
   '/clinica/produtos/cadastro': typeof AuthenticatedClinicaProdutosCadastroRoute
   '/clinica/produtos': typeof AuthenticatedClinicaProdutosIndexRoute
@@ -234,6 +243,7 @@ export interface FileRoutesById {
   '/_authenticated/clinica/dashboard': typeof AuthenticatedClinicaDashboardRoute
   '/_authenticated/clinica/financeiro': typeof AuthenticatedClinicaFinanceiroRoute
   '/_authenticated/paciente/dashboard': typeof AuthenticatedPacienteDashboardRoute
+  '/_authenticated/parceiro/dashboard': typeof AuthenticatedParceiroDashboardRoute
   '/_authenticated/clinica/': typeof AuthenticatedClinicaIndexRoute
   '/_authenticated/clinica/produtos/cadastro': typeof AuthenticatedClinicaProdutosCadastroRoute
   '/_authenticated/clinica/produtos/': typeof AuthenticatedClinicaProdutosIndexRoute
@@ -261,6 +271,7 @@ export interface FileRouteTypes {
     | '/clinica/dashboard'
     | '/clinica/financeiro'
     | '/paciente/dashboard'
+    | '/parceiro/dashboard'
     | '/clinica/'
     | '/clinica/produtos/cadastro'
     | '/clinica/produtos/'
@@ -286,6 +297,7 @@ export interface FileRouteTypes {
     | '/clinica/dashboard'
     | '/clinica/financeiro'
     | '/paciente/dashboard'
+    | '/parceiro/dashboard'
     | '/clinica'
     | '/clinica/produtos/cadastro'
     | '/clinica/produtos'
@@ -312,6 +324,7 @@ export interface FileRouteTypes {
     | '/_authenticated/clinica/dashboard'
     | '/_authenticated/clinica/financeiro'
     | '/_authenticated/paciente/dashboard'
+    | '/_authenticated/parceiro/dashboard'
     | '/_authenticated/clinica/'
     | '/_authenticated/clinica/produtos/cadastro'
     | '/_authenticated/clinica/produtos/'
@@ -454,6 +467,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClinicaIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/parceiro/dashboard': {
+      id: '/_authenticated/parceiro/dashboard'
+      path: '/parceiro/dashboard'
+      fullPath: '/parceiro/dashboard'
+      preLoaderRoute: typeof AuthenticatedParceiroDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/paciente/dashboard': {
       id: '/_authenticated/paciente/dashboard'
       path: '/paciente/dashboard'
@@ -514,6 +534,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedClinicaDashboardRoute: typeof AuthenticatedClinicaDashboardRoute
   AuthenticatedClinicaFinanceiroRoute: typeof AuthenticatedClinicaFinanceiroRoute
   AuthenticatedPacienteDashboardRoute: typeof AuthenticatedPacienteDashboardRoute
+  AuthenticatedParceiroDashboardRoute: typeof AuthenticatedParceiroDashboardRoute
   AuthenticatedClinicaIndexRoute: typeof AuthenticatedClinicaIndexRoute
   AuthenticatedClinicaProdutosCadastroRoute: typeof AuthenticatedClinicaProdutosCadastroRoute
   AuthenticatedClinicaProdutosIndexRoute: typeof AuthenticatedClinicaProdutosIndexRoute
@@ -527,6 +548,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedClinicaDashboardRoute: AuthenticatedClinicaDashboardRoute,
   AuthenticatedClinicaFinanceiroRoute: AuthenticatedClinicaFinanceiroRoute,
   AuthenticatedPacienteDashboardRoute: AuthenticatedPacienteDashboardRoute,
+  AuthenticatedParceiroDashboardRoute: AuthenticatedParceiroDashboardRoute,
   AuthenticatedClinicaIndexRoute: AuthenticatedClinicaIndexRoute,
   AuthenticatedClinicaProdutosCadastroRoute:
     AuthenticatedClinicaProdutosCadastroRoute,
