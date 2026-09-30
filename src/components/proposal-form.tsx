@@ -27,7 +27,9 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 const proposalSchema = z.object({
-  requestedAmount: z.number().positive("Valor deve ser maior que zero"),
+  prosthesisAmount: z.number().min(0),
+  adaptationAmount: z.number().min(0),
+  maintenanceAmount: z.number().min(0),
   downPayment: z.number().min(0),
   installments: z.number().int().min(1).max(60),
   clinicId: z.string().optional(),
@@ -51,7 +53,9 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
 
   const clinics = clinicsData?.clinics ?? [];
 
-  const [amount, setAmount] = useState(15000);
+  const [prosthesisAmount, setProsthesisAmount] = useState(15000);
+  const [adaptationAmount, setAdaptationAmount] = useState(0);
+  const [maintenanceAmount, setMaintenanceAmount] = useState(0);
   const [downPayment, setDownPayment] = useState(3000);
   const [installments, setInstallments] = useState(24);
   const [selectedModel, setSelectedModel] = useState<ProsthesisModelId | null>(null);
@@ -60,7 +64,9 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
   const form = useForm<ProposalForm>({
     resolver: zodResolver(proposalSchema),
     defaultValues: {
-      requestedAmount: amount,
+      prosthesisAmount,
+      adaptationAmount,
+      maintenanceAmount,
       downPayment,
       installments,
       clinicId: "",
@@ -68,7 +74,7 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
     },
   });
 
-  const totalAmount = amount;
+  const totalAmount = prosthesisAmount + adaptationAmount + maintenanceAmount;
   const financedAmount = Math.max(0, totalAmount - downPayment);
   const monthlyRate = interestRate / 100;
   const monthlyPayment =
@@ -89,17 +95,16 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
         .join(" ");
       await createApplication({
         data: {
-          requestedAmount: totalAmount,
+          prosthesisAmount: values.prosthesisAmount,
+          adaptationAmount: values.adaptationAmount,
+          maintenanceAmount: values.maintenanceAmount,
           downPayment: values.downPayment,
           installments: values.installments,
-          monthlyPayment: Number(monthlyPayment.toFixed(2)),
-          interestRate,
-          totalCost: Number(totalCost.toFixed(2)),
           clinicId: values.clinicId || undefined,
           purpose: purposeText,
         },
       });
-      toast.success("Proposta enviada com sucesso!");
+      toast.success("Solicitação enviada para análise!");
       onSuccess?.();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao enviar proposta");
@@ -109,21 +114,62 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
       <div className="mx-auto max-w-3xl space-y-6">
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label>Valor do tratamento</Label>
-            <span className="text-lg font-semibold text-primary">{formatCurrency(amount)}</span>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Prótese e tratamento</Label>
+              <span className="text-lg font-semibold text-primary">{formatCurrency(prosthesisAmount)}</span>
+            </div>
+            <Slider
+              min={1000}
+              max={100000}
+              step={500}
+              value={[prosthesisAmount]}
+              onValueChange={(value) => {
+                setProsthesisAmount(value[0]);
+                form.setValue("prosthesisAmount", value[0]);
+              }}
+            />
           </div>
-          <Slider
-            min={1000}
-            max={100000}
-            step={500}
-            value={[amount]}
-            onValueChange={(value) => {
-              setAmount(value[0]);
-              form.setValue("requestedAmount", value[0]);
-            }}
-          />
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Adaptação</Label>
+              <span className="text-lg font-semibold text-primary">{formatCurrency(adaptationAmount)}</span>
+            </div>
+            <Slider
+              min={0}
+              max={50000}
+              step={100}
+              value={[adaptationAmount]}
+              onValueChange={(value) => {
+                setAdaptationAmount(value[0]);
+                form.setValue("adaptationAmount", value[0]);
+              }}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Manutenção</Label>
+              <span className="text-lg font-semibold text-primary">{formatCurrency(maintenanceAmount)}</span>
+            </div>
+            <Slider
+              min={0}
+              max={50000}
+              step={100}
+              value={[maintenanceAmount]}
+              onValueChange={(value) => {
+                setMaintenanceAmount(value[0]);
+                form.setValue("maintenanceAmount", value[0]);
+              }}
+            />
+          </div>
+
+          <div className="flex justify-between items-center rounded-lg bg-primary/5 p-3">
+            <span className="text-sm font-medium">Soma Total Estimada:</span>
+            <span className="text-lg font-bold text-primary">{formatCurrency(totalAmount)}</span>
+          </div>
         </div>
 
         <div className="space-y-2">
@@ -208,8 +254,8 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
                 onClick={() => {
                   setSelectedModel(active ? null : model.id);
                   if (!active) {
-                    setAmount(model.basePrice);
-                    form.setValue("requestedAmount", model.basePrice);
+                    setProsthesisAmount(model.basePrice);
+                    form.setValue("prosthesisAmount", model.basePrice);
                     if (downPayment > model.basePrice) {
                       setDownPayment(0);
                       form.setValue("downPayment", 0);
@@ -261,13 +307,13 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
               </div>
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              Taxa de {interestRate}% ao mês
+              Valores sujeitos a análise (taxa ex: {interestRate}% a.m.)
             </p>
           </CardContent>
         </Card>
 
         <Button type="submit" className="w-full">
-          Enviar proposta
+          Enviar para análise
         </Button>
       </div>
     </form>

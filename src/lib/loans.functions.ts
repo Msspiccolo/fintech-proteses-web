@@ -3,12 +3,11 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const createApplicationSchema = z.object({
-  requestedAmount: z.number().positive(),
+  prosthesisAmount: z.number().min(0),
+  adaptationAmount: z.number().min(0),
+  maintenanceAmount: z.number().min(0),
   downPayment: z.number().min(0),
   installments: z.number().int().min(1).max(60),
-  monthlyPayment: z.number().positive(),
-  interestRate: z.number().min(0),
-  totalCost: z.number().positive(),
   clinicId: z.string().uuid().optional(),
   purpose: z.string().optional(),
 });
@@ -23,18 +22,37 @@ export const createLoanApplication = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: unknown) => createApplicationSchema.parse(data))
   .handler(async ({ data, context }) => {
+    const requestedAmount = data.prosthesisAmount + data.adaptationAmount + data.maintenanceAmount;
+    if (requestedAmount <= 0) {
+      throw new Error("O valor total deve ser maior que zero.");
+    }
+    const interestRate = 1.99;
+    const financedAmount = Math.max(0, requestedAmount - data.downPayment);
+    const monthlyRate = interestRate / 100;
+    
+    const monthlyPayment =
+      monthlyRate === 0
+        ? financedAmount / data.installments
+        : (financedAmount * monthlyRate * Math.pow(1 + monthlyRate, data.installments)) /
+          (Math.pow(1 + monthlyRate, data.installments) - 1);
+
+    const totalCost = monthlyPayment * data.installments + data.downPayment;
+
+    const breakdownText = `[Prótese: R$ ${data.prosthesisAmount} | Adaptação: R$ ${data.adaptationAmount} | Manutenção: R$ ${data.maintenanceAmount}]`;
+    const finalPurpose = [data.purpose, breakdownText].filter(Boolean).join(" ");
+
     const { data: application, error } = await context.supabase
       .from("loan_applications")
       .insert({
         patient_id: context.userId,
         clinic_id: data.clinicId ?? null,
-        requested_amount: data.requestedAmount,
+        requested_amount: requestedAmount,
         down_payment: data.downPayment,
         installments: data.installments,
-        monthly_payment: data.monthlyPayment,
-        interest_rate: data.interestRate,
-        total_cost: data.totalCost,
-        purpose: data.purpose ?? null,
+        monthly_payment: Number(monthlyPayment.toFixed(2)),
+        interest_rate: interestRate,
+        total_cost: Number(totalCost.toFixed(2)),
+        purpose: finalPurpose,
         status: "pending",
       })
       .select()

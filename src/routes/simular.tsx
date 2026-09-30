@@ -22,7 +22,9 @@ export const Route = createFileRoute("/simular")({
 });
 
 function SimularPage() {
-  const [amount, setAmount] = useState(15000);
+  const [prosthesisAmount, setProsthesisAmount] = useState(15000);
+  const [adaptationAmount, setAdaptationAmount] = useState(0);
+  const [maintenanceAmount, setMaintenanceAmount] = useState(0);
   const [downPayment, setDownPayment] = useState(3000);
   const [installments, setInstallments] = useState(24);
 
@@ -60,8 +62,12 @@ function SimularPage() {
 
             <div className="mx-auto max-w-4xl">
               <CreditSimulator
-                amount={amount}
-                setAmount={setAmount}
+                prosthesisAmount={prosthesisAmount}
+                setProsthesisAmount={setProsthesisAmount}
+                adaptationAmount={adaptationAmount}
+                setAdaptationAmount={setAdaptationAmount}
+                maintenanceAmount={maintenanceAmount}
+                setMaintenanceAmount={setMaintenanceAmount}
                 downPayment={downPayment}
                 setDownPayment={setDownPayment}
                 installments={installments}
@@ -69,25 +75,25 @@ function SimularPage() {
               />
 
               <div className="mt-8 rounded-xl border border-border bg-card p-6">
-                <h2 className="text-lg font-semibold text-foreground">O que você precisa saber:</h2>
+                <h2 className="text-lg font-semibold text-foreground">Atenção: Valores de Demonstração</h2>
                 <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
                   <li className="flex items-start gap-2">
                     <CheckCircle size={16} className="mt-0.5 text-primary" />
-                    <span>Taxa a partir de 1,99% ao mês para clientes selecionados.</span>
+                    <span>Valores e taxas (ex: 1,99% a.m.) são apenas para demonstração.</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle size={16} className="mt-0.5 text-primary" />
-                    <span>Parcelamento em até 48x, sem burocracia.</span>
+                    <span>Prazos (ex: até 48x) também são ilustrativos até a definição do parceiro financeiro.</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle size={16} className="mt-0.5 text-primary" />
-                    <span>A análise de crédito é feita em poucos minutos.</span>
+                    <span>As condições reais e o CET serão calculados pelo parceiro financeiro após a análise.</span>
                   </li>
                 </ul>
                 <div className="mt-6">
                   <Link to="/auth">
                     <Button size="lg" className="w-full gap-2">
-                      Solicitar este crédito <ArrowRight size={18} />
+                      Enviar para análise <ArrowRight size={18} />
                     </Button>
                   </Link>
                 </div>

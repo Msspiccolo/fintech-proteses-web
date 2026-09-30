@@ -4,8 +4,12 @@ import { Label } from "@/components/ui/label";
 import { formatCurrency } from "@/lib/utils";
 
 interface CreditSimulatorProps {
-  amount: number;
-  setAmount: (value: number) => void;
+  prosthesisAmount: number;
+  setProsthesisAmount: (value: number) => void;
+  adaptationAmount: number;
+  setAdaptationAmount: (value: number) => void;
+  maintenanceAmount: number;
+  setMaintenanceAmount: (value: number) => void;
   downPayment: number;
   setDownPayment: (value: number) => void;
   installments: number;
@@ -14,14 +18,19 @@ interface CreditSimulatorProps {
 }
 
 export function CreditSimulator({
-  amount,
-  setAmount,
+  prosthesisAmount,
+  setProsthesisAmount,
+  adaptationAmount,
+  setAdaptationAmount,
+  maintenanceAmount,
+  setMaintenanceAmount,
   downPayment,
   setDownPayment,
   installments,
   setInstallments,
   interestRate = 1.99,
 }: CreditSimulatorProps) {
+  const amount = prosthesisAmount + adaptationAmount + maintenanceAmount;
   const financedAmount = Math.max(0, amount - downPayment);
 
   const calculation = useMemo(() => {
@@ -46,22 +55,55 @@ export function CreditSimulator({
 
   return (
     <div className="space-y-6 rounded-xl border border-border bg-card p-6 shadow-sm">
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="amount">Valor do tratamento / prótese</Label>
-          <span className="text-lg font-semibold text-primary">{formatCurrency(amount)}</span>
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="prosthesisAmount">Prótese e tratamento</Label>
+            <span className="text-lg font-semibold text-primary">{formatCurrency(prosthesisAmount)}</span>
+          </div>
+          <Slider
+            id="prosthesisAmount"
+            min={1000}
+            max={100000}
+            step={500}
+            value={[prosthesisAmount]}
+            onValueChange={(value) => setProsthesisAmount(value[0])}
+          />
         </div>
-        <Slider
-          id="amount"
-          min={1000}
-          max={100000}
-          step={500}
-          value={[amount]}
-          onValueChange={(value) => setAmount(value[0])}
-        />
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>R$ 1.000</span>
-          <span>R$ 100.000</span>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="adaptationAmount">Adaptação</Label>
+            <span className="text-lg font-semibold text-primary">{formatCurrency(adaptationAmount)}</span>
+          </div>
+          <Slider
+            id="adaptationAmount"
+            min={0}
+            max={50000}
+            step={100}
+            value={[adaptationAmount]}
+            onValueChange={(value) => setAdaptationAmount(value[0])}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="maintenanceAmount">Manutenção</Label>
+            <span className="text-lg font-semibold text-primary">{formatCurrency(maintenanceAmount)}</span>
+          </div>
+          <Slider
+            id="maintenanceAmount"
+            min={0}
+            max={50000}
+            step={100}
+            value={[maintenanceAmount]}
+            onValueChange={(value) => setMaintenanceAmount(value[0])}
+          />
+        </div>
+
+        <div className="flex justify-between items-center rounded-lg bg-primary/5 p-3">
+          <span className="text-sm font-medium">Soma Total Estimada:</span>
+          <span className="text-lg font-bold text-primary">{formatCurrency(amount)}</span>
         </div>
       </div>
 
@@ -119,7 +161,7 @@ export function CreditSimulator({
           </div>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          Taxa de {interestRate}% ao mês · CET estimado {calculation.cet}%
+          Valores de demonstração (taxa ex: {interestRate}% a.m. · CET {calculation.cet}%)
         </p>
       </div>
     </div>
