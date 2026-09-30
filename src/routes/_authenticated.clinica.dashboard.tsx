@@ -16,7 +16,12 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { getClinicLoanApplications } from "@/lib/loans.functions";
-import { getClinicByUser, registerClinic } from "@/lib/clinics.functions";
+import {
+  getClinicByUser,
+  registerClinic,
+  getApprovedClinics,
+  affiliateWithExistingClinic,
+} from "@/lib/clinics.functions";
 import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Header } from "@/components/layout/header";
