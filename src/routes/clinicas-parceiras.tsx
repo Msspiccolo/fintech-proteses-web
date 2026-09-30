@@ -209,11 +209,13 @@ function ClinicasParceirasPage() {
                   <Building2 size={18} /> Ver clínicas credenciadas
                 </Button>
               </a>
-              <a href="#cadastrar-clinica">
-                <Button size="lg" variant="outline" className="gap-2">
-                  <Sparkles size={18} /> Seja uma parceira
-                </Button>
-              </a>
+              {!isAuthenticated && (
+                <a href="#cadastrar-clinica">
+                  <Button size="lg" variant="outline" className="gap-2">
+                    <Sparkles size={18} /> Seja uma parceira
+                  </Button>
+                </a>
+              )}
             </div>
           </div>
         </section>
@@ -418,10 +420,11 @@ function ClinicasParceirasPage() {
         </section>
 
         {/* Benefits & Registration Section */}
-        <section
-          id="cadastrar-clinica"
-          className="border-t border-border bg-muted/20 px-4 py-16 md:py-24"
-        >
+        {!isAuthenticated && (
+          <section
+            id="cadastrar-clinica"
+            className="border-t border-border bg-muted/20 px-4 py-16 md:py-24"
+          >
           <div className="mx-auto max-w-5xl">
             <div className="text-center">
               <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1 text-xs font-semibold text-muted-foreground">
@@ -640,6 +643,7 @@ function ClinicasParceirasPage() {
             </div>
           </div>
         </section>
+        )}
       </main>
       <Footer />
     </div>

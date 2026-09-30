@@ -179,7 +179,7 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
           </div>
           <Slider
             min={0}
-            max={amount}
+            max={totalAmount}
             step={500}
             value={[downPayment]}
             onValueChange={(value) => {

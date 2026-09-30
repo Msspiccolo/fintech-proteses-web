@@ -25,7 +25,9 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
-  const [amount, setAmount] = useState(15000);
+  const [prosthesisAmount, setProsthesisAmount] = useState(15000);
+  const [adaptationAmount, setAdaptationAmount] = useState(0);
+  const [maintenanceAmount, setMaintenanceAmount] = useState(0);
   const [downPayment, setDownPayment] = useState(3000);
   const [installments, setInstallments] = useState(24);
 
@@ -77,8 +79,12 @@ function HomePage() {
 
               <div className="rounded-2xl border border-border bg-card p-2 shadow-xl">
                 <CreditSimulator
-                  amount={amount}
-                  setAmount={setAmount}
+                  prosthesisAmount={prosthesisAmount}
+                  setProsthesisAmount={setProsthesisAmount}
+                  adaptationAmount={adaptationAmount}
+                  setAdaptationAmount={setAdaptationAmount}
+                  maintenanceAmount={maintenanceAmount}
+                  setMaintenanceAmount={setMaintenanceAmount}
                   downPayment={downPayment}
                   setDownPayment={setDownPayment}
                   installments={installments}
