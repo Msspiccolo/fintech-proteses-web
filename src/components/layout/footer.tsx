@@ -33,6 +33,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link to="/seja-parceiro" className="hover:text-foreground">
+                  Seja Parceiro de Crédito
+                </Link>
+              </li>
+              <li>
                 <Link to="/admin/setup" className="hover:text-foreground">
                   Setup de Admin
                 </Link>
