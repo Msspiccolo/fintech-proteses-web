@@ -208,7 +208,7 @@ export async function setAccountAsClinic(): Promise<void> {
   }
 }
 
-export async function getAuthenticatedUserRole(): Promise<"patient" | "clinic" | "admin"> {
+export async function getAuthenticatedUserRole(): Promise<"patient" | "clinic" | "admin" | "investor"> {
   try {
     const {
       data: { user },
@@ -235,12 +235,18 @@ export async function getAuthenticatedUserRole(): Promise<"patient" | "clinic" |
     // If the account is an admin, it must NEVER be overridden!
     // ========================================================
     const metaRole = (user.user_metadata?.role as string)?.toLowerCase();
+    const isInvestor = user.user_metadata?.is_investor === true || user.user_metadata?.is_investor === "true";
+    
     if (metaRole === "admin") {
       if (typeof window !== "undefined") {
         localStorage.removeItem("user_role_hint");
         localStorage.removeItem("pending_signup_role");
       }
       return "admin";
+    }
+    
+    if (isInvestor) {
+      return "investor";
     }
 
     try {
@@ -413,7 +419,7 @@ export async function getAuthenticatedUserRole(): Promise<"patient" | "clinic" |
 }
 
 export function redirectUserByRole(
-  role: "patient" | "clinic" | "admin",
+  role: "patient" | "clinic" | "admin" | "investor",
   navigate?: (opts: { to: string; replace?: boolean }) => void,
 ) {
   if (role === "clinic") {
@@ -429,6 +435,14 @@ export function redirectUserByRole(
       navigate({ to: "/admin/dashboard", replace: true });
     } else {
       window.location.href = "/admin/dashboard";
+    }
+    return;
+  }
+  if (role === "investor") {
+    if (navigate) {
+      navigate({ to: "/parceiro/dashboard", replace: true });
+    } else {
+      window.location.href = "/parceiro/dashboard";
     }
     return;
   }

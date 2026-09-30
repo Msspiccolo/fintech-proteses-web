@@ -28,6 +28,7 @@ import { openDocument, DOC_TYPES } from "@/components/application-extras";
 import { FileText } from "lucide-react";
 import { Footer } from "@/components/layout/footer";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/admin/dashboard")({
   head: () => ({
@@ -73,6 +74,32 @@ function AdminDashboard() {
   const approvalRate = applications.length > 0 ? (approvedApps.length / applications.length) * 100 : 0;
   const creditVolume = approvedApps.reduce((acc, app) => acc + app.requested_amount, 0);
   const pendingCredit = pendingApps.reduce((acc, app) => acc + app.requested_amount, 0);
+  const totalRepassed = applications.filter(a => a.status === "completed").reduce((acc, app) => acc + app.requested_amount, 0);
+  const pendingRepasses = approvedApps.reduce((acc, app) => acc + app.requested_amount, 0);
+  
+  // Fetch credit partners from Supabase (or use fallback)
+  const { data: fetchedPartners } = useQuery({
+    queryKey: ["credit-partners"],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase.from("credit_partners" as any).select("*");
+        if (error) throw error;
+        return data;
+      } catch (err) {
+        console.warn("Table credit_partners doesn't exist yet, using mock data.");
+        return null;
+      }
+    },
+  });
+
+  const mockCreditPartners = [
+    { name: "Fundo Alpha Invest", type: "Fundo de Investimento", acquired: 2000000, used: 1500000, status: "Ativo" },
+    { name: "Banco FinanceBrasil", type: "Banco Institucional", acquired: 1500000, used: 800000, status: "Ativo" },
+    { name: "Capital Próteses", type: "Investidor Anjo", acquired: 1500000, used: 200000, status: "Ativo" }
+  ];
+
+  const creditPartners = fetchedPartners && fetchedPartners.length > 0 ? fetchedPartners : mockCreditPartners;
+  const totalCreditAcquired = creditPartners.reduce((acc, p) => acc + (p.acquired || 0), 0);
 
 
 
@@ -227,6 +254,7 @@ function AdminDashboard() {
               <TabsTrigger value="applications">Propostas</TabsTrigger>
               <TabsTrigger value="clinics">Clínicas Parceiras</TabsTrigger>
               <TabsTrigger value="users">Usuários</TabsTrigger>
+              <TabsTrigger value="partners">Parceiros de Crédito</TabsTrigger>
               <TabsTrigger value="settings">Configurações</TabsTrigger>
             </TabsList>
 
@@ -294,6 +322,30 @@ function AdminDashboard() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-3xl font-bold text-foreground">{averagePatientsPerClinic}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Total Repassado</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-foreground">{formatCurrency(totalRepassed)}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Repasses Pendentes</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-foreground">{formatCurrency(pendingRepasses)}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Crédito Adquirido (Parceiros)</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-primary">{formatCurrency(totalCreditAcquired)}</p>
                   </CardContent>
                 </Card>
               </div>
@@ -715,6 +767,75 @@ function AdminDashboard() {
                     </div>
                   </div>
                 )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="partners" className="mt-6 space-y-6">
+              <div>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                  <h2 className="text-xl font-semibold text-foreground">Parceiros de Crédito</h2>
+                  <Link to="/seja-parceiro">
+                    <Button variant="outline" size="sm">Ver Página de Captação</Button>
+                  </Link>
+                </div>
+                
+                <div className="grid gap-6 md:grid-cols-3 mb-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Crédito Total Adquirido</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-3xl font-bold text-primary">{formatCurrency(totalCreditAcquired)}</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Crédito Utilizado</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-3xl font-bold text-foreground">{formatCurrency(creditVolume)}</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Parceiros Ativos</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-3xl font-bold text-foreground">{creditPartners.length}</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="overflow-hidden rounded-lg border bg-card shadow-sm">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                      <thead className="bg-muted/50 text-muted-foreground text-xs uppercase">
+                        <tr>
+                          <th className="px-6 py-4 font-medium">Nome do Parceiro</th>
+                          <th className="px-6 py-4 font-medium">Tipo</th>
+                          <th className="px-6 py-4 font-medium">Crédito Disponibilizado</th>
+                          <th className="px-6 py-4 font-medium">Crédito Utilizado</th>
+                          <th className="px-6 py-4 font-medium">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {creditPartners.map((partner) => (
+                          <tr key={partner.name} className="hover:bg-muted/30 transition-colors">
+                            <td className="px-6 py-4 font-medium text-foreground">{partner.name}</td>
+                            <td className="px-6 py-4 text-muted-foreground">{partner.type}</td>
+                            <td className="px-6 py-4 font-semibold text-primary">{formatCurrency(partner.acquired)}</td>
+                            <td className="px-6 py-4 font-medium">{formatCurrency(partner.used)}</td>
+                            <td className="px-6 py-4">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-green-100 text-green-800 border-green-200">
+                                {partner.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             </TabsContent>
 

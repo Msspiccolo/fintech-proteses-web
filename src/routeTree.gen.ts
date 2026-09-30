@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SimularRouteImport } from './routes/simular'
+import { Route as SejaParceiroRouteImport } from './routes/seja-parceiro'
+import { Route as ProdutosRouteImport } from './routes/produtos'
 import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
 import { Route as ClinicasParceirasRouteImport } from './routes/clinicas-parceiras'
 import { Route as CadastroClinicaRouteImport } from './routes/cadastro-clinica'
@@ -25,9 +27,12 @@ import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedClinicaIndexRouteImport } from './routes/_authenticated.clinica.index'
 import { Route as AuthenticatedPacienteDashboardRouteImport } from './routes/_authenticated.paciente.dashboard'
+import { Route as AuthenticatedClinicaFinanceiroRouteImport } from './routes/_authenticated.clinica.financeiro'
 import { Route as AuthenticatedClinicaDashboardRouteImport } from './routes/_authenticated.clinica.dashboard'
 import { Route as AuthenticatedAdminSetupRouteImport } from './routes/_authenticated.admin.setup'
 import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated.admin.dashboard'
+import { Route as AuthenticatedClinicaProdutosIndexRouteImport } from './routes/_authenticated.clinica.produtos.index'
+import { Route as AuthenticatedClinicaProdutosCadastroRouteImport } from './routes/_authenticated.clinica.produtos.cadastro'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -37,6 +42,16 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const SimularRoute = SimularRouteImport.update({
   id: '/simular',
   path: '/simular',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SejaParceiroRoute = SejaParceiroRouteImport.update({
+  id: '/seja-parceiro',
+  path: '/seja-parceiro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProdutosRoute = ProdutosRouteImport.update({
+  id: '/produtos',
+  path: '/produtos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComoFuncionaRoute = ComoFuncionaRouteImport.update({
@@ -110,6 +125,12 @@ const AuthenticatedPacienteDashboardRoute =
     path: '/paciente/dashboard',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedClinicaFinanceiroRoute =
+  AuthenticatedClinicaFinanceiroRouteImport.update({
+    id: '/clinica/financeiro',
+    path: '/clinica/financeiro',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedClinicaDashboardRoute =
   AuthenticatedClinicaDashboardRouteImport.update({
     id: '/clinica/dashboard',
@@ -127,6 +148,18 @@ const AuthenticatedAdminDashboardRoute =
     path: '/admin/dashboard',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedClinicaProdutosIndexRoute =
+  AuthenticatedClinicaProdutosIndexRouteImport.update({
+    id: '/clinica/produtos/',
+    path: '/clinica/produtos/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedClinicaProdutosCadastroRoute =
+  AuthenticatedClinicaProdutosCadastroRouteImport.update({
+    id: '/clinica/produtos/cadastro',
+    path: '/clinica/produtos/cadastro',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -134,6 +167,8 @@ export interface FileRoutesByFullPath {
   '/cadastro-clinica': typeof CadastroClinicaRoute
   '/clinicas-parceiras': typeof ClinicasParceirasRoute
   '/como-funciona': typeof ComoFuncionaRoute
+  '/produtos': typeof ProdutosRoute
+  '/seja-parceiro': typeof SejaParceiroRoute
   '/simular': typeof SimularRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -145,8 +180,11 @@ export interface FileRoutesByFullPath {
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/clinica/dashboard': typeof AuthenticatedClinicaDashboardRoute
+  '/clinica/financeiro': typeof AuthenticatedClinicaFinanceiroRoute
   '/paciente/dashboard': typeof AuthenticatedPacienteDashboardRoute
   '/clinica/': typeof AuthenticatedClinicaIndexRoute
+  '/clinica/produtos/cadastro': typeof AuthenticatedClinicaProdutosCadastroRoute
+  '/clinica/produtos/': typeof AuthenticatedClinicaProdutosIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -154,6 +192,8 @@ export interface FileRoutesByTo {
   '/cadastro-clinica': typeof CadastroClinicaRoute
   '/clinicas-parceiras': typeof ClinicasParceirasRoute
   '/como-funciona': typeof ComoFuncionaRoute
+  '/produtos': typeof ProdutosRoute
+  '/seja-parceiro': typeof SejaParceiroRoute
   '/simular': typeof SimularRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -165,8 +205,11 @@ export interface FileRoutesByTo {
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/clinica/dashboard': typeof AuthenticatedClinicaDashboardRoute
+  '/clinica/financeiro': typeof AuthenticatedClinicaFinanceiroRoute
   '/paciente/dashboard': typeof AuthenticatedPacienteDashboardRoute
   '/clinica': typeof AuthenticatedClinicaIndexRoute
+  '/clinica/produtos/cadastro': typeof AuthenticatedClinicaProdutosCadastroRoute
+  '/clinica/produtos': typeof AuthenticatedClinicaProdutosIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -176,6 +219,8 @@ export interface FileRoutesById {
   '/cadastro-clinica': typeof CadastroClinicaRoute
   '/clinicas-parceiras': typeof ClinicasParceirasRoute
   '/como-funciona': typeof ComoFuncionaRoute
+  '/produtos': typeof ProdutosRoute
+  '/seja-parceiro': typeof SejaParceiroRoute
   '/simular': typeof SimularRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -187,8 +232,11 @@ export interface FileRoutesById {
   '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/_authenticated/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/_authenticated/clinica/dashboard': typeof AuthenticatedClinicaDashboardRoute
+  '/_authenticated/clinica/financeiro': typeof AuthenticatedClinicaFinanceiroRoute
   '/_authenticated/paciente/dashboard': typeof AuthenticatedPacienteDashboardRoute
   '/_authenticated/clinica/': typeof AuthenticatedClinicaIndexRoute
+  '/_authenticated/clinica/produtos/cadastro': typeof AuthenticatedClinicaProdutosCadastroRoute
+  '/_authenticated/clinica/produtos/': typeof AuthenticatedClinicaProdutosIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -198,6 +246,8 @@ export interface FileRouteTypes {
     | '/cadastro-clinica'
     | '/clinicas-parceiras'
     | '/como-funciona'
+    | '/produtos'
+    | '/seja-parceiro'
     | '/simular'
     | '/sitemap.xml'
     | '/dashboard'
@@ -209,8 +259,11 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/setup'
     | '/clinica/dashboard'
+    | '/clinica/financeiro'
     | '/paciente/dashboard'
     | '/clinica/'
+    | '/clinica/produtos/cadastro'
+    | '/clinica/produtos/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -218,6 +271,8 @@ export interface FileRouteTypes {
     | '/cadastro-clinica'
     | '/clinicas-parceiras'
     | '/como-funciona'
+    | '/produtos'
+    | '/seja-parceiro'
     | '/simular'
     | '/sitemap.xml'
     | '/dashboard'
@@ -229,8 +284,11 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/setup'
     | '/clinica/dashboard'
+    | '/clinica/financeiro'
     | '/paciente/dashboard'
     | '/clinica'
+    | '/clinica/produtos/cadastro'
+    | '/clinica/produtos'
   id:
     | '__root__'
     | '/'
@@ -239,6 +297,8 @@ export interface FileRouteTypes {
     | '/cadastro-clinica'
     | '/clinicas-parceiras'
     | '/como-funciona'
+    | '/produtos'
+    | '/seja-parceiro'
     | '/simular'
     | '/sitemap.xml'
     | '/_authenticated/dashboard'
@@ -250,8 +310,11 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/dashboard'
     | '/_authenticated/admin/setup'
     | '/_authenticated/clinica/dashboard'
+    | '/_authenticated/clinica/financeiro'
     | '/_authenticated/paciente/dashboard'
     | '/_authenticated/clinica/'
+    | '/_authenticated/clinica/produtos/cadastro'
+    | '/_authenticated/clinica/produtos/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -261,6 +324,8 @@ export interface RootRouteChildren {
   CadastroClinicaRoute: typeof CadastroClinicaRoute
   ClinicasParceirasRoute: typeof ClinicasParceirasRoute
   ComoFuncionaRoute: typeof ComoFuncionaRoute
+  ProdutosRoute: typeof ProdutosRoute
+  SejaParceiroRoute: typeof SejaParceiroRoute
   SimularRoute: typeof SimularRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiGenerate3dModelRoute: typeof ApiGenerate3dModelRoute
@@ -282,6 +347,20 @@ declare module '@tanstack/react-router' {
       path: '/simular'
       fullPath: '/simular'
       preLoaderRoute: typeof SimularRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seja-parceiro': {
+      id: '/seja-parceiro'
+      path: '/seja-parceiro'
+      fullPath: '/seja-parceiro'
+      preLoaderRoute: typeof SejaParceiroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/produtos': {
+      id: '/produtos'
+      path: '/produtos'
+      fullPath: '/produtos'
+      preLoaderRoute: typeof ProdutosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/como-funciona': {
@@ -382,6 +461,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPacienteDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/clinica/financeiro': {
+      id: '/_authenticated/clinica/financeiro'
+      path: '/clinica/financeiro'
+      fullPath: '/clinica/financeiro'
+      preLoaderRoute: typeof AuthenticatedClinicaFinanceiroRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/clinica/dashboard': {
       id: '/_authenticated/clinica/dashboard'
       path: '/clinica/dashboard'
@@ -403,6 +489,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/clinica/produtos/': {
+      id: '/_authenticated/clinica/produtos/'
+      path: '/clinica/produtos'
+      fullPath: '/clinica/produtos/'
+      preLoaderRoute: typeof AuthenticatedClinicaProdutosIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/clinica/produtos/cadastro': {
+      id: '/_authenticated/clinica/produtos/cadastro'
+      path: '/clinica/produtos/cadastro'
+      fullPath: '/clinica/produtos/cadastro'
+      preLoaderRoute: typeof AuthenticatedClinicaProdutosCadastroRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -412,8 +512,11 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
   AuthenticatedAdminSetupRoute: typeof AuthenticatedAdminSetupRoute
   AuthenticatedClinicaDashboardRoute: typeof AuthenticatedClinicaDashboardRoute
+  AuthenticatedClinicaFinanceiroRoute: typeof AuthenticatedClinicaFinanceiroRoute
   AuthenticatedPacienteDashboardRoute: typeof AuthenticatedPacienteDashboardRoute
   AuthenticatedClinicaIndexRoute: typeof AuthenticatedClinicaIndexRoute
+  AuthenticatedClinicaProdutosCadastroRoute: typeof AuthenticatedClinicaProdutosCadastroRoute
+  AuthenticatedClinicaProdutosIndexRoute: typeof AuthenticatedClinicaProdutosIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -422,8 +525,13 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminDashboardRoute: AuthenticatedAdminDashboardRoute,
   AuthenticatedAdminSetupRoute: AuthenticatedAdminSetupRoute,
   AuthenticatedClinicaDashboardRoute: AuthenticatedClinicaDashboardRoute,
+  AuthenticatedClinicaFinanceiroRoute: AuthenticatedClinicaFinanceiroRoute,
   AuthenticatedPacienteDashboardRoute: AuthenticatedPacienteDashboardRoute,
   AuthenticatedClinicaIndexRoute: AuthenticatedClinicaIndexRoute,
+  AuthenticatedClinicaProdutosCadastroRoute:
+    AuthenticatedClinicaProdutosCadastroRoute,
+  AuthenticatedClinicaProdutosIndexRoute:
+    AuthenticatedClinicaProdutosIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -447,6 +555,8 @@ const rootRouteChildren: RootRouteChildren = {
   CadastroClinicaRoute: CadastroClinicaRoute,
   ClinicasParceirasRoute: ClinicasParceirasRoute,
   ComoFuncionaRoute: ComoFuncionaRoute,
+  ProdutosRoute: ProdutosRoute,
+  SejaParceiroRoute: SejaParceiroRoute,
   SimularRoute: SimularRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiGenerate3dModelRoute: ApiGenerate3dModelRoute,

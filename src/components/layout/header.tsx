@@ -2,20 +2,46 @@ import { Link, useRouter } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Box, PlusCircle, Landmark } from "lucide-react";
+import { getAuthenticatedUserRole } from "@/lib/auth-client";
+
+let globalUserCache: { email?: string; role?: string } | null = null;
+let globalUserLoaded = false;
 
 export function Header() {
   const router = useRouter();
-  const [user, setUser] = useState<null | { email?: string }>(null);
+  const [user, setUser] = useState<null | { email?: string; role?: string }>(globalUserCache);
+  const [isLoaded, setIsLoaded] = useState(globalUserLoaded);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user ? { email: data.user.email } : null);
-    });
+    async function loadUser() {
+      const { data } = await supabase.auth.getUser();
+      if (data.user) {
+        const role = await getAuthenticatedUserRole();
+        globalUserCache = { email: data.user.email, role };
+      } else {
+        globalUserCache = null;
+      }
+      globalUserLoaded = true;
+      setUser(globalUserCache);
+      setIsLoaded(true);
+    }
+    
+    if (!globalUserLoaded) {
+      loadUser();
+    }
 
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ? { email: session.user.email } : null);
+    const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const role = await getAuthenticatedUserRole();
+        globalUserCache = { email: session.user.email, role };
+      } else {
+        globalUserCache = null;
+      }
+      globalUserLoaded = true;
+      setUser(globalUserCache);
+      setIsLoaded(true);
     });
 
     return () => listener.subscription.unsubscribe();
@@ -40,28 +66,72 @@ export function Header() {
           <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground">
             Home
           </Link>
-          <Link
-            to="/simular"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground"
-          >
-            Simular
-          </Link>
-          <Link
-            to="/como-funciona"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground"
-          >
-            Como funciona
-          </Link>
-          <Link
-            to="/clinicas-parceiras"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground"
-          >
-            Clínicas parceiras
-          </Link>
+          
+          {user?.role !== "clinic" && user?.role !== "admin" && (
+            <>
+              <Link
+                to="/simular"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground"
+              >
+                Simular
+              </Link>
+              <Link
+                to="/como-funciona"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground"
+              >
+                Como funciona
+              </Link>
+              <Link
+                to="/clinicas-parceiras"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground"
+              >
+                Clínicas parceiras
+              </Link>
+              <Link
+                to="/produtos"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground flex items-center gap-1"
+              >
+                <Box size={16} /> Catálogo
+              </Link>
+            </>
+          )}
+
+          {user?.role === "admin" && (
+            <Link
+              to="/admin/dashboard"
+              className="text-sm font-medium text-primary hover:text-primary/80"
+            >
+              Painel Administrativo
+            </Link>
+          )}
+          {user?.role === "clinic" && (
+            <>
+              <Link
+                to="/clinica/produtos/cadastro"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground flex items-center gap-1"
+              >
+                <PlusCircle size={16} /> Cadastro de produto
+              </Link>
+              <Link
+                to="/clinica/produtos"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground flex items-center gap-1"
+              >
+                <Box size={16} /> Catálogo de produto
+              </Link>
+              <Link
+                to="/clinica/financeiro"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground flex items-center gap-1"
+              >
+                <Landmark size={16} /> Meus Repasses
+              </Link>
+            </>
+          )}
         </nav>
 
         <div className="hidden items-center gap-4 md:flex">
-          {user ? (
+          {!isLoaded ? (
+            <div className="h-9 w-20 animate-pulse bg-muted rounded-md"></div>
+          ) : user ? (
             <>
               <Link to="/dashboard" className={buttonVariants({ variant: "ghost", size: "sm" })}>
                 Meu painel
@@ -99,27 +169,74 @@ export function Header() {
             >
               Home
             </Link>
-            <Link
-              to="/simular"
-              className="text-sm font-medium text-muted-foreground"
-              onClick={() => setMobileOpen(false)}
-            >
-              Simular
-            </Link>
-            <Link
-              to="/como-funciona"
-              className="text-sm font-medium text-muted-foreground"
-              onClick={() => setMobileOpen(false)}
-            >
-              Como funciona?
-            </Link>
-            <Link
-              to="/clinicas-parceiras"
-              className="text-sm font-medium text-muted-foreground"
-              onClick={() => setMobileOpen(false)}
-            >
-              Clínicas parceiras
-            </Link>
+
+            {user?.role !== "clinic" && user?.role !== "admin" && (
+              <>
+                <Link
+                  to="/simular"
+                  className="text-sm font-medium text-muted-foreground"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Simular
+                </Link>
+                <Link
+                  to="/como-funciona"
+                  className="text-sm font-medium text-muted-foreground"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Como funciona?
+                </Link>
+                <Link
+                  to="/clinicas-parceiras"
+                  className="text-sm font-medium text-muted-foreground"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Clínicas parceiras
+                </Link>
+                <Link
+                  to="/produtos"
+                  className="text-sm font-medium text-muted-foreground flex items-center gap-2"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <Box size={16} /> Catálogo
+                </Link>
+              </>
+            )}
+
+            {user?.role === "admin" && (
+              <Link
+                to="/admin/dashboard"
+                className="text-sm font-medium text-primary"
+                onClick={() => setMobileOpen(false)}
+              >
+                Painel Administrativo
+              </Link>
+            )}
+            {user?.role === "clinic" && (
+              <>
+                <Link
+                  to="/clinica/produtos/cadastro"
+                  className="text-sm font-medium text-muted-foreground flex items-center gap-2"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <PlusCircle size={16} /> Cadastro de produto
+                </Link>
+                <Link
+                  to="/clinica/produtos"
+                  className="text-sm font-medium text-muted-foreground flex items-center gap-2"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <Box size={16} /> Catálogo de produto
+                </Link>
+                <Link
+                  to="/clinica/financeiro"
+                  className="text-sm font-medium text-muted-foreground flex items-center gap-2"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <Landmark size={16} /> Meus Repasses
+                </Link>
+              </>
+            )}
             {user ? (
               <>
                 <Link
@@ -143,6 +260,8 @@ export function Header() {
                   Sair
                 </button>
               </>
+            ) : !isLoaded ? (
+              <div className="text-sm font-medium text-muted-foreground">Carregando...</div>
             ) : (
               <Link
                 to="/auth"
