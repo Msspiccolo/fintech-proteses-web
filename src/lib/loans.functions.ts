@@ -100,12 +100,30 @@ export const getClinicLoanApplications = createServerFn({ method: "GET" })
 
     const { data, error } = await context.supabase
       .from("loan_applications")
-      .select("*, clinics(name), profiles!loan_applications_patient_id_fkey(full_name)")
+      .select("*, clinics(name)")
       .in("clinic_id", clinicIds)
       .order("created_at", { ascending: false });
 
     if (error) {
       throw new Error(error.message);
+    }
+
+    // Fetch profiles manually
+    const patientIds = [...new Set(data?.map(app => app.patient_id).filter(Boolean) || [])];
+    if (patientIds.length > 0) {
+      const { data: profiles } = await context.supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", patientIds);
+        
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+      
+      const applicationsWithProfiles = data?.map(app => ({
+        ...app,
+        profiles: profileMap.get(app.patient_id) || null
+      }));
+      
+      return { applications: applicationsWithProfiles };
     }
 
     return { applications: data ?? [] };
@@ -137,11 +155,29 @@ export const getAllLoanApplications = createServerFn({ method: "GET" })
 
     const { data, error } = await context.supabase
       .from("loan_applications")
-      .select("*, clinics(name), profiles!loan_applications_patient_id_fkey(full_name), loan_documents(*), fabrication_orders(*)")
+      .select("*, clinics(name), loan_documents(*), fabrication_orders(*)")
       .order("created_at", { ascending: false });
 
     if (error) {
       throw new Error(error.message);
+    }
+
+    // Fetch profiles manually
+    const patientIds = [...new Set(data?.map(app => app.patient_id).filter(Boolean) || [])];
+    if (patientIds.length > 0) {
+      const { data: profiles } = await context.supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", patientIds);
+        
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+      
+      const applicationsWithProfiles = data?.map(app => ({
+        ...app,
+        profiles: profileMap.get(app.patient_id) || null
+      }));
+      
+      return { applications: applicationsWithProfiles };
     }
 
     return { applications: data ?? [] };
