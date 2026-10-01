@@ -22,6 +22,7 @@ import {
   getApprovedClinics,
   affiliateWithExistingClinic,
 } from "@/lib/clinics.functions";
+import { ApplicationChat } from "@/components/application-extras";
 import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Header } from "@/components/layout/header";
@@ -259,6 +260,7 @@ function ClinicDashboard() {
           parcelasAtrasadas: 0,
           historicoBoletos: [],
           mensagens: [],
+          applicationId: app.id,
         };
       }
 
@@ -784,41 +786,13 @@ function ClinicDashboard() {
                 </TabsContent>
 
                 <TabsContent value="mensagens" className="h-[50vh] flex flex-col">
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/20 rounded-md border mb-4">
-                    {(!selectedClient.mensagens || selectedClient.mensagens.length === 0) ? (
-                      <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-                        Nenhuma mensagem encontrada.
-                      </div>
-                    ) : (
-                      selectedClient.mensagens.map((msg: any) => (
-                        <div key={msg.id} className={`flex ${msg.sender === "clinica" ? "justify-end" : "justify-start"}`}>
-                          <div 
-                            className={`max-w-[80%] rounded-lg p-3 ${
-                              msg.sender === "clinica" 
-                                ? "bg-primary text-primary-foreground rounded-tr-none" 
-                                : "bg-muted text-foreground rounded-tl-none"
-                            }`}
-                          >
-                            <p className="text-sm mb-1">{msg.text}</p>
-                            <span className="text-[10px] opacity-70">
-                              {new Date(msg.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit'})}
-                            </span>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                  <form onSubmit={handleSendMessage} className="flex gap-2">
-                    <Input 
-                      placeholder="Digite sua mensagem..." 
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button type="submit" disabled={!newMessage.trim()}>
-                      <Send className="h-4 w-4" />
-                    </Button>
-                  </form>
+                  {selectedClient?.applicationId ? (
+                    <ApplicationChat applicationId={selectedClient.applicationId} />
+                  ) : (
+                    <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+                      Nenhuma solicitação ativa para chat.
+                    </div>
+                  )}
                 </TabsContent>
                 <TabsContent value="boletos">
                   <div className="grid gap-6 py-4">

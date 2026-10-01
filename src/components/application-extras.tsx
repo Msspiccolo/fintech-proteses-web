@@ -1,7 +1,8 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -10,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Check, Circle, FileText, Upload, Download, X, Printer, Banknote } from "lucide-react";
+import { Check, Circle, FileText, Upload, Download, X, Printer, Banknote, MessageCircle, Send } from "lucide-react";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
@@ -366,6 +367,135 @@ export function BoletoPreview({ app }: { app: any }) {
   );
 }
 
+export function ApplicationChat({ applicationId }: { applicationId: string }) {
+  const [newMessage, setNewMessage] = useState("");
+  const queryClient = useQueryClient();
+  const [userId, setUserId] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useQuery({
+    queryKey: ["auth-user"],
+    queryFn: async () => {
+      const { data } = await db.auth.getUser();
+      if (data.user) setUserId(data.user.id);
+      return data.user;
+    }
+  });
+
+  const { data: messages = [] } = useQuery({
+    queryKey: ["application_messages", applicationId],
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("application_messages")
+        .select("*")
+        .eq("application_id", applicationId)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  useEffect(() => {
+    const channel = db
+      .channel(`chat_${applicationId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "application_messages",
+          filter: `application_id=eq.${applicationId}`,
+        },
+        (payload: any) => {
+          queryClient.setQueryData(["application_messages", applicationId], (old: any) => {
+            if (!old) return [payload.new];
+            if (old.some((m: any) => m.id === payload.new.id)) return old;
+            return [...old, payload.new];
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      db.removeChannel(channel);
+    };
+  }, [applicationId, queryClient]);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  async function handleSendMessage(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newMessage.trim() || !userId) return;
+
+    const msgText = newMessage.trim();
+    setNewMessage("");
+
+    const { error } = await db.from("application_messages").insert({
+      application_id: applicationId,
+      sender_id: userId,
+      text: msgText,
+    });
+
+    if (error) {
+      console.error("Erro ao enviar mensagem:", error);
+      toast.error("Erro ao enviar mensagem");
+    }
+  }
+
+  return (
+    <div className="space-y-3 pt-4 border-t border-border">
+      <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+        <MessageCircle className="h-4 w-4 text-primary" />
+        Mensagens
+      </div>
+      <div className="flex flex-col h-[250px]">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/20 rounded-md border mb-3">
+          {messages.length === 0 ? (
+             <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
+               Nenhuma mensagem encontrada.
+             </div>
+          ) : (
+            messages.map((msg: any) => {
+              const isMe = msg.sender_id === userId;
+              return (
+                <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                  <div 
+                    className={`max-w-[80%] rounded-lg p-3 ${
+                      isMe
+                        ? "bg-primary text-primary-foreground rounded-tr-none" 
+                        : "bg-muted text-foreground rounded-tl-none"
+                    }`}
+                  >
+                    <p className="text-sm mb-1">{msg.text}</p>
+                    <span className="text-[10px] opacity-70">
+                      {new Date(msg.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit'})}
+                    </span>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+        <form onSubmit={handleSendMessage} className="flex gap-2">
+          <Input 
+            placeholder="Digite sua mensagem..." 
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            className="flex-1"
+          />
+          <Button type="submit" disabled={!newMessage.trim()}>
+            <Send className="h-4 w-4" />
+          </Button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export function PatientApplicationExtras({ app }: { app: any }) {
   const { data: docs = [] } = useApplicationDocuments(app.id);
   return (
@@ -374,6 +504,8 @@ export function PatientApplicationExtras({ app }: { app: any }) {
       <ApplicationDocuments applicationId={app.id} canUpload={app.status === "pending"} />
       <FabricationRequest applicationId={app.id} status={app.status} />
       <BoletoPreview app={app} />
+      <ApplicationChat applicationId={app.id} />
     </div>
   );
 }
+
