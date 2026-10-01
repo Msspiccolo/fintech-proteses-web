@@ -11,7 +11,7 @@ export interface SignUpInput {
   address?: string;
   city?: string;
   state: string;
-  role: "patient" | "clinic" | "admin";
+  role: "patient" | "clinic" | "admin" | "investor";
   clinicName?: string;
 }
 
@@ -93,6 +93,7 @@ export async function signUpWithPassword(input: SignUpInput) {
         role: input.role,
         app_role: input.role,
         tipo: input.role,
+        is_investor: input.role === "investor" ? true : undefined,
         clinic_name: input.clinicName,
       },
     },

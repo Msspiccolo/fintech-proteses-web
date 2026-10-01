@@ -84,7 +84,7 @@ function AdminDashboard() {
       try {
         const { data, error } = await supabase.from("credit_partners" as any).select("*");
         if (error) throw error;
-        return data;
+        return data as any[];
       } catch (err) {
         console.warn("Table credit_partners doesn't exist yet, using mock data.");
         return null;
