@@ -4,13 +4,15 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect } from "react";
 import { getAuthenticatedUserRole } from "@/lib/auth-client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getMyLoanApplications } from "@/lib/loans.functions";
+import { getMyLoanApplications, deleteLoanApplication } from "@/lib/loans.functions";
 import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { ProposalForm } from "@/components/proposal-form";
 import { PatientApplicationExtras } from "@/components/application-extras";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 
 import { toast } from "sonner";
 
@@ -51,6 +53,7 @@ function PatientDashboard() {
   }, [router]);
 
   const fetchApplications = useServerFn(getMyLoanApplications);
+  const deleteApplication = useServerFn(deleteLoanApplication);
   const queryClient = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["my-loan-applications"],
@@ -58,6 +61,18 @@ function PatientDashboard() {
   });
 
   const applications = data?.applications ?? [];
+
+  async function handleDelete(id: string) {
+    if (!confirm("Tem certeza que deseja cancelar e excluir esta proposta?")) return;
+    try {
+      await deleteApplication({ data: { id } });
+      toast.success("Proposta excluída com sucesso!");
+      await queryClient.invalidateQueries({ queryKey: ["my-loan-applications"] });
+      router.invalidate();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao excluir proposta.");
+    }
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -147,6 +162,18 @@ function PatientDashboard() {
                           <p className="text-sm text-muted-foreground">Data</p>
                           <p className="text-foreground">{formatDate(app.created_at)}</p>
                         </div>
+                        {app.status === "pending" && (
+                          <div className="flex items-center justify-end sm:col-span-2 lg:col-span-5 mt-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-red-500 hover:text-red-600 hover:bg-red-50 w-full sm:w-auto"
+                              onClick={() => handleDelete(app.id)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" /> Excluir proposta
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                     <PatientApplicationExtras app={app} />

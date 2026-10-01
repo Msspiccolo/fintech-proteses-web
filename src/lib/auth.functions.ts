@@ -93,7 +93,7 @@ export const updateUserRoleForAdmin = createServerFn({ method: "POST" })
     z
       .object({
         targetUserId: z.string().uuid(),
-        newRole: z.enum(["patient", "clinic", "admin"]),
+        newRole: z.enum(["patient", "clinic", "admin", "investor"]),
       })
       .parse(data),
   )
@@ -117,14 +117,28 @@ export const updateUserRoleForAdmin = createServerFn({ method: "POST" })
       metaRole === "admin";
     if (!isAdmin) throw new Error("Unauthorized");
 
+    let actualRole = data.newRole;
+    if (data.newRole === "investor") {
+      actualRole = "patient" as any;
+    }
+
     // Call the RPC to update roles securely without needing service role keys
     const { error } = await context.supabase.rpc("update_user_role_by_admin", {
       target_user_id: data.targetUserId,
-      new_role: data.newRole,
+      new_role: actualRole,
     });
 
     if (error) {
       throw new Error(error.message);
+    }
+
+    if (data.newRole === "investor") {
+      await context.supabase.from("credit_partners" as any).upsert({
+        user_id: data.targetUserId,
+        status: "Ativo",
+      }, { onConflict: "user_id" });
+    } else {
+      await context.supabase.from("credit_partners" as any).delete().eq("user_id", data.targetUserId);
     }
 
     return { ok: true };

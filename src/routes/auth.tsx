@@ -18,7 +18,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { lovable } from "@/integrations/lovable";
 import { signUpWithPassword, signInWithPassword, resetPasswordForEmail } from "@/lib/auth-client";
-import { Chrome, User, Building2 } from "lucide-react";
+import { Chrome, User, Building2, Briefcase } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -59,7 +59,7 @@ const registerSchema = z
     state: z.string().length(2, "UF deve ter 2 letras"),
     password: z.string().min(6, "Mínimo 6 caracteres"),
     confirmPassword: z.string().min(6, "Mínimo 6 caracteres"),
-    role: z.enum(["patient", "clinic"]),
+    role: z.enum(["patient", "clinic", "investor"]),
     clinicName: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -108,7 +108,7 @@ function AuthPage() {
     },
   });
 
-  const [selectedRole, setSelectedRole] = useState<"patient" | "clinic">(
+  const [selectedRole, setSelectedRole] = useState<"patient" | "clinic" | "investor">(
     tipo === "clinica" ? "clinic" : "patient",
   );
 
@@ -381,7 +381,7 @@ function AuthPage() {
                       render={({ field }) => (
                         <FormItem className="space-y-2">
                           <FormLabel>Tipo de conta</FormLabel>
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="flex flex-col gap-3">
                             <button
                               type="button"
                               onClick={() => {
@@ -442,6 +442,38 @@ function AuthPage() {
                                 )}
                               >
                                 {selectedRole === "clinic" && (
+                                  <div className="h-1.5 w-1.5 rounded-full bg-white" />
+                                )}
+                              </div>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                console.log("[Auth] Switching role to investor");
+                                setSelectedRole("investor");
+                                field.onChange("investor");
+                                registerForm.setValue("role", "investor");
+                              }}
+                              className={cn(
+                                "flex items-center justify-between rounded-lg border-2 p-3.5 text-sm font-semibold transition-all cursor-pointer",
+                                selectedRole === "investor"
+                                  ? "border-primary bg-primary/10 text-primary shadow-sm ring-2 ring-primary/20"
+                                  : "border-border bg-card text-muted-foreground hover:bg-muted/50",
+                              )}
+                            >
+                              <div className="flex items-center gap-2">
+                                <Briefcase size={18} />
+                                <span>Sou parceiro / investidor</span>
+                              </div>
+                              <div
+                                className={cn(
+                                  "h-4 w-4 rounded-full border flex items-center justify-center shrink-0",
+                                  selectedRole === "investor"
+                                    ? "border-primary bg-primary"
+                                    : "border-muted-foreground/40",
+                                )}
+                              >
+                                {selectedRole === "investor" && (
                                   <div className="h-1.5 w-1.5 rounded-full bg-white" />
                                 )}
                               </div>

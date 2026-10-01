@@ -11,7 +11,7 @@ export interface SignUpInput {
   address?: string;
   city?: string;
   state: string;
-  role: "patient" | "clinic" | "admin";
+  role: "patient" | "clinic" | "admin" | "investor";
   clinicName?: string;
 }
 
@@ -20,7 +20,7 @@ export async function completeSignup(input: Omit<SignUpInput, "email" | "passwor
     _full_name: input.fullName,
     _document: input.document,
     _phone: input.phone,
-    _role: input.role,
+    _role: input.role === "investor" ? "patient" : input.role,
     _clinic_name: input.clinicName || "",
     _zip_code: input.zipCode || "",
     _address: input.address || "",
@@ -90,9 +90,10 @@ export async function signUpWithPassword(input: SignUpInput) {
         address: input.address,
         city: input.city,
         state: input.state,
-        role: input.role,
-        app_role: input.role,
-        tipo: input.role,
+        role: input.role === "investor" ? "patient" : input.role,
+        app_role: input.role === "investor" ? "patient" : input.role,
+        tipo: input.role === "investor" ? "patient" : input.role,
+        is_investor: input.role === "investor" ? true : undefined,
         clinic_name: input.clinicName,
       },
     },
