@@ -101,6 +101,44 @@ function AdminDashboard() {
   const creditPartners = fetchedPartners && fetchedPartners.length > 0 ? fetchedPartners : mockCreditPartners;
   const totalCreditAcquired = creditPartners.reduce((acc, p) => acc + (p.acquired || 0), 0);
 
+  // Fetch partner transactions
+  const { data: partnerTransactions, refetch: refetchTransactions } = useQuery({
+    queryKey: ["partner-transactions"],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase.from("partner_transactions" as any).select("*").order("created_at", { ascending: false });
+        if (error) throw error;
+        return data as any[];
+      } catch (err) {
+        console.warn("Table partner_transactions doesn't exist yet.");
+        return [];
+      }
+    },
+  });
+
+  async function handleTransactionStatus(id: string, status: "completed" | "rejected") {
+    try {
+      const { data, error: fetchTxError } = await supabase.from("partner_transactions" as any).select("*").eq("id", id).single();
+      const tx = data as any;
+      if (fetchTxError) throw fetchTxError;
+
+      const { error } = await supabase.from("partner_transactions" as any).update({ status }).eq("id", id);
+      if (error) throw error;
+
+      if (status === "completed" && tx?.type === "deposit") {
+        const { data: partnerData } = await supabase.from("credit_partners" as any).select("acquired").eq("user_id", tx.user_id).single();
+        const partner = partnerData as any;
+        const currentAcquired = partner?.acquired || 0;
+        await supabase.from("credit_partners" as any).update({ acquired: currentAcquired + tx.amount }).eq("user_id", tx.user_id);
+      }
+
+      toast.success(`Transação ${status === "completed" ? "concluída" : "rejeitada"} com sucesso!`);
+      refetchTransactions();
+    } catch (err) {
+      toast.error("Erro ao atualizar transação");
+    }
+  }
+
 
 
 
@@ -249,12 +287,13 @@ function AdminDashboard() {
           </div>
 
           <Tabs defaultValue="reports" className="mt-8">
-            <TabsList className="grid w-full grid-cols-5 max-w-[1000px]">
+            <TabsList className="grid w-full grid-cols-7 max-w-[1200px]">
               <TabsTrigger value="reports">Relatórios</TabsTrigger>
               <TabsTrigger value="applications">Propostas</TabsTrigger>
               <TabsTrigger value="clinics">Clínicas Parceiras</TabsTrigger>
               <TabsTrigger value="users">Usuários</TabsTrigger>
               <TabsTrigger value="partners">Parceiros de Crédito</TabsTrigger>
+              <TabsTrigger value="finance">Financeiro</TabsTrigger>
               <TabsTrigger value="settings">Configurações</TabsTrigger>
             </TabsList>
 
@@ -702,27 +741,31 @@ function AdminDashboard() {
                                 {user.email || "—"}
                               </td>
                               <td className="px-6 py-4">
-                                <span
-                                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
-                                  ${
-                                    user.roles?.includes("admin") || user.role === "admin"
-                                      ? "bg-purple-100 text-purple-800 border-purple-200"
-                                      : user.roles?.includes("clinic") ||
-                                          user.role === "clinic" ||
-                                          user.role === "clinica"
-                                        ? "bg-blue-100 text-blue-800 border-blue-200"
-                                        : "bg-green-100 text-green-800 border-green-200"
+                                {(() => {
+                                  const isInvestor = creditPartners.some((p: any) => p.user_id === user.user_id) || user.role === "investor" || user.roles?.includes("investor");
+                                  const isAdmin = user.roles?.includes("admin") || user.role === "admin";
+                                  const isClinic = user.roles?.includes("clinic") || user.role === "clinic" || user.role === "clinica";
+                                  
+                                  let badgeClass = "bg-green-100 text-green-800 border-green-200";
+                                  let badgeLabel = "Paciente";
+                                  
+                                  if (isAdmin) {
+                                    badgeClass = "bg-purple-100 text-purple-800 border-purple-200";
+                                    badgeLabel = "Administrador";
+                                  } else if (isClinic) {
+                                    badgeClass = "bg-blue-100 text-blue-800 border-blue-200";
+                                    badgeLabel = "Clínica";
+                                  } else if (isInvestor) {
+                                    badgeClass = "bg-amber-100 text-amber-800 border-amber-200";
+                                    badgeLabel = "Parceiro Financeiro";
                                   }
-                                `}
-                                >
-                                  {user.roles?.includes("admin") || user.role === "admin"
-                                    ? "Administrador"
-                                    : user.roles?.includes("clinic") ||
-                                        user.role === "clinic" ||
-                                        user.role === "clinica"
-                                      ? "Clínica"
-                                      : "Paciente"}
-                                </span>
+
+                                  return (
+                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${badgeClass}`}>
+                                      {badgeLabel}
+                                    </span>
+                                  );
+                                })()}
                               </td>
                               <td className="px-6 py-4 text-muted-foreground">
                                 {user.document || "—"}
@@ -736,9 +779,13 @@ function AdminDashboard() {
                               <td className="px-6 py-4">
                                 <div className="flex items-center gap-2">
                                   <Select
-                                    defaultValue={user.roles?.[0] || user.role || "patient"}
-                                    onValueChange={(val: "patient" | "clinic" | "admin") =>
-                                      handleRoleChange(user.user_id, val)
+                                    defaultValue={
+                                      creditPartners.some((p: any) => p.user_id === user.user_id) || user.role === "investor" || user.roles?.includes("investor")
+                                        ? "investor"
+                                        : user.roles?.[0] || user.role || "patient"
+                                    }
+                                    onValueChange={(val: "patient" | "clinic" | "admin" | "investor") =>
+                                      handleRoleChange(user.user_id, val as any)
                                     }
                                   >
                                     <SelectTrigger className="w-[140px] h-8 text-xs">
@@ -747,6 +794,7 @@ function AdminDashboard() {
                                     <SelectContent>
                                       <SelectItem value="patient">Paciente</SelectItem>
                                       <SelectItem value="clinic">Clínica</SelectItem>
+                                      <SelectItem value="investor">Parceiro Financeiro</SelectItem>
                                       <SelectItem value="admin">Administrador</SelectItem>
                                     </SelectContent>
                                   </Select>
@@ -815,23 +863,102 @@ function AdminDashboard() {
                           <th className="px-6 py-4 font-medium">Tipo</th>
                           <th className="px-6 py-4 font-medium">Crédito Disponibilizado</th>
                           <th className="px-6 py-4 font-medium">Crédito Utilizado</th>
+                          <th className="px-6 py-4 font-medium">Lucro / Repasse (15%)</th>
                           <th className="px-6 py-4 font-medium">Status</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y">
-                        {creditPartners.map((partner) => (
-                          <tr key={partner.name} className="hover:bg-muted/30 transition-colors">
-                            <td className="px-6 py-4 font-medium text-foreground">{partner.name}</td>
-                            <td className="px-6 py-4 text-muted-foreground">{partner.type}</td>
-                            <td className="px-6 py-4 font-semibold text-primary">{formatCurrency(partner.acquired)}</td>
-                            <td className="px-6 py-4 font-medium">{formatCurrency(partner.used)}</td>
-                            <td className="px-6 py-4">
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-green-100 text-green-800 border-green-200">
-                                {partner.status}
-                              </span>
+                        {creditPartners.map((p) => {
+                          let name = p.name;
+                          let type = p.type || "Investidor Individual";
+                          let acquired = p.acquired || 1500000;
+                          let used = p.used || 350000;
+                          
+                          if (!name && p.user_id) {
+                            const user = users.find((u) => u.user_id === p.user_id);
+                            name = user?.full_name || user?.email || "Parceiro Desconhecido";
+                          }
+
+                          const profit = used * 0.15;
+
+                          return (
+                            <tr key={p.user_id || name} className="hover:bg-muted/30 transition-colors">
+                              <td className="px-6 py-4 font-medium text-foreground">{name}</td>
+                              <td className="px-6 py-4 text-muted-foreground">{type}</td>
+                              <td className="px-6 py-4 font-semibold text-primary">{formatCurrency(acquired)}</td>
+                              <td className="px-6 py-4 font-medium text-foreground">{formatCurrency(used)}</td>
+                              <td className="px-6 py-4 font-bold text-emerald-500">{formatCurrency(profit)}</td>
+                              <td className="px-6 py-4">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-green-100 text-green-800 border-green-200">
+                                  {p.status || "Ativo"}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="finance" className="mt-6 space-y-6">
+              <div>
+                <h2 className="text-xl font-semibold text-foreground mb-4">Gerenciamento Financeiro (Aportes e Repasses)</h2>
+                <div className="overflow-hidden rounded-lg border bg-card shadow-sm">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                      <thead className="bg-muted/50 text-muted-foreground text-xs uppercase">
+                        <tr>
+                          <th className="px-6 py-4 font-medium">Parceiro</th>
+                          <th className="px-6 py-4 font-medium">Tipo</th>
+                          <th className="px-6 py-4 font-medium">Valor</th>
+                          <th className="px-6 py-4 font-medium">Data</th>
+                          <th className="px-6 py-4 font-medium">Status</th>
+                          <th className="px-6 py-4 font-medium">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {partnerTransactions?.map((tx) => {
+                          const user = users.find((u) => u.user_id === tx.user_id);
+                          const name = user?.full_name || user?.email || "Desconhecido";
+                          
+                          return (
+                            <tr key={tx.id} className="hover:bg-muted/30 transition-colors">
+                              <td className="px-6 py-4 font-medium text-foreground">{name}</td>
+                              <td className="px-6 py-4">
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${tx.type === "deposit" ? "bg-blue-100 text-blue-800 border-blue-200" : "bg-orange-100 text-orange-800 border-orange-200"}`}>
+                                  {tx.type === "deposit" ? "Aporte" : "Repasse"}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 font-semibold text-foreground">{formatCurrency(tx.amount)}</td>
+                              <td className="px-6 py-4 text-muted-foreground">{formatDate(tx.created_at)}</td>
+                              <td className="px-6 py-4">
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${tx.status === "completed" ? "bg-green-100 text-green-800 border-green-200" : tx.status === "rejected" ? "bg-red-100 text-red-800 border-red-200" : "bg-yellow-100 text-yellow-800 border-yellow-200"}`}>
+                                  {tx.status === "completed" ? "Concluído" : tx.status === "rejected" ? "Rejeitado" : "Pendente"}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4">
+                                {tx.status === "pending" ? (
+                                  <div className="flex gap-2">
+                                    <Button size="sm" onClick={() => handleTransactionStatus(tx.id, "completed")}>Concluir</Button>
+                                    <Button size="sm" variant="destructive" onClick={() => handleTransactionStatus(tx.id, "rejected")}>Rejeitar</Button>
+                                  </div>
+                                ) : (
+                                  <span className="text-muted-foreground">Processado</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        {(!partnerTransactions || partnerTransactions.length === 0) && (
+                          <tr>
+                            <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
+                              Nenhuma transação financeira encontrada.
                             </td>
                           </tr>
-                        ))}
+                        )}
                       </tbody>
                     </table>
                   </div>

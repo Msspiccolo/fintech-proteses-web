@@ -67,7 +67,7 @@ export function Header() {
             Home
           </Link>
           
-          {user?.role !== "clinic" && user?.role !== "admin" && (
+          {user?.role !== "clinic" && user?.role !== "admin" && user?.role !== "investor" && (
             <>
               <Link
                 to="/simular"
@@ -170,7 +170,7 @@ export function Header() {
               Home
             </Link>
 
-            {user?.role !== "clinic" && user?.role !== "admin" && (
+            {user?.role !== "clinic" && user?.role !== "admin" && user?.role !== "investor" && (
               <>
                 <Link
                   to="/simular"

@@ -114,12 +114,24 @@ export const getClinicLoanApplications = createServerFn({ method: "GET" })
 export const getAllLoanApplications = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data: isAdmin, error: adminError } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
+    const { data: profile } = await context.supabase
+      .from("profiles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .maybeSingle();
 
-    if (adminError || !isAdmin) {
+    const { data: roles } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId);
+
+    const metaRole = (context.claims?.user_metadata as any)?.role;
+    const isAdmin =
+      roles?.some((r: any) => r.role === "admin") ||
+      profile?.role === "admin" ||
+      metaRole === "admin";
+      
+    if (!isAdmin) {
       throw new Error("Forbidden");
     }
 
@@ -139,12 +151,24 @@ export const updateLoanApplication = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: unknown) => updateApplicationSchema.parse(data))
   .handler(async ({ data, context }) => {
-    const { data: isAdmin, error: adminError } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
+    const { data: profile } = await context.supabase
+      .from("profiles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .maybeSingle();
 
-    if (adminError || !isAdmin) {
+    const { data: roles } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId);
+
+    const metaRole = (context.claims?.user_metadata as any)?.role;
+    const isAdmin =
+      roles?.some((r: any) => r.role === "admin") ||
+      profile?.role === "admin" ||
+      metaRole === "admin";
+      
+    if (!isAdmin) {
       throw new Error("Forbidden");
     }
 
@@ -176,12 +200,24 @@ export const updateFabricationOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: unknown) => updateFabricationOrderSchema.parse(data))
   .handler(async ({ data, context }) => {
-    const { data: isAdmin, error: adminError } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
+    const { data: profile } = await context.supabase
+      .from("profiles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .maybeSingle();
 
-    if (adminError || !isAdmin) {
+    const { data: roles } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId);
+
+    const metaRole = (context.claims?.user_metadata as any)?.role;
+    const isAdmin =
+      roles?.some((r: any) => r.role === "admin") ||
+      profile?.role === "admin" ||
+      metaRole === "admin";
+      
+    if (!isAdmin) {
       throw new Error("Forbidden");
     }
 
@@ -200,4 +236,40 @@ export const updateFabricationOrder = createServerFn({ method: "POST" })
     }
 
     return { order };
+  });
+
+export const deleteLoanApplication = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    // Check if the application belongs to the user and is pending
+    const { data: application, error: fetchError } = await context.supabase
+      .from("loan_applications")
+      .select("status, patient_id")
+      .eq("id", data.id)
+      .single();
+
+    if (fetchError) throw new Error(fetchError.message);
+    
+    if (application.patient_id !== context.userId) {
+      throw new Error("Unauthorized: you can only delete your own proposals.");
+    }
+    
+    if (application.status !== "pending") {
+      throw new Error("Only pending proposals can be deleted.");
+    }
+
+    const { data: deletedRows, error: deleteError } = await context.supabase
+      .from("loan_applications")
+      .delete()
+      .eq("id", data.id)
+      .select("id");
+
+    if (deleteError) throw new Error(deleteError.message);
+    
+    if (!deletedRows || deletedRows.length === 0) {
+      throw new Error("O banco de dados bloqueou a exclusão. Execute o comando GRANT DELETE no Supabase.");
+    }
+
+    return { ok: true };
   });
