@@ -108,7 +108,6 @@ export const getClinicLoanApplications = createServerFn({ method: "GET" })
       throw new Error(error.message);
     }
 
-<<<<<<< HEAD
     if (!data || data.length === 0) {
       return { applications: [] };
     }
@@ -125,7 +124,7 @@ export const getClinicLoanApplications = createServerFn({ method: "GET" })
         .in("user_id", patientIds);
 
       if (profiles) {
-        profilesMap = profiles.reduce((acc, p) => ({ ...acc, [p.user_id]: p.full_name }), {});
+        profilesMap = profiles.reduce((acc: Record<string, string>, p: any) => ({ ...acc, [p.user_id]: p.full_name }), {});
       }
     }
 
@@ -135,27 +134,6 @@ export const getClinicLoanApplications = createServerFn({ method: "GET" })
     }));
 
     return { applications };
-=======
-    // Fetch profiles manually
-    const patientIds = [...new Set(data?.map(app => app.patient_id).filter(Boolean) || [])];
-    if (patientIds.length > 0) {
-      const { data: profiles } = await context.supabase
-        .from("profiles")
-        .select("user_id, full_name")
-        .in("user_id", patientIds);
-        
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
-      
-      const applicationsWithProfiles = data?.map(app => ({
-        ...app,
-        profiles: profileMap.get(app.patient_id) || null
-      }));
-      
-      return { applications: applicationsWithProfiles };
-    }
-
-    return { applications: data ?? [] };
->>>>>>> 1b6e5bead8ba5ec8a7aa22556312422251324e6a
   });
 
 export const getAllLoanApplications = createServerFn({ method: "GET" })
@@ -191,7 +169,6 @@ export const getAllLoanApplications = createServerFn({ method: "GET" })
       throw new Error(error.message);
     }
 
-<<<<<<< HEAD
     if (!data || data.length === 0) {
       return { applications: [] };
     }
@@ -200,19 +177,13 @@ export const getAllLoanApplications = createServerFn({ method: "GET" })
     const patientIds = data.map((d: any) => d.patient_id).filter(Boolean);
     let profilesMap: Record<string, string> = {};
 
-=======
-    // Fetch profiles manually
-    const patientIds = [...new Set(data?.map(app => app.patient_id).filter(Boolean) || [])];
->>>>>>> 1b6e5bead8ba5ec8a7aa22556312422251324e6a
     if (patientIds.length > 0) {
       const { data: profiles } = await context.supabase
         .from("profiles")
         .select("user_id, full_name")
         .in("user_id", patientIds);
-<<<<<<< HEAD
-
       if (profiles) {
-        profilesMap = profiles.reduce((acc, p) => ({ ...acc, [p.user_id]: p.full_name }), {});
+        profilesMap = profiles.reduce((acc: Record<string, string>, p: any) => ({ ...acc, [p.user_id]: p.full_name }), {});
       }
     }
 
@@ -222,20 +193,6 @@ export const getAllLoanApplications = createServerFn({ method: "GET" })
     }));
 
     return { applications };
-=======
-        
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
-      
-      const applicationsWithProfiles = data?.map(app => ({
-        ...app,
-        profiles: profileMap.get(app.patient_id) || null
-      }));
-      
-      return { applications: applicationsWithProfiles };
-    }
-
-    return { applications: data ?? [] };
->>>>>>> 1b6e5bead8ba5ec8a7aa22556312422251324e6a
   });
 
 export const updateLoanApplication = createServerFn({ method: "POST" })

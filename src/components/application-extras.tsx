@@ -2,12 +2,9 @@ import { useRef, useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-<<<<<<< HEAD
 import { useServerFn } from "@tanstack/react-start";
 import { reportInstallmentPayment } from "@/lib/loans.functions";
-=======
 import { Input } from "@/components/ui/input";
->>>>>>> 1b6e5bead8ba5ec8a7aa22556312422251324e6a
 import {
   Select,
   SelectContent,
@@ -541,12 +538,8 @@ export function PatientApplicationExtras({ app }: { app: any }) {
       <ApplicationTimeline status={app.status} createdAt={app.created_at} reviewedAt={app.reviewed_at} hasDocs={docs.length > 0} />
       <ApplicationDocuments applicationId={app.id} canUpload={app.status === "pending"} />
       <FabricationRequest applicationId={app.id} status={app.status} />
-<<<<<<< HEAD
       <PatientInvoices app={app} />
-=======
-      <BoletoPreview app={app} />
       <ApplicationChat applicationId={app.id} />
->>>>>>> 1b6e5bead8ba5ec8a7aa22556312422251324e6a
     </div>
   );
 }
