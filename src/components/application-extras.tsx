@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useServerFn } from "@tanstack/react-start";
-import { reportInstallmentPayment } from "@/lib/loans.functions";
+import { reportInstallmentPayment, confirmInstallmentPayment } from "@/lib/loans.functions";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -308,7 +308,7 @@ export function FabricationRequest({ applicationId, status }: { applicationId: s
   );
 }
 
-export function PatientInvoices({ app }: { app: any }) {
+export function PatientInvoices({ app, isClinicView }: { app: any, isClinicView?: boolean }) {
   if (app.status !== "approved" && app.status !== "paid") return null;
 
   const totalInstallments = app.installments || 1;
@@ -316,6 +316,7 @@ export function PatientInvoices({ app }: { app: any }) {
   const reportedInstallments = app.installments_reported || 0;
   const queryClient = useQueryClient();
   const reportPayment = useServerFn(reportInstallmentPayment);
+  const confirmPayment = useServerFn(confirmInstallmentPayment);
   const [isReporting, setIsReporting] = useState(false);
   
   // Calculate due dates starting 1 month after approval
@@ -380,25 +381,31 @@ export function PatientInvoices({ app }: { app: any }) {
                   
                   <div className="text-right">
                     <p className="font-semibold">{formatCurrency(inv.amount)}</p>
-                    {inv.status === "Próxima" && (
+                    {(inv.status === "Próxima" || (isClinicView && inv.status === "Aguardando")) && (
                       <Button 
                         size="sm" 
                         disabled={isReporting}
-                        className="mt-1 h-7 text-xs"
+                        className={`mt-1 h-7 text-xs ${isClinicView ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`}
                         onClick={async () => {
                           try {
                             setIsReporting(true);
-                            await reportPayment({ data: { id: app.id } });
-                            await queryClient.invalidateQueries({ queryKey: ["my-loan-applications"] });
-                            toast.success("Pagamento informado! A clínica irá confirmar em breve.");
+                            if (isClinicView) {
+                              await confirmPayment({ data: { id: app.id } });
+                              toast.success("Pagamento confirmado com sucesso!");
+                              await queryClient.invalidateQueries({ queryKey: ["clinic-loan-applications"] });
+                            } else {
+                              await reportPayment({ data: { id: app.id } });
+                              await queryClient.invalidateQueries({ queryKey: ["my-loan-applications"] });
+                              toast.success("Pagamento informado! A clínica irá confirmar em breve.");
+                            }
                           } catch (e: any) {
-                            toast.error(e.message || "Erro ao informar pagamento");
+                            toast.error(e.message || "Erro ao processar pagamento");
                           } finally {
                             setIsReporting(false);
                           }
                         }}
                       >
-                        Avisar Pagamento
+                        {isClinicView ? "Confirmar Pagamento" : "Avisar Pagamento"}
                       </Button>
                     )}
                   </div>

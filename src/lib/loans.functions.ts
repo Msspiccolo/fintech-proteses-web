@@ -371,33 +371,13 @@ export const confirmInstallmentPayment = createServerFn({ method: "POST" })
       throw new Error("Forbidden");
     }
 
-    // Buscar a proposta
-    const { data: app, error: fetchError } = await context.supabase
-      .from("loan_applications")
-      .select("installments, installments_paid")
-      .eq("id", data.id)
-      .single();
+    const { error: rpcError } = await context.supabase.rpc("confirm_installment" as any, {
+      application_id: data.id,
+      clinic_user_id: context.userId
+    });
 
-    if (fetchError || !app) {
-      throw new Error("Proposta não encontrada");
-    }
-
-    const currentPaid = app.installments_paid || 0;
-    if (currentPaid >= app.installments) {
-      throw new Error("Todas as parcelas já foram pagas");
-    }
-
-    const { data: updatedApp, error: updateError } = await context.supabase
-      .from("loan_applications")
-      .update({
-        installments_paid: currentPaid + 1,
-      })
-      .eq("id", data.id)
-      .select()
-      .single();
-
-    if (updateError) {
-      throw new Error(updateError.message);
+    if (rpcError) {
+      throw new Error(rpcError.message);
     }
 
     return { application: updatedApp };
@@ -418,7 +398,13 @@ export const reportInstallmentPayment = createServerFn({ method: "POST" })
       throw new Error(fetchError?.message || "Application not found");
     }
 
-    if (application.patient_id !== context.userId) {
+    const isAdminOrClinic = async () => {
+      const { data: roles } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
+      if (roles?.some(r => r.role === "admin" || r.role === "clinic")) return true;
+      return false;
+    };
+
+    if (application.patient_id !== context.userId && !(await isAdminOrClinic())) {
       throw new Error("Forbidden");
     }
 

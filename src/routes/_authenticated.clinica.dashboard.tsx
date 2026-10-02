@@ -879,6 +879,7 @@ function ClinicDashboard() {
                           <h4 className="text-sm font-semibold mb-3">Ações Rápidas</h4>
                           <div className="flex flex-wrap gap-3">
                             <PatientInvoices 
+                              isClinicView={true}
                               app={{ 
                                 id: selectedClient.applicationId,
                                 status: "approved", 
