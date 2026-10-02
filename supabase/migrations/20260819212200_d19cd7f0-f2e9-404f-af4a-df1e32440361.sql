@@ -1,4 +1,4 @@
-create or replace function public.is_clinic_member(_user_id uuid, _clinic_id uuid)
+﻿create or replace function public.is_clinic_member(_user_id uuid, _clinic_id uuid)
 returns boolean
 language sql
 stable

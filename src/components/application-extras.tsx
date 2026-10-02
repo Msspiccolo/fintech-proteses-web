@@ -272,11 +272,21 @@ export function FabricationRequest({ applicationId, status }: { applicationId: s
     <div className="space-y-2 rounded-lg border border-border p-3">
       <p className="text-sm font-medium text-foreground">Fabricação da peça 3D</p>
       {orders.map((o) => (
-        <div key={o.id} className="flex items-center justify-between text-sm">
-          <span>{o.model} · {o.material} — <b>{FAB_STATUS[o.status] ?? o.status}</b></span>
-          <Button size="sm" variant="ghost" onClick={() => downloadStl(o.model)}>
-            <Download className="mr-1 h-4 w-4" /> STL
-          </Button>
+        <div key={o.id} className="flex flex-col gap-2 border-b border-border pb-3 mb-3 last:border-0 last:pb-0 last:mb-0">
+          <div className="flex items-center justify-between text-sm">
+            <span>{o.model} · {o.material} — <b className="text-primary">{FAB_STATUS[o.status] ?? o.status}</b></span>
+            <Button size="sm" variant="ghost" onClick={() => downloadStl(o.model)}>
+              <Download className="mr-1 h-4 w-4" /> STL
+            </Button>
+          </div>
+          {/* Tracking info section */}
+          <div className="flex flex-wrap items-center gap-2 bg-muted/40 p-2.5 rounded-md text-xs border border-border/50">
+            <span className="font-semibold text-foreground">Rastreio:</span>
+            <span className="font-mono bg-background px-2 py-1 border rounded">{o.tracking_code || "BR" + String(o.id).replace(/\D/g, '').slice(0, 9).padStart(9, '0') + "BR"}</span>
+            <Button size="sm" variant="outline" className="h-6 ml-auto" onClick={() => toast.info("Status atualizado: " + (FAB_STATUS[o.status] ?? o.status))}>
+              Acompanhar
+            </Button>
+          </div>
         </div>
       ))}
       {orders.length === 0 && (

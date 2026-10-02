@@ -117,11 +117,14 @@ export const getClinicLoanApplications = createServerFn({ method: "GET" })
     let profilesMap: Record<string, string> = {};
 
     if (patientIds.length > 0) {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: profiles } = await supabaseAdmin
+      const { data: profiles, error: profErr } = await context.supabase
         .from("profiles")
         .select("user_id, full_name")
         .in("user_id", patientIds);
+
+      console.log("[Loans] patientIds:", patientIds);
+      console.log("[Loans] profiles fetched:", profiles);
+      console.log("[Loans] profile error:", profErr);
 
       if (profiles) {
         profilesMap = profiles.reduce((acc: Record<string, string>, p: any) => ({ ...acc, [p.user_id]: p.full_name }), {});
@@ -303,8 +306,8 @@ export const deleteLoanApplication = createServerFn({ method: "POST" })
       throw new Error("Unauthorized: you can only delete your own proposals.");
     }
     
-    if (application.status !== "pending") {
-      throw new Error("Only pending proposals can be deleted.");
+    if (application.status === "paid" || application.status === "cancelled") {
+      throw new Error("Propostas pagas ou canceladas não podem ser excluídas.");
     }
 
     // Attempt deletion with supabaseAdmin (service role) to bypass restrictive client RLS safely

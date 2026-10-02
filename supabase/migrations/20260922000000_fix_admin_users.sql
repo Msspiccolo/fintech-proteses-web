@@ -1,4 +1,4 @@
-create or replace function public.get_all_users_for_admin()
+﻿create or replace function public.get_all_users_for_admin()
 returns json
 language plpgsql
 security definer

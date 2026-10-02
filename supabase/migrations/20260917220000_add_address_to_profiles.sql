@@ -1,4 +1,4 @@
--- Add address fields to profiles
+﻿-- Add address fields to profiles
 ALTER TABLE public.profiles
 ADD COLUMN zip_code text,
 ADD COLUMN address text,

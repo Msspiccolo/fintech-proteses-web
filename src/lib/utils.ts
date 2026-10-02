@@ -20,3 +20,19 @@ export function formatDate(value: string | Date) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   return `${day}/${month}/${date.getFullYear()}`;
 }
+
+export function generateFakeBoleto() {
+  const content = `======================================
+         BOLETO BANCÁRIO - PROMOBI
+======================================
+Beneficiário: ProMobi S.A.
+Linha Digitável: 34191.09008 10738.452097 01340.560002 1 90000000000000
+======================================
+Utilize a linha digitável acima para realizar o pagamento.`;
+  const blob = new Blob([content], { type: "text/plain" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `boleto_${Date.now()}.txt`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}

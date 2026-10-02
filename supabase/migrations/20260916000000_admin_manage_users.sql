@@ -1,4 +1,4 @@
--- Add RLS policies allowing admins to read and manage all profiles and user_roles
+﻿-- Add RLS policies allowing admins to read and manage all profiles and user_roles
 
 -- Profiles
 CREATE POLICY "Admins can manage all profiles"

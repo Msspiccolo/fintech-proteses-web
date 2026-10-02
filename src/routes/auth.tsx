@@ -217,7 +217,7 @@ function AuthPage() {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="flex justify-center mb-4">
-              <img src="/promobi-logo.png" alt="ProMobi" className="h-12 w-auto" />
+              <img src="/promobi-logo.png?v=2" alt="ProMobi" className="h-12 w-auto" />
             </CardTitle>
             <CardDescription>Entre ou crie sua conta para continuar</CardDescription>
           </CardHeader>

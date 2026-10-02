@@ -1,4 +1,4 @@
--- ==========================================================
+﻿-- ==========================================================
 -- Fix 1: Drop ALL overloaded versions of complete_signup 
 -- and recreate a single clean version that uses
 -- ON CONFLICT ... DO UPDATE instead of DO NOTHING.

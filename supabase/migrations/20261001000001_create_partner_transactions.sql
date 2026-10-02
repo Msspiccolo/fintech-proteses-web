@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS public.partner_transactions (
+﻿CREATE TABLE IF NOT EXISTS public.partner_transactions (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
   type text NOT NULL CHECK (type IN ('deposit', 'withdrawal')),

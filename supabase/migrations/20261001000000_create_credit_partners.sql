@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS public.credit_partners (
+﻿CREATE TABLE IF NOT EXISTS public.credit_partners (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
   type text DEFAULT 'Investidor Individual',
