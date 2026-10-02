@@ -356,7 +356,7 @@ export function PatientInvoices({ app, isClinicView }: { app: any, isClinicView?
 
   const totalInstallments = app.installments || 1;
   const paidInstallments = app.installments_paid || 0;
-  const reportedInstallments = app.installments_reported || 0;
+  const reportedInstallments = Math.max(app.installments_reported || 0, paidInstallments);
   const queryClient = useQueryClient();
   const reportPayment = useServerFn(reportInstallmentPayment);
   const confirmPayment = useServerFn(confirmInstallmentPayment);
