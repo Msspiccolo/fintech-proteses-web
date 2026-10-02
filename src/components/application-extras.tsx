@@ -280,12 +280,55 @@ export function FabricationRequest({ applicationId, status }: { applicationId: s
             </Button>
           </div>
           {/* Tracking info section */}
-          <div className="flex flex-wrap items-center gap-2 bg-muted/40 p-2.5 rounded-md text-xs border border-border/50">
+          <div className="flex flex-wrap items-center gap-2 bg-muted/40 p-2.5 rounded-md text-xs border border-border/50 mt-2">
             <span className="font-semibold text-foreground">Rastreio:</span>
             <span className="font-mono bg-background px-2 py-1 border rounded">{o.tracking_code || "BR" + String(o.id).replace(/\D/g, '').slice(0, 9).padStart(9, '0') + "BR"}</span>
-            <Button size="sm" variant="outline" className="h-6 ml-auto" onClick={() => toast.info("Status atualizado: " + (FAB_STATUS[o.status] ?? o.status))}>
-              Acompanhar
-            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="outline" className="h-6 ml-auto">
+                  Acompanhar
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <span className="text-primary">📦</span> Rastreamento de Encomenda
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                  <div className="p-3 bg-muted rounded-md mb-4 flex justify-between items-center">
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase font-bold">Código de Rastreio</p>
+                      <p className="font-mono text-sm">{o.tracking_code || "BR" + String(o.id).replace(/\D/g, '').slice(0, 9).padStart(9, '0') + "BR"}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground uppercase font-bold">Status</p>
+                      <p className="text-sm text-primary font-semibold">{FAB_STATUS[o.status] ?? o.status}</p>
+                    </div>
+                  </div>
+                  <div className="relative border-l-2 border-primary/30 ml-3 pl-5 space-y-6">
+                    <div className="relative">
+                      <div className="absolute -left-[27px] bg-primary w-3 h-3 rounded-full border-2 border-background shadow-[0_0_0_3px_var(--primary)] shadow-primary/20"></div>
+                      <p className="text-sm font-semibold text-foreground">Em rota de entrega</p>
+                      <p className="text-xs text-muted-foreground">Unidade de Distribuição, São Paulo - SP</p>
+                      <p className="text-xs font-mono mt-1 text-muted-foreground/80">Hoje, 08:42</p>
+                    </div>
+                    <div className="relative">
+                      <div className="absolute -left-[27px] bg-muted-foreground/40 w-3 h-3 rounded-full border-2 border-background"></div>
+                      <p className="text-sm font-semibold text-foreground">Objeto em trânsito</p>
+                      <p className="text-xs text-muted-foreground">De Unidade de Logística Integrada para Unidade de Distribuição</p>
+                      <p className="text-xs font-mono mt-1 text-muted-foreground/80">Ontem, 15:30</p>
+                    </div>
+                    <div className="relative">
+                      <div className="absolute -left-[27px] bg-muted-foreground/40 w-3 h-3 rounded-full border-2 border-background"></div>
+                      <p className="text-sm font-semibold text-foreground">Objeto postado</p>
+                      <p className="text-xs text-muted-foreground">Agência ProMobi, São José dos Campos - SP</p>
+                      <p className="text-xs font-mono mt-1 text-muted-foreground/80">Há 2 dias, 10:15</p>
+                    </div>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       ))}
