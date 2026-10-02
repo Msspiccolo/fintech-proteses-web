@@ -380,7 +380,7 @@ export const confirmInstallmentPayment = createServerFn({ method: "POST" })
       throw new Error(rpcError.message);
     }
 
-    return { application: updatedApp };
+    return { success: true };
   });
 
 export const reportInstallmentPayment = createServerFn({ method: "POST" })
@@ -400,7 +400,7 @@ export const reportInstallmentPayment = createServerFn({ method: "POST" })
 
     const isAdminOrClinic = async () => {
       const { data: roles } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
-      if (roles?.some(r => r.role === "admin" || r.role === "clinic")) return true;
+      if (roles?.some((r: any) => r.role === "admin" || r.role === "clinic")) return true;
       return false;
     };
 
