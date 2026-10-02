@@ -104,7 +104,7 @@ function SejaParceiro() {
                 Seja um Parceiro de Crédito
               </h1>
               <p className="text-xl text-muted-foreground mt-4">
-                Junte-se à PrótesePay para democratizar o acesso a próteses ortopédicas. Obtenha rentabilidade atrativa enquanto transforma milhares de vidas.
+                Junte-se à ProMobi para democratizar o acesso a próteses ortopédicas. Obtenha rentabilidade atrativa enquanto transforma milhares de vidas.
               </p>
             </div>
           </div>
@@ -140,7 +140,7 @@ function SejaParceiro() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    A PrótesePay realiza análise de crédito rigorosa via API (SPC/Serasa) e formaliza os contratos digitalmente, mitigando a inadimplência e protegendo o seu capital.
+                    A ProMobi realiza análise de crédito rigorosa via API (SPC/Serasa) e formaliza os contratos digitalmente, mitigando a inadimplência e protegendo o seu capital.
                   </p>
                 </CardContent>
               </Card>

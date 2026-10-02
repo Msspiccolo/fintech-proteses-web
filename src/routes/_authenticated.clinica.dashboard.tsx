@@ -1,5 +1,5 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo, useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -15,13 +15,14 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { getClinicLoanApplications } from "@/lib/loans.functions";
+import { getClinicLoanApplications, confirmInstallmentPayment } from "@/lib/loans.functions";
 import {
   getClinicByUser,
   registerClinic,
   getApprovedClinics,
   affiliateWithExistingClinic,
 } from "@/lib/clinics.functions";
+import { ApplicationChat } from "@/components/application-extras";
 import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Header } from "@/components/layout/header";
@@ -51,15 +52,16 @@ import {
   History,
   Send,
   MessageCircle,
+  Check,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Banknote, Calendar as CalendarIcon } from "lucide-react";
-import { BoletoPreview } from "@/components/application-extras";
+import { PatientInvoices } from "@/components/application-extras";
 
 export const Route = createFileRoute("/_authenticated/clinica/dashboard")({
   head: () => ({
     meta: [
-      { title: "Painel da Clínica — PrótesePay" },
+      { title: "Painel da Clínica — ProMobi" },
       {
         name: "description",
         content: "Painel de controle e inteligência de negócios para sua clínica.",
@@ -103,8 +105,10 @@ function ClinicDashboard() {
   }, []);
 
   const fetchApplications = useServerFn(getClinicLoanApplications);
+  const confirmInstallment = useServerFn(confirmInstallmentPayment);
   const fetchMyClinics = useServerFn(getClinicByUser);
   const createClinic = useServerFn(registerClinic);
+  const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
     queryKey: ["clinic-loan-applications"],
@@ -226,7 +230,7 @@ function ClinicDashboard() {
           zipCode: form.zipCode || undefined,
         },
       });
-      toast.success("Clínica cadastrada! Aguarde a aprovação da equipe PrótesePay.");
+      toast.success("Clínica cadastrada! Aguarde a aprovação da equipe ProMobi.");
       refetchClinics();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao cadastrar clínica");
@@ -238,8 +242,6 @@ function ClinicDashboard() {
   const applications = data?.applications ?? [];
 
   useEffect(() => {
-    if (!applications.length) return;
-    
     const clientsMap: Record<string, any> = {};
 
     applications.forEach((app: any) => {
@@ -255,16 +257,20 @@ function ClinicDashboard() {
           valorTotal: 0,
           produto: app.purpose || "Tratamento Prótese",
           parcelasPagas: 0,
+          parcelasReportadas: 0,
           parcelasRestantes: 0,
           parcelasAtrasadas: 0,
           historicoBoletos: [],
           mensagens: [],
+          applicationId: app.id,
         };
       }
 
       clientsMap[patientId].propostas += 1;
       clientsMap[patientId].valorTotal += app.requested_amount || 0;
-      clientsMap[patientId].parcelasRestantes += app.installments || 0;
+      clientsMap[patientId].parcelasPagas += app.installments_paid || 0;
+      clientsMap[patientId].parcelasReportadas += Math.max(0, (app.installments_reported || 0) - (app.installments_paid || 0));
+      clientsMap[patientId].parcelasRestantes += Math.max(0, (app.installments || 0) - (app.installments_paid || 0));
     });
 
     setClients(Object.values(clientsMap));
@@ -582,6 +588,7 @@ function ClinicDashboard() {
                       <th className="px-6 py-4 font-medium">Nome do Cliente</th>
                       <th className="px-6 py-4 font-medium text-center">Nº de Propostas</th>
                       <th className="px-6 py-4 font-medium">Valor Total</th>
+                      <th className="px-6 py-4 font-medium text-center">Parcelas (Pagas / Faltam)</th>
                       <th className="px-6 py-4 font-medium">Status de Pagamento</th>
                       <th className="px-6 py-4 font-medium text-center">Ações</th>
                     </tr>
@@ -597,6 +604,21 @@ function ClinicDashboard() {
                         </td>
                         <td className="px-6 py-4 text-muted-foreground">
                           {formatCurrency(client.valorTotal)}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <div className="flex flex-col items-center">
+                            <span className="text-sm font-medium text-green-600">
+                              {client.parcelasPagas} pagas
+                            </span>
+                            {client.parcelasReportadas > 0 && (
+                              <span className="text-xs font-medium text-yellow-600">
+                                {client.parcelasReportadas} avisada(s)
+                              </span>
+                            )}
+                            <span className="text-xs text-muted-foreground">
+                              {client.parcelasRestantes} restantes
+                            </span>
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <span
@@ -643,6 +665,13 @@ function ClinicDashboard() {
                         </td>
                       </tr>
                     ))}
+                    {clients.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">
+                          Nenhum cliente ou proposta encontrada para a sua clínica.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -784,41 +813,13 @@ function ClinicDashboard() {
                 </TabsContent>
 
                 <TabsContent value="mensagens" className="h-[50vh] flex flex-col">
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/20 rounded-md border mb-4">
-                    {(!selectedClient.mensagens || selectedClient.mensagens.length === 0) ? (
-                      <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-                        Nenhuma mensagem encontrada.
-                      </div>
-                    ) : (
-                      selectedClient.mensagens.map((msg: any) => (
-                        <div key={msg.id} className={`flex ${msg.sender === "clinica" ? "justify-end" : "justify-start"}`}>
-                          <div 
-                            className={`max-w-[80%] rounded-lg p-3 ${
-                              msg.sender === "clinica" 
-                                ? "bg-primary text-primary-foreground rounded-tr-none" 
-                                : "bg-muted text-foreground rounded-tl-none"
-                            }`}
-                          >
-                            <p className="text-sm mb-1">{msg.text}</p>
-                            <span className="text-[10px] opacity-70">
-                              {new Date(msg.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit'})}
-                            </span>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                  <form onSubmit={handleSendMessage} className="flex gap-2">
-                    <Input 
-                      placeholder="Digite sua mensagem..." 
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button type="submit" disabled={!newMessage.trim()}>
-                      <Send className="h-4 w-4" />
-                    </Button>
-                  </form>
+                  {selectedClient?.applicationId ? (
+                    <ApplicationChat applicationId={selectedClient.applicationId} />
+                  ) : (
+                    <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+                      Nenhuma solicitação ativa para chat.
+                    </div>
+                  )}
                 </TabsContent>
                 <TabsContent value="boletos">
                   <div className="grid gap-6 py-4">
@@ -852,13 +853,43 @@ function ClinicDashboard() {
                         <div className="border-t pt-6">
                           <h4 className="text-sm font-semibold mb-3">Ações Rápidas</h4>
                           <div className="flex flex-wrap gap-3">
-                            <BoletoPreview app={{ status: "approved", monthly_payment: selectedClient.valorTotal / (selectedClient.parcelasPagas + selectedClient.parcelasRestantes || 1), profiles: { full_name: selectedClient.name } }} />
+                            <PatientInvoices 
+                              app={{ 
+                                status: "approved", 
+                                monthly_payment: selectedClient.valorTotal / (selectedClient.parcelasPagas + selectedClient.parcelasRestantes || 1), 
+                                profiles: { full_name: selectedClient.name },
+                                installments: selectedClient.parcelasPagas + selectedClient.parcelasRestantes,
+                                installments_paid: selectedClient.parcelasPagas
+                              }} 
+                            />
                             <Button 
                               variant="outline"
                               onClick={() => handleAction(selectedClient.id, "Boleto 2ª via gerado", `Boleto gerado e enviado para ${selectedClient.name}!`)}
                             >
                               Gerar 2ª Via
                             </Button>
+                            {selectedClient.parcelasReportadas > 0 && (
+                              <Button
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                                onClick={async () => {
+                                  try {
+                                    const appToConfirm = applications.find((a: any) => a.patient_id === selectedClient.id && (a.installments_reported || 0) > (a.installments_paid || 0));
+                                    if (appToConfirm) {
+                                      await confirmInstallment({ data: { id: appToConfirm.id } });
+                                      toast.success("Pagamento confirmado com sucesso!");
+                                      queryClient.invalidateQueries({ queryKey: ["clinic-loan-applications"] });
+                                    } else {
+                                      toast.error("Nenhuma proposta encontrada aguardando confirmação.");
+                                    }
+                                  } catch (e: any) {
+                                    toast.error(e.message || "Erro ao confirmar pagamento");
+                                  }
+                                }}
+                              >
+                                <Check className="mr-2 h-4 w-4" />
+                                Confirmar Pagamento
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </CardContent>

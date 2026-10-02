@@ -18,7 +18,7 @@ export const Route = createFileRoute("/simular")({
   },
   head: () => ({
     meta: [
-      { title: "Simular e Criar — PrótesePay" },
+      { title: "Simular e Criar — ProMobi" },
       {
         name: "description",
         content:

@@ -40,13 +40,13 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/clinicas-parceiras")({
   head: () => ({
     meta: [
-      { title: "Clínicas Parceiras Credenciadas — PrótesePay" },
+      { title: "Clínicas Parceiras Credenciadas — ProMobi" },
       {
         name: "description",
         content:
-          "Encontre clínicas ortopédicas credenciadas pela PrótesePay em todo o Brasil ou cadastre sua clínica para oferecer financiamento a pacientes.",
+          "Encontre clínicas ortopédicas credenciadas pela ProMobi em todo o Brasil ou cadastre sua clínica para oferecer financiamento a pacientes.",
       },
-      { property: "og:title", content: "Clínicas Parceiras Credenciadas — PrótesePay" },
+      { property: "og:title", content: "Clínicas Parceiras Credenciadas — ProMobi" },
       {
         property: "og:description",
         content: "Encontre clínicas ortopédicas credenciadas para financiamento de próteses.",
@@ -193,7 +193,7 @@ function ClinicasParceirasPage() {
           <div className="mx-auto max-w-6xl text-center">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary">
               <ShieldCheck size={16} />
-              <span>Rede Credenciada PrótesePay</span>
+              <span>Rede Credenciada ProMobi</span>
             </div>
             <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-foreground md:text-5xl lg:text-6xl">
               Clínicas Parceiras Credenciadas
@@ -229,7 +229,7 @@ function ClinicasParceirasPage() {
                   Rede de Clínicas Ativas
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Todas as clínicas abaixo são verificadas e aceitam o parcelamento da PrótesePay.
+                  Todas as clínicas abaixo são verificadas e aceitam o parcelamento da ProMobi.
                 </p>
               </div>
 
@@ -431,7 +431,7 @@ function ClinicasParceirasPage() {
                 <Building2 size={14} /> Para estabelecimentos de saúde
               </span>
               <h2 className="mt-4 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-                Quer cadastrar sua clínica na PrótesePay?
+                Quer cadastrar sua clínica na ProMobi?
               </h2>
               <p className="mt-3 text-muted-foreground max-w-2xl mx-auto">
                 Ofereça opções de crédito facilitado para próteses ortopédicas e aumente a conversão
@@ -493,7 +493,7 @@ function ClinicasParceirasPage() {
                     Crie uma conta para cadastrar sua clínica
                   </h3>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Faça login ou cadastre-se na PrótesePay com a opção &quot;Sou clínica&quot; para
+                    Faça login ou cadastre-se na ProMobi com a opção &quot;Sou clínica&quot; para
                     iniciar o credenciamento.
                   </p>
                   <Button asChild className="mt-6" size="lg">

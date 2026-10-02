@@ -27,11 +27,11 @@ export const Route = createFileRoute("/auth")({
     search["tipo"] === "clinica" ? { tipo: "clinica" } : {},
   head: () => ({
     meta: [
-      { title: "Entrar — PrótesePay" },
+      { title: "Entrar — ProMobi" },
       {
         name: "description",
         content:
-          "Entre ou crie sua conta na PrótesePay para simular e solicitar financiamento de próteses ortopédicas.",
+          "Entre ou crie sua conta na ProMobi para simular e solicitar financiamento de próteses ortopédicas.",
       },
     ],
   }),
@@ -216,7 +216,9 @@ function AuthPage() {
       <div className="flex flex-1 items-center justify-center px-4 py-12">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">PrótesePay</CardTitle>
+            <CardTitle className="flex justify-center mb-4">
+              <img src="/promobi-logo.png" alt="ProMobi" className="h-12 w-auto" />
+            </CardTitle>
             <CardDescription>Entre ou crie sua conta para continuar</CardDescription>
           </CardHeader>
           <CardContent>

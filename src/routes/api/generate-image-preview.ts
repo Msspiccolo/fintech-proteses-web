@@ -33,9 +33,9 @@ export const Route = createFileRoute("/api/generate-image-preview")({
   server: {
     handlers: {
       POST: async ({ request }: { request: Request }) => {
-        const apiKey = process.env.OPENAI_API_KEY;
+        const apiKey = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY;
         if (!apiKey) {
-          return json({ error: "A chave da OpenAI ainda não foi configurada." }, 500);
+          return json({ error: "A chave da API do Gemini não foi configurada." }, 500);
         }
 
         let params: z.infer<typeof Input>;
@@ -47,41 +47,35 @@ export const Route = createFileRoute("/api/generate-image-preview")({
 
         const prompt = buildProsthesisPrompt(params);
 
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image:generateContent?key=${apiKey}`;
+        
         try {
-          const res = await fetch("https://api.openai.com/v1/images/generations", {
+          const geminiResponse = await fetch(url, {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${apiKey}`,
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              model: "gpt-image-1",
-              prompt,
-              n: 1,
-              size: "1024x1024",
-              quality: "medium",
-            }),
+              contents: [{ parts: [{ text: prompt }] }]
+            })
           });
-
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok) {
-            console.error("OpenAI error", res.status, data);
-            const msg =
-              res.status === 401
-                ? "Chave da OpenAI inválida."
-                : res.status === 429
-                  ? "Limite da OpenAI atingido. Tente novamente em instantes."
-                  : data?.error?.message || `Falha na OpenAI (${res.status}).`;
-            return json({ error: msg }, res.status);
+          
+          if (!geminiResponse.ok) {
+            const errData = await geminiResponse.json();
+            return json({ error: errData.error?.message || "Erro na API Gemini" }, 500);
           }
-
-          const b64 = data?.data?.[0]?.b64_json;
-          if (!b64) return json({ error: "A OpenAI não retornou imagem." }, 502);
-
-          return json({ imageUrl: `data:image/png;base64,${b64}`, prompt });
+          
+          const data = await geminiResponse.json();
+          const part = data.candidates?.[0]?.content?.parts?.[0];
+          
+          if (part?.inlineData) {
+            const b64 = part.inlineData.data;
+            const mime = part.inlineData.mimeType || "image/jpeg";
+            const imageUrl = `data:${mime};base64,${b64}`;
+            return json({ imageUrl, prompt });
+          } else {
+            return json({ error: "A API não retornou uma imagem." }, 500);
+          }
         } catch (e) {
-          console.error(e);
-          return json({ error: "Não foi possível conectar à OpenAI." }, 502);
+          return json({ error: "Erro ao gerar a imagem 3D com IA." }, 500);
         }
       },
     },

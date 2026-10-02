@@ -117,10 +117,7 @@ export const updateUserRoleForAdmin = createServerFn({ method: "POST" })
       metaRole === "admin";
     if (!isAdmin) throw new Error("Unauthorized");
 
-    let actualRole = data.newRole;
-    if (data.newRole === "investor") {
-      actualRole = "patient" as any;
-    }
+    const actualRole = data.newRole === "investor" ? "patient" : data.newRole;
 
     // Call the RPC to update roles securely without needing service role keys
     const { error } = await context.supabase.rpc("update_user_role_by_admin", {

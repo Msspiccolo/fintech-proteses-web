@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, Wand2, Image as ImageIcon, Download, RefreshCw, AlertCircle } from "lucide-react";
+import { Loader2, Wand2, Image as ImageIcon, Download, RefreshCw, AlertCircle, PlusCircle } from "lucide-react";
 
 export function ProsthesisGenerator() {
   const [tipo, setTipo] = useState("de braço transradial");
@@ -42,8 +42,27 @@ export function ProsthesisGenerator() {
     if (!imageUrl) return;
     const a = document.createElement("a");
     a.href = imageUrl;
-    a.download = `protese-3d-${Date.now()}.png`;
+    a.download = `protese-3d-${Date.now()}.jpg`;
     a.click();
+  }
+
+  function addToCatalog() {
+    if (!imageUrl) return;
+    
+    const novoProduto = {
+      id: Date.now().toString(),
+      nome: `Prótese Personalizada (${tipo})`,
+      descricao: `Prótese 3D gerada por IA. Material: ${material}, Cor: ${cor}, Tamanho: ${tamanho}.`,
+      preco: 0, // Sob Consulta
+      categoria: tipo,
+      imagem: imageUrl,
+      created_at: new Date().toISOString()
+    };
+    
+    const saved = JSON.parse(localStorage.getItem("clinica_produtos") || "[]");
+    localStorage.setItem("clinica_produtos", JSON.stringify([novoProduto, ...saved]));
+    
+    toast.success("Imagem adicionada ao catálogo com sucesso!");
   }
 
   const field = (label: string, value: string, set: (v: string) => void, opts: [string, string][]) => (
@@ -126,9 +145,14 @@ export function ProsthesisGenerator() {
               )}
             </div>
             {imageUrl && !loading && (
-              <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" onClick={download}><Download className="w-4 h-4 mr-2" /> Baixar</Button>
-                <Button variant="outline" onClick={generate}><RefreshCw className="w-4 h-4 mr-2" /> Regenerar</Button>
+              <div className="grid grid-cols-1 gap-2 mt-2">
+                <Button onClick={addToCatalog} className="w-full">
+                  <PlusCircle className="w-4 h-4 mr-2" /> Adicionar ao Catálogo
+                </Button>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" onClick={download}><Download className="w-4 h-4 mr-2" /> Baixar</Button>
+                  <Button variant="outline" onClick={generate}><RefreshCw className="w-4 h-4 mr-2" /> Regenerar</Button>
+                </div>
               </div>
             )}
           </div>

@@ -1,7 +1,13 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+<<<<<<< HEAD
+import { useServerFn } from "@tanstack/react-start";
+import { reportInstallmentPayment } from "@/lib/loans.functions";
+=======
+import { Input } from "@/components/ui/input";
+>>>>>>> 1b6e5bead8ba5ec8a7aa22556312422251324e6a
 import {
   Select,
   SelectContent,
@@ -10,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Check, Circle, FileText, Upload, Download, X, Printer, Banknote } from "lucide-react";
+import { Check, Circle, FileText, Upload, Download, X, Printer, Banknote, MessageCircle, Send } from "lucide-react";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
@@ -295,10 +301,42 @@ export function FabricationRequest({ applicationId, status }: { applicationId: s
   );
 }
 
-export function BoletoPreview({ app }: { app: any }) {
-  if (app.status !== "approved") return null;
+export function PatientInvoices({ app }: { app: any }) {
+  if (app.status !== "approved" && app.status !== "paid") return null;
 
-  const boletoCode = "34191.09008 61000.000000 00000.000000 1 90000000000000";
+  const totalInstallments = app.installments || 1;
+  const paidInstallments = app.installments_paid || 0;
+  const reportedInstallments = app.installments_reported || 0;
+  const queryClient = useQueryClient();
+  const reportPayment = useServerFn(reportInstallmentPayment);
+  const [isReporting, setIsReporting] = useState(false);
+  
+  // Calculate due dates starting 1 month after approval
+  const approvalDate = new Date(app.reviewed_at || app.created_at);
+  const invoices = Array.from({ length: totalInstallments }).map((_, i) => {
+    const dueDate = new Date(approvalDate);
+    dueDate.setMonth(dueDate.getMonth() + i + 1);
+    
+    let status = "Futura";
+    if (i < paidInstallments) {
+      status = "Paga";
+    } else if (i < reportedInstallments) {
+      status = "Aguardando";
+    } else if (i === reportedInstallments) {
+      status = "Próxima";
+    }
+
+    // Check if overdue
+    const isOverdue = status === "Próxima" && dueDate < new Date();
+
+    return {
+      index: i + 1,
+      dueDate,
+      status,
+      isOverdue,
+      amount: app.monthly_payment,
+    };
+  });
 
   return (
     <div className="mt-4">
@@ -306,62 +344,192 @@ export function BoletoPreview({ app }: { app: any }) {
         <DialogTrigger asChild>
           <Button variant="outline" className="w-full sm:w-auto">
             <Banknote className="mr-2 h-4 w-4" />
-            Visualizar Boleto
+            Minhas Faturas
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Prévia do Boleto</DialogTitle>
+            <DialogTitle>Minhas Faturas</DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              {paidInstallments} de {totalInstallments} parcelas pagas
+            </p>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="flex justify-between items-center border-b pb-2">
-              <span className="font-bold text-lg">Banco PrótesePay</span>
-              <span className="font-bold text-lg">341-7</span>
-            </div>
-            
             <div className="space-y-3">
-              <div>
-                <p className="text-xs text-muted-foreground uppercase">Local de Pagamento</p>
-                <p className="text-sm font-medium">Pagável em qualquer banco até o vencimento</p>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-muted-foreground uppercase">Data de Vencimento</p>
-                  <p className="text-sm font-medium">{formatDate(new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString())}</p>
+              {invoices.map((inv) => (
+                <div key={inv.index} className={`flex items-center justify-between p-3 rounded-lg border ${inv.status === "Paga" ? "bg-green-50/50 border-green-100" : inv.isOverdue ? "bg-red-50/50 border-red-100" : "bg-card"}`}>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-sm">Parcela {inv.index}/{totalInstallments}</p>
+                      {inv.status === "Paga" && <span className="text-[10px] uppercase font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded">Paga</span>}
+                      {inv.status === "Aguardando" && <span className="text-[10px] uppercase font-bold text-yellow-600 bg-yellow-100 px-2 py-0.5 rounded">Aguardando Confirmação</span>}
+                      {inv.status === "Próxima" && !inv.isOverdue && <span className="text-[10px] uppercase font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded">A Vencer</span>}
+                      {inv.isOverdue && <span className="text-[10px] uppercase font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded">Vencida</span>}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Vencimento: {formatDate(inv.dueDate.toISOString())}
+                    </p>
+                  </div>
+                  
+                  <div className="text-right">
+                    <p className="font-semibold">{formatCurrency(inv.amount)}</p>
+                    {inv.status === "Próxima" && (
+                      <Button 
+                        size="sm" 
+                        disabled={isReporting}
+                        className="mt-1 h-7 text-xs"
+                        onClick={async () => {
+                          try {
+                            setIsReporting(true);
+                            await reportPayment({ data: { id: app.id } });
+                            await queryClient.invalidateQueries({ queryKey: ["my-loan-applications"] });
+                            toast.success("Pagamento informado! A clínica irá confirmar em breve.");
+                          } catch (e: any) {
+                            toast.error(e.message || "Erro ao informar pagamento");
+                          } finally {
+                            setIsReporting(false);
+                          }
+                        }}
+                      >
+                        Avisar Pagamento
+                      </Button>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground uppercase">Valor do Documento</p>
-                  <p className="text-sm font-medium">{formatCurrency(app.monthly_payment)}</p>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-xs text-muted-foreground uppercase">Pagador</p>
-                <p className="text-sm font-medium">
-                  {(app.profiles as any)?.full_name || "Nome do Paciente"}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-xs text-muted-foreground uppercase">Código de Barras</p>
-                <div className="mt-1 p-2 bg-muted rounded font-mono text-xs text-center break-all">
-                  {boletoCode}
-                </div>
-              </div>
-            </div>
-            
-            <div className="pt-4 flex gap-2">
-              <Button className="w-full" onClick={() => {
-                navigator.clipboard.writeText(boletoCode);
-                toast.success("Código de barras copiado!");
-              }}>
-                Copiar Código
-              </Button>
+              ))}
             </div>
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+export function ApplicationChat({ applicationId }: { applicationId: string }) {
+  const [newMessage, setNewMessage] = useState("");
+  const queryClient = useQueryClient();
+  const [userId, setUserId] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useQuery({
+    queryKey: ["auth-user"],
+    queryFn: async () => {
+      const { data } = await db.auth.getUser();
+      if (data.user) setUserId(data.user.id);
+      return data.user;
+    }
+  });
+
+  const { data: messages = [] } = useQuery({
+    queryKey: ["application_messages", applicationId],
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("application_messages")
+        .select("*")
+        .eq("application_id", applicationId)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  useEffect(() => {
+    const channel = db
+      .channel(`chat_${applicationId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "application_messages",
+          filter: `application_id=eq.${applicationId}`,
+        },
+        (payload: any) => {
+          queryClient.setQueryData(["application_messages", applicationId], (old: any) => {
+            if (!old) return [payload.new];
+            if (old.some((m: any) => m.id === payload.new.id)) return old;
+            return [...old, payload.new];
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      db.removeChannel(channel);
+    };
+  }, [applicationId, queryClient]);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  async function handleSendMessage(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newMessage.trim() || !userId) return;
+
+    const msgText = newMessage.trim();
+    setNewMessage("");
+
+    const { error } = await db.from("application_messages").insert({
+      application_id: applicationId,
+      sender_id: userId,
+      text: msgText,
+    });
+
+    if (error) {
+      console.error("Erro ao enviar mensagem:", error);
+      toast.error("Erro ao enviar mensagem");
+    }
+  }
+
+  return (
+    <div className="space-y-3 pt-4 border-t border-border">
+      <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+        <MessageCircle className="h-4 w-4 text-primary" />
+        Mensagens
+      </div>
+      <div className="flex flex-col h-[250px]">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/20 rounded-md border mb-3">
+          {messages.length === 0 ? (
+             <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
+               Nenhuma mensagem encontrada.
+             </div>
+          ) : (
+            messages.map((msg: any) => {
+              const isMe = msg.sender_id === userId;
+              return (
+                <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                  <div 
+                    className={`max-w-[80%] rounded-lg p-3 ${
+                      isMe
+                        ? "bg-primary text-primary-foreground rounded-tr-none" 
+                        : "bg-muted text-foreground rounded-tl-none"
+                    }`}
+                  >
+                    <p className="text-sm mb-1">{msg.text}</p>
+                    <span className="text-[10px] opacity-70">
+                      {new Date(msg.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit'})}
+                    </span>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+        <form onSubmit={handleSendMessage} className="flex gap-2">
+          <Input 
+            placeholder="Digite sua mensagem..." 
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            className="flex-1"
+          />
+          <Button type="submit" disabled={!newMessage.trim()}>
+            <Send className="h-4 w-4" />
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }
@@ -373,7 +541,13 @@ export function PatientApplicationExtras({ app }: { app: any }) {
       <ApplicationTimeline status={app.status} createdAt={app.created_at} reviewedAt={app.reviewed_at} hasDocs={docs.length > 0} />
       <ApplicationDocuments applicationId={app.id} canUpload={app.status === "pending"} />
       <FabricationRequest applicationId={app.id} status={app.status} />
+<<<<<<< HEAD
+      <PatientInvoices app={app} />
+=======
       <BoletoPreview app={app} />
+      <ApplicationChat applicationId={app.id} />
+>>>>>>> 1b6e5bead8ba5ec8a7aa22556312422251324e6a
     </div>
   );
 }
+

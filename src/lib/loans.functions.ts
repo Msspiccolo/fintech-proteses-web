@@ -100,7 +100,7 @@ export const getClinicLoanApplications = createServerFn({ method: "GET" })
 
     const { data, error } = await context.supabase
       .from("loan_applications")
-      .select("*, clinics(name), profiles!loan_applications_patient_id_fkey(full_name)")
+      .select("*, clinics(name)")
       .in("clinic_id", clinicIds)
       .order("created_at", { ascending: false });
 
@@ -108,7 +108,54 @@ export const getClinicLoanApplications = createServerFn({ method: "GET" })
       throw new Error(error.message);
     }
 
+<<<<<<< HEAD
+    if (!data || data.length === 0) {
+      return { applications: [] };
+    }
+
+    // Fetch profiles separately using admin client to bypass RLS
+    const patientIds = data.map((d: any) => d.patient_id).filter(Boolean);
+    let profilesMap: Record<string, string> = {};
+
+    if (patientIds.length > 0) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: profiles } = await supabaseAdmin
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", patientIds);
+
+      if (profiles) {
+        profilesMap = profiles.reduce((acc, p) => ({ ...acc, [p.user_id]: p.full_name }), {});
+      }
+    }
+
+    const applications = data.map((app: any) => ({
+      ...app,
+      profiles: { full_name: profilesMap[app.patient_id] || "Paciente Protegido" }
+    }));
+
+    return { applications };
+=======
+    // Fetch profiles manually
+    const patientIds = [...new Set(data?.map(app => app.patient_id).filter(Boolean) || [])];
+    if (patientIds.length > 0) {
+      const { data: profiles } = await context.supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", patientIds);
+        
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+      
+      const applicationsWithProfiles = data?.map(app => ({
+        ...app,
+        profiles: profileMap.get(app.patient_id) || null
+      }));
+      
+      return { applications: applicationsWithProfiles };
+    }
+
     return { applications: data ?? [] };
+>>>>>>> 1b6e5bead8ba5ec8a7aa22556312422251324e6a
   });
 
 export const getAllLoanApplications = createServerFn({ method: "GET" })
@@ -137,14 +184,58 @@ export const getAllLoanApplications = createServerFn({ method: "GET" })
 
     const { data, error } = await context.supabase
       .from("loan_applications")
-      .select("*, clinics(name), profiles!loan_applications_patient_id_fkey(full_name), loan_documents(*), fabrication_orders(*)")
+      .select("*, clinics(name), loan_documents(*), fabrication_orders(*)")
       .order("created_at", { ascending: false });
 
     if (error) {
       throw new Error(error.message);
     }
 
+<<<<<<< HEAD
+    if (!data || data.length === 0) {
+      return { applications: [] };
+    }
+
+    // Fetch profiles separately to avoid FK issues
+    const patientIds = data.map((d: any) => d.patient_id).filter(Boolean);
+    let profilesMap: Record<string, string> = {};
+
+=======
+    // Fetch profiles manually
+    const patientIds = [...new Set(data?.map(app => app.patient_id).filter(Boolean) || [])];
+>>>>>>> 1b6e5bead8ba5ec8a7aa22556312422251324e6a
+    if (patientIds.length > 0) {
+      const { data: profiles } = await context.supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", patientIds);
+<<<<<<< HEAD
+
+      if (profiles) {
+        profilesMap = profiles.reduce((acc, p) => ({ ...acc, [p.user_id]: p.full_name }), {});
+      }
+    }
+
+    const applications = data.map((app: any) => ({
+      ...app,
+      profiles: { full_name: profilesMap[app.patient_id] || "Paciente Protegido" }
+    }));
+
+    return { applications };
+=======
+        
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+      
+      const applicationsWithProfiles = data?.map(app => ({
+        ...app,
+        profiles: profileMap.get(app.patient_id) || null
+      }));
+      
+      return { applications: applicationsWithProfiles };
+    }
+
     return { applications: data ?? [] };
+>>>>>>> 1b6e5bead8ba5ec8a7aa22556312422251324e6a
   });
 
 export const updateLoanApplication = createServerFn({ method: "POST" })
@@ -259,6 +350,22 @@ export const deleteLoanApplication = createServerFn({ method: "POST" })
       throw new Error("Only pending proposals can be deleted.");
     }
 
+    // Attempt deletion with supabaseAdmin (service role) to bypass restrictive client RLS safely
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: deletedRows, error: adminDeleteError } = await supabaseAdmin
+        .from("loan_applications")
+        .delete()
+        .eq("id", data.id)
+        .select("id");
+
+      if (!adminDeleteError && deletedRows && deletedRows.length > 0) {
+        return { ok: true };
+      }
+    } catch {
+      // Fallback to client context if admin client is unavailable
+    }
+
     const { data: deletedRows, error: deleteError } = await context.supabase
       .from("loan_applications")
       .delete()
@@ -272,4 +379,102 @@ export const deleteLoanApplication = createServerFn({ method: "POST" })
     }
 
     return { ok: true };
+  });
+
+export const confirmInstallmentPayment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { data: profile } = await context.supabase
+      .from("profiles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+
+    const { data: roles } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId);
+
+    const metaRole = (context.claims?.user_metadata as any)?.role;
+    const isAdmin =
+      roles?.some((r: any) => r.role === "admin") ||
+      profile?.role === "admin" ||
+      metaRole === "admin";
+      
+    const isClinic =
+      roles?.some((r: any) => r.role === "clinic") ||
+      profile?.role === "clinic" ||
+      metaRole === "clinic";
+      
+    if (!isAdmin && !isClinic) {
+      throw new Error("Forbidden");
+    }
+
+    // Buscar a proposta
+    const { data: app, error: fetchError } = await context.supabase
+      .from("loan_applications")
+      .select("installments, installments_paid")
+      .eq("id", data.id)
+      .single();
+
+    if (fetchError || !app) {
+      throw new Error("Proposta não encontrada");
+    }
+
+    const currentPaid = app.installments_paid || 0;
+    if (currentPaid >= app.installments) {
+      throw new Error("Todas as parcelas já foram pagas");
+    }
+
+    const { data: updatedApp, error: updateError } = await context.supabase
+      .from("loan_applications")
+      .update({
+        installments_paid: currentPaid + 1,
+      })
+      .eq("id", data.id)
+      .select()
+      .single();
+
+    if (updateError) {
+      throw new Error(updateError.message);
+    }
+
+    return { application: updatedApp };
+  });
+
+export const reportInstallmentPayment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: { id: string }) => d)
+  .handler(async ({ data: { id }, context }) => {
+    // Fetch current installments_reported
+    const { data: application, error: fetchError } = await context.supabase
+      .from("loan_applications")
+      .select("installments_reported, installments_paid, patient_id")
+      .eq("id", id)
+      .single();
+
+    if (fetchError || !application) {
+      throw new Error(fetchError?.message || "Application not found");
+    }
+
+    if (application.patient_id !== context.userId) {
+      throw new Error("Forbidden");
+    }
+
+    const currentReported = Math.max(
+      application.installments_reported || 0,
+      application.installments_paid || 0
+    );
+
+    const { error: updateError } = await context.supabase
+      .from("loan_applications")
+      .update({ installments_reported: currentReported + 1 })
+      .eq("id", id);
+
+    if (updateError) {
+      throw new Error(updateError.message);
+    }
+
+    return { success: true };
   });

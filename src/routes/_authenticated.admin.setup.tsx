@@ -41,7 +41,7 @@ function AdminSetupPage() {
       toast.error(error.message);
       return;
     }
-    toast.success("Você agora é administrador da PrótesePay.");
+    toast.success("Você agora é administrador da ProMobi.");
     router.navigate({ to: "/admin/dashboard", replace: true });
   }
 

@@ -46,6 +46,38 @@ export type Database = {
           },
         ]
       }
+      application_messages: {
+        Row: {
+          id: string
+          application_id: string
+          sender_id: string
+          text: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          application_id: string
+          sender_id: string
+          text: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          application_id?: string
+          sender_id?: string
+          text?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_messages_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "loan_applications"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       clinics: {
         Row: {
           address: string | null
@@ -145,6 +177,8 @@ export type Database = {
           down_payment: number
           id: string
           installments: number
+          installments_paid: number
+          installments_reported: number | null
           interest_rate: number
           monthly_payment: number
           notes: string | null
@@ -163,6 +197,8 @@ export type Database = {
           down_payment?: number
           id?: string
           installments: number
+          installments_paid?: number
+          installments_reported?: number | null
           interest_rate: number
           monthly_payment: number
           notes?: string | null
@@ -181,6 +217,8 @@ export type Database = {
           down_payment?: number
           id?: string
           installments?: number
+          installments_paid?: number
+          installments_reported?: number | null
           interest_rate?: number
           monthly_payment?: number
           notes?: string | null

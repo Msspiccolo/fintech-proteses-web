@@ -8,17 +8,17 @@ import { BadgeCheck, Building2, LineChart, Users } from "lucide-react";
 export const Route = createFileRoute("/cadastro-clinica")({
   head: () => ({
     meta: [
-      { title: "Cadastre sua clínica — PrótesePay" },
+      { title: "Cadastre sua clínica — ProMobi" },
       {
         name: "description",
         content:
-          "Torne-se uma clínica parceira PrótesePay e ofereça financiamento de próteses ortopédicas aos seus pacientes.",
+          "Torne-se uma clínica parceira ProMobi e ofereça financiamento de próteses ortopédicas aos seus pacientes.",
       },
-      { property: "og:title", content: "Cadastre sua clínica — PrótesePay" },
+      { property: "og:title", content: "Cadastre sua clínica — ProMobi" },
       {
         property: "og:description",
         content:
-          "Cadastre sua clínica na PrótesePay e acompanhe as propostas de crédito dos seus pacientes.",
+          "Cadastre sua clínica na ProMobi e acompanhe as propostas de crédito dos seus pacientes.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -41,7 +41,7 @@ const benefits = [
   {
     icon: BadgeCheck,
     title: "Selo de clínica parceira",
-    description: "Após a aprovação, sua clínica aparece na vitrine pública da PrótesePay.",
+    description: "Após a aprovação, sua clínica aparece na vitrine pública da ProMobi.",
   },
 ];
 
@@ -56,7 +56,7 @@ function ClinicSignupPage() {
               <Building2 size={14} /> Para clínicas e centros ortopédicos
             </span>
             <h1 className="mt-6 text-4xl font-bold tracking-tight text-foreground md:text-5xl">
-              Cadastre sua clínica na PrótesePay
+              Cadastre sua clínica na ProMobi
             </h1>
             <p className="mt-4 text-lg text-muted-foreground">
               Crie a conta da sua clínica em poucos minutos. Após a análise cadastral, você passa a

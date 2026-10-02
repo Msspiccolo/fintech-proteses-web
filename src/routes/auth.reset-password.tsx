@@ -19,7 +19,7 @@ import {
 
 export const Route = createFileRoute("/auth/reset-password")({
   head: () => ({
-    meta: [{ title: "Redefinir Senha — PrótesePay" }],
+    meta: [{ title: "Redefinir Senha — ProMobi" }],
   }),
   component: ResetPasswordPage,
 });

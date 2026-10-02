@@ -14,7 +14,7 @@ import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/perfil")({
   head: () => ({
-    meta: [{ title: "Meu Perfil | PrótesePay" }],
+    meta: [{ title: "Meu Perfil | ProMobi" }],
   }),
   component: ProfilePage,
 });

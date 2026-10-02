@@ -73,11 +73,11 @@ function FinanceiroClinica() {
           if (patientIds.length > 0) {
             const { data: profiles } = await supabase
               .from("profiles")
-              .select("id, full_name")
-              .in("id", patientIds);
+              .select("user_id, full_name")
+              .in("user_id", patientIds);
               
             if (profiles) {
-              profilesMap = profiles.reduce((acc, p) => ({...acc, [p.id]: p.full_name || "Paciente"}), {});
+              profilesMap = profiles.reduce((acc, p) => ({...acc, [p.user_id]: p.full_name || "Paciente"}), {});
             }
           }
 

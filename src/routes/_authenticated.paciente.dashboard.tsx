@@ -19,7 +19,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/_authenticated/paciente/dashboard")({
   head: () => ({
     meta: [
-      { title: "Painel do Paciente | PrótesePay" },
+      { title: "Painel do Paciente | ProMobi" },
       {
         name: "description",
         content: "Acompanhe suas propostas de financiamento de próteses ortopédicas.",
@@ -147,6 +147,16 @@ function PatientDashboard() {
                           <p className="text-xs text-muted-foreground">
                             {app.installments}x de {formatCurrency(app.monthly_payment)}
                           </p>
+                          {(app.status === "approved" || app.status === "paid") && (
+                            <div className="mt-1 flex items-center gap-1 text-xs">
+                              <span className="font-medium text-green-600">
+                                {app.installments_paid || 0} pagas
+                              </span>
+                              <span className="text-muted-foreground">
+                                / {Math.max(0, (app.installments || 0) - (app.installments_paid || 0))} restantes
+                              </span>
+                            </div>
+                          )}
                         </div>
                         <div>
                           <p className="text-sm text-muted-foreground">Clínica</p>

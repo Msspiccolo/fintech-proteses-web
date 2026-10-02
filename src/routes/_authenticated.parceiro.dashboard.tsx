@@ -140,7 +140,7 @@ function ParceiroDashboard() {
             <div>
               <h1 className="text-3xl font-bold text-foreground">Painel do Investidor</h1>
               <p className="mt-2 text-muted-foreground">
-                Acompanhe o desempenho do seu capital investido na plataforma PrótesePay.
+                Acompanhe o desempenho do seu capital investido na plataforma ProMobi.
               </p>
             </div>
             <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-3">

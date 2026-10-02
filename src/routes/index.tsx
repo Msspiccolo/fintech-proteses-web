@@ -9,12 +9,12 @@ import { Activity, Shield, Clock, Stethoscope, ArrowRight, CheckCircle } from "l
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "PrótesePay — Financiamento de Próteses" },
+      { title: "ProMobi — Financiamento de Próteses" },
       {
         name: "description",
         content: "Simule e financie próteses com parcelas acessíveis para pacientes.",
       },
-      { property: "og:title", content: "PrótesePay — Financiamento de Próteses Ortopédicas" },
+      { property: "og:title", content: "ProMobi — Financiamento de Próteses Ortopédicas" },
       {
         property: "og:description",
         content: "Simule e financie próteses ortopédicas com parcelas acessíveis.",
@@ -50,7 +50,7 @@ function HomePage() {
                   Financie sua prótese agora com um preço acessível
                 </h1>
                 <p className="text-lg text-muted-foreground">
-                  A PrótesePay traz facilidades para os pacientes.Transparencia e sem burocracia.
+                  A ProMobi traz facilidades para os pacientes.Transparencia e sem burocracia.
                 </p>
                 <div className="flex flex-wrap gap-4">
                   <Link to="/simular">
@@ -105,7 +105,7 @@ function HomePage() {
           <div className="mx-auto max-w-7xl">
             <div className="text-center">
               <h2 className="text-3xl font-bold text-foreground md:text-4xl">
-                Por que escolher a PrótesePay?
+                Por que escolher a ProMobi?
               </h2>
               <p className="mt-4 text-muted-foreground">
                 Tecnologia e cuidado para transformar tratamentos em realidade.
