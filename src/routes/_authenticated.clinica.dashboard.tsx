@@ -274,6 +274,12 @@ function ClinicDashboard() {
     });
 
     setClients(Object.values(clientsMap));
+
+    // Update selectedClient if it is currently open
+    setSelectedClient((prev: any) => {
+      if (!prev) return prev;
+      return Object.values(clientsMap).find((c: any) => c.id === prev.id) || prev;
+    });
   }, [applications]);
 
   // Business Intelligence KPIs
