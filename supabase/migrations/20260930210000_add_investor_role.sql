@@ -1,4 +1,4 @@
--- Add 'investor' to app_role ENUM type
+﻿-- Add 'investor' to app_role ENUM type
 ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'investor';
 
 -- Update the complete_signup function to accept 'investor'

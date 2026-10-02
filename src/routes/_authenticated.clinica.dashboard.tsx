@@ -24,7 +24,7 @@ import {
 } from "@/lib/clinics.functions";
 import { ApplicationChat } from "@/components/application-extras";
 import { StatusBadge } from "@/components/status-badge";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate, generateFakeBoleto } from "@/lib/utils";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import {
@@ -239,7 +239,7 @@ function ClinicDashboard() {
     }
   }
 
-  const applications = data?.applications ?? [];
+  const applications = useMemo(() => data?.applications ?? [], [data?.applications]);
 
   useEffect(() => {
     const clientsMap: Record<string, any> = {};
@@ -274,6 +274,12 @@ function ClinicDashboard() {
     });
 
     setClients(Object.values(clientsMap));
+
+    // Update selectedClient if it is currently open
+    setSelectedClient((prev: any) => {
+      if (!prev) return prev;
+      return Object.values(clientsMap).find((c: any) => c.id === prev.id) || prev;
+    });
   }, [applications]);
 
   // Business Intelligence KPIs
@@ -655,11 +661,33 @@ function ClinicDashboard() {
                                 </Button>
                                 <Button
                                   size="sm"
-                                  onClick={() => handleAction(client.id, "Boleto 2ª via gerado", `Boleto gerado e enviado para ${client.name}!`)}
+                                  onClick={() => {
+                                    handleAction(client.id, "Boleto 2ª via gerado", `Boleto gerado e enviado para ${client.name}!`);
+                                    generateFakeBoleto();
+                                  }}
                                 >
                                   Gerar boleto
                                 </Button>
                               </>
+                            )}
+                            {client.parcelasReportadas > 0 && (
+                              <Button
+                                size="sm"
+                                variant="default"
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                                onClick={async () => {
+                                  try {
+                                    await confirmInstallment({ data: { id: client.applicationId } });
+                                    toast.success("Pagamento confirmado com sucesso!");
+                                    queryClient.invalidateQueries({ queryKey: ["clinic-loan-applications"] });
+                                  } catch (e: any) {
+                                    toast.error(e.message || "Erro ao confirmar pagamento");
+                                  }
+                                }}
+                                title="Confirmar Pagamento Avisado"
+                              >
+                                <Check className="h-4 w-4 mr-1" /> Confirmar
+                              </Button>
                             )}
                           </div>
                         </td>
@@ -803,7 +831,10 @@ function ClinicDashboard() {
                         </Button>
                         <Button 
                           className="flex-1"
-                          onClick={() => handleAction(selectedClient.id, "Boleto 2ª via gerado", `Boleto gerado e enviado para ${selectedClient.name}!`)}
+                          onClick={() => {
+                            handleAction(selectedClient.id, "Boleto 2ª via gerado", `Boleto gerado e enviado para ${selectedClient.name}!`);
+                            generateFakeBoleto();
+                          }}
                         >
                           Gerar novo boleto
                         </Button>
@@ -854,8 +885,11 @@ function ClinicDashboard() {
                           <h4 className="text-sm font-semibold mb-3">Ações Rápidas</h4>
                           <div className="flex flex-wrap gap-3">
                             <PatientInvoices 
+                              isClinicView={true}
                               app={{ 
+                                id: selectedClient.applicationId,
                                 status: "approved", 
+                                created_at: new Date().toISOString(),
                                 monthly_payment: selectedClient.valorTotal / (selectedClient.parcelasPagas + selectedClient.parcelasRestantes || 1), 
                                 profiles: { full_name: selectedClient.name },
                                 installments: selectedClient.parcelasPagas + selectedClient.parcelasRestantes,
@@ -864,7 +898,10 @@ function ClinicDashboard() {
                             />
                             <Button 
                               variant="outline"
-                              onClick={() => handleAction(selectedClient.id, "Boleto 2ª via gerado", `Boleto gerado e enviado para ${selectedClient.name}!`)}
+                              onClick={() => {
+                                handleAction(selectedClient.id, "Boleto 2ª via gerado", `Boleto gerado e enviado para ${selectedClient.name}!`);
+                                generateFakeBoleto();
+                              }}
                             >
                               Gerar 2ª Via
                             </Button>

@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useServerFn } from "@tanstack/react-start";
-import { reportInstallmentPayment } from "@/lib/loans.functions";
+import { reportInstallmentPayment, confirmInstallmentPayment } from "@/lib/loans.functions";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -272,11 +272,64 @@ export function FabricationRequest({ applicationId, status }: { applicationId: s
     <div className="space-y-2 rounded-lg border border-border p-3">
       <p className="text-sm font-medium text-foreground">Fabricação da peça 3D</p>
       {orders.map((o) => (
-        <div key={o.id} className="flex items-center justify-between text-sm">
-          <span>{o.model} · {o.material} — <b>{FAB_STATUS[o.status] ?? o.status}</b></span>
-          <Button size="sm" variant="ghost" onClick={() => downloadStl(o.model)}>
-            <Download className="mr-1 h-4 w-4" /> STL
-          </Button>
+        <div key={o.id} className="flex flex-col gap-2 border-b border-border pb-3 mb-3 last:border-0 last:pb-0 last:mb-0">
+          <div className="flex items-center justify-between text-sm">
+            <span>{o.model} · {o.material} — <b className="text-primary">{FAB_STATUS[o.status] ?? o.status}</b></span>
+            <Button size="sm" variant="ghost" onClick={() => downloadStl(o.model)}>
+              <Download className="mr-1 h-4 w-4" /> STL
+            </Button>
+          </div>
+          {/* Tracking info section */}
+          <div className="flex flex-wrap items-center gap-2 bg-muted/40 p-2.5 rounded-md text-xs border border-border/50 mt-2">
+            <span className="font-semibold text-foreground">Rastreio:</span>
+            <span className="font-mono bg-background px-2 py-1 border rounded">{o.tracking_code || "BR" + String(o.id).replace(/\D/g, '').slice(0, 9).padStart(9, '0') + "BR"}</span>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="outline" className="h-6 ml-auto">
+                  Acompanhar
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <span className="text-primary">📦</span> Rastreamento de Encomenda
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                  <div className="p-3 bg-muted rounded-md mb-4 flex justify-between items-center">
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase font-bold">Código de Rastreio</p>
+                      <p className="font-mono text-sm">{o.tracking_code || "BR" + String(o.id).replace(/\D/g, '').slice(0, 9).padStart(9, '0') + "BR"}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground uppercase font-bold">Status</p>
+                      <p className="text-sm text-primary font-semibold">{FAB_STATUS[o.status] ?? o.status}</p>
+                    </div>
+                  </div>
+                  <div className="relative border-l-2 border-primary/30 ml-3 pl-5 space-y-6">
+                    <div className="relative">
+                      <div className="absolute -left-[27px] bg-primary w-3 h-3 rounded-full border-2 border-background shadow-[0_0_0_3px_var(--primary)] shadow-primary/20"></div>
+                      <p className="text-sm font-semibold text-foreground">Em rota de entrega</p>
+                      <p className="text-xs text-muted-foreground">Unidade de Distribuição, São Paulo - SP</p>
+                      <p className="text-xs font-mono mt-1 text-muted-foreground/80">Hoje, 08:42</p>
+                    </div>
+                    <div className="relative">
+                      <div className="absolute -left-[27px] bg-muted-foreground/40 w-3 h-3 rounded-full border-2 border-background"></div>
+                      <p className="text-sm font-semibold text-foreground">Objeto em trânsito</p>
+                      <p className="text-xs text-muted-foreground">De Unidade de Logística Integrada para Unidade de Distribuição</p>
+                      <p className="text-xs font-mono mt-1 text-muted-foreground/80">Ontem, 15:30</p>
+                    </div>
+                    <div className="relative">
+                      <div className="absolute -left-[27px] bg-muted-foreground/40 w-3 h-3 rounded-full border-2 border-background"></div>
+                      <p className="text-sm font-semibold text-foreground">Objeto postado</p>
+                      <p className="text-xs text-muted-foreground">Agência ProMobi, São José dos Campos - SP</p>
+                      <p className="text-xs font-mono mt-1 text-muted-foreground/80">Há 2 dias, 10:15</p>
+                    </div>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       ))}
       {orders.length === 0 && (
@@ -298,14 +351,15 @@ export function FabricationRequest({ applicationId, status }: { applicationId: s
   );
 }
 
-export function PatientInvoices({ app }: { app: any }) {
+export function PatientInvoices({ app, isClinicView }: { app: any, isClinicView?: boolean }) {
   if (app.status !== "approved" && app.status !== "paid") return null;
 
   const totalInstallments = app.installments || 1;
   const paidInstallments = app.installments_paid || 0;
-  const reportedInstallments = app.installments_reported || 0;
+  const reportedInstallments = Math.max(app.installments_reported || 0, paidInstallments);
   const queryClient = useQueryClient();
   const reportPayment = useServerFn(reportInstallmentPayment);
+  const confirmPayment = useServerFn(confirmInstallmentPayment);
   const [isReporting, setIsReporting] = useState(false);
   
   // Calculate due dates starting 1 month after approval
@@ -370,25 +424,31 @@ export function PatientInvoices({ app }: { app: any }) {
                   
                   <div className="text-right">
                     <p className="font-semibold">{formatCurrency(inv.amount)}</p>
-                    {inv.status === "Próxima" && (
+                    {(inv.status === "Próxima" || (isClinicView && inv.status === "Aguardando")) && (
                       <Button 
                         size="sm" 
                         disabled={isReporting}
-                        className="mt-1 h-7 text-xs"
+                        className={`mt-1 h-7 text-xs ${isClinicView ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`}
                         onClick={async () => {
                           try {
                             setIsReporting(true);
-                            await reportPayment({ data: { id: app.id } });
-                            await queryClient.invalidateQueries({ queryKey: ["my-loan-applications"] });
-                            toast.success("Pagamento informado! A clínica irá confirmar em breve.");
+                            if (isClinicView) {
+                              await confirmPayment({ data: { id: app.id } });
+                              toast.success("Pagamento confirmado com sucesso!");
+                              await queryClient.invalidateQueries({ queryKey: ["clinic-loan-applications"] });
+                            } else {
+                              await reportPayment({ data: { id: app.id } });
+                              await queryClient.invalidateQueries({ queryKey: ["my-loan-applications"] });
+                              toast.success("Pagamento informado! A clínica irá confirmar em breve.");
+                            }
                           } catch (e: any) {
-                            toast.error(e.message || "Erro ao informar pagamento");
+                            toast.error(e.message || "Erro ao processar pagamento");
                           } finally {
                             setIsReporting(false);
                           }
                         }}
                       >
-                        Avisar Pagamento
+                        {isClinicView ? "Confirmar Pagamento" : "Avisar Pagamento"}
                       </Button>
                     )}
                   </div>

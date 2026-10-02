@@ -172,7 +172,7 @@ function PatientDashboard() {
                           <p className="text-sm text-muted-foreground">Data</p>
                           <p className="text-foreground">{formatDate(app.created_at)}</p>
                         </div>
-                        {app.status === "pending" && (
+                        {app.status !== "paid" && app.status !== "cancelled" && (
                           <div className="flex items-center justify-end sm:col-span-2 lg:col-span-5 mt-2">
                             <Button
                               variant="outline"
@@ -180,7 +180,7 @@ function PatientDashboard() {
                               className="text-red-500 hover:text-red-600 hover:bg-red-50 w-full sm:w-auto"
                               onClick={() => handleDelete(app.id)}
                             >
-                              <Trash2 className="h-4 w-4 mr-2" /> Excluir proposta
+                              <Trash2 className="h-4 w-4 mr-2" /> Cancelar / Apagar proposta
                             </Button>
                           </div>
                         )}

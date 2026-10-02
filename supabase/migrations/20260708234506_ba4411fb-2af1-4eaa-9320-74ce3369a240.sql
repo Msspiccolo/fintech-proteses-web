@@ -1,4 +1,4 @@
-create type public.app_role as enum ('patient', 'clinic', 'admin');
+﻿create type public.app_role as enum ('patient', 'clinic', 'admin');
 
 create table public.user_roles (
   id uuid primary key default gen_random_uuid(),

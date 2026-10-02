@@ -117,11 +117,14 @@ export const getClinicLoanApplications = createServerFn({ method: "GET" })
     let profilesMap: Record<string, string> = {};
 
     if (patientIds.length > 0) {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: profiles } = await supabaseAdmin
+      const { data: profiles, error: profErr } = await context.supabase
         .from("profiles")
         .select("user_id, full_name")
         .in("user_id", patientIds);
+
+      console.log("[Loans] patientIds:", patientIds);
+      console.log("[Loans] profiles fetched:", profiles);
+      console.log("[Loans] profile error:", profErr);
 
       if (profiles) {
         profilesMap = profiles.reduce((acc: Record<string, string>, p: any) => ({ ...acc, [p.user_id]: p.full_name }), {});
@@ -303,8 +306,8 @@ export const deleteLoanApplication = createServerFn({ method: "POST" })
       throw new Error("Unauthorized: you can only delete your own proposals.");
     }
     
-    if (application.status !== "pending") {
-      throw new Error("Only pending proposals can be deleted.");
+    if (application.status === "paid" || application.status === "cancelled") {
+      throw new Error("Propostas pagas ou canceladas não podem ser excluídas.");
     }
 
     // Attempt deletion with supabaseAdmin (service role) to bypass restrictive client RLS safely
@@ -368,36 +371,16 @@ export const confirmInstallmentPayment = createServerFn({ method: "POST" })
       throw new Error("Forbidden");
     }
 
-    // Buscar a proposta
-    const { data: app, error: fetchError } = await context.supabase
-      .from("loan_applications")
-      .select("installments, installments_paid")
-      .eq("id", data.id)
-      .single();
+    const { error: rpcError } = await context.supabase.rpc("confirm_installment" as any, {
+      application_id: data.id,
+      clinic_user_id: context.userId
+    });
 
-    if (fetchError || !app) {
-      throw new Error("Proposta não encontrada");
+    if (rpcError) {
+      throw new Error(rpcError.message);
     }
 
-    const currentPaid = app.installments_paid || 0;
-    if (currentPaid >= app.installments) {
-      throw new Error("Todas as parcelas já foram pagas");
-    }
-
-    const { data: updatedApp, error: updateError } = await context.supabase
-      .from("loan_applications")
-      .update({
-        installments_paid: currentPaid + 1,
-      })
-      .eq("id", data.id)
-      .select()
-      .single();
-
-    if (updateError) {
-      throw new Error(updateError.message);
-    }
-
-    return { application: updatedApp };
+    return { success: true };
   });
 
 export const reportInstallmentPayment = createServerFn({ method: "POST" })
@@ -415,7 +398,13 @@ export const reportInstallmentPayment = createServerFn({ method: "POST" })
       throw new Error(fetchError?.message || "Application not found");
     }
 
-    if (application.patient_id !== context.userId) {
+    const isAdminOrClinic = async () => {
+      const { data: roles } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
+      if (roles?.some((r: any) => r.role === "admin" || r.role === "clinic")) return true;
+      return false;
+    };
+
+    if (application.patient_id !== context.userId && !(await isAdminOrClinic())) {
       throw new Error("Forbidden");
     }
 

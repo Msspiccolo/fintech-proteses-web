@@ -1,4 +1,4 @@
-CREATE TABLE public.loan_documents (
+﻿CREATE TABLE public.loan_documents (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   application_id uuid NOT NULL REFERENCES public.loan_applications(id) ON DELETE CASCADE,
   patient_id uuid NOT NULL,
