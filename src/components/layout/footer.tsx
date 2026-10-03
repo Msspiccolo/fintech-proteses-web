@@ -27,11 +27,7 @@ export function Footer() {
                   Como funciona?
                 </Link>
               </li>
-              <li>
-                <Link to="/clinicas-parceiras" className="hover:text-foreground">
-                  Clínicas parceiras
-                </Link>
-              </li>
+
               <li>
                 <Link to="/seja-parceiro" className="hover:text-foreground">
                   Seja Parceiro de Crédito

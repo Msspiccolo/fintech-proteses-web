@@ -79,12 +79,14 @@ export function Header() {
               >
                 Como funciona
               </Link>
-              <Link
-                to="/clinicas-parceiras"
-                className="text-sm font-medium text-muted-foreground hover:text-foreground"
-              >
-                Clínicas parceiras
-              </Link>
+              {user && (
+                <Link
+                  to="/clinicas-parceiras"
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground"
+                >
+                  Clínicas parceiras
+                </Link>
+              )}
               <Link
                 to="/produtos"
                 className="text-sm font-medium text-muted-foreground hover:text-foreground flex items-center gap-1"
@@ -184,13 +186,15 @@ export function Header() {
                 >
                   Como funciona?
                 </Link>
-                <Link
-                  to="/clinicas-parceiras"
-                  className="text-sm font-medium text-muted-foreground"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  Clínicas parceiras
-                </Link>
+                {user && (
+                  <Link
+                    to="/clinicas-parceiras"
+                    className="text-sm font-medium text-muted-foreground"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Clínicas parceiras
+                  </Link>
+                )}
                 <Link
                   to="/produtos"
                   className="text-sm font-medium text-muted-foreground flex items-center gap-2"
