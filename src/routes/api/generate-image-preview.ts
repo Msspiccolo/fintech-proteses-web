@@ -8,18 +8,42 @@ const Input = z.object({
   tamanho: z.string().min(1).max(50).optional(),
 });
 
-// Template parametrizável do prompt
 export function buildProsthesisPrompt(p: z.infer<typeof Input>) {
+  const typeMap: Record<string, string> = {
+    "de braço transradial": "transradial arm",
+    "de perna transtibial": "transtibial leg",
+    "de mão biônica": "bionic hand",
+    "de pé dinâmico": "dynamic foot",
+    "de joelho modular": "modular knee",
+    "de quadril": "hip"
+  };
+  const matMap: Record<string, string> = {
+    "fibra de carbono": "carbon fiber",
+    "titânio aeroespacial": "aerospace titanium",
+    "silicone realista": "realistic medical silicone",
+    "polímero impresso em 3D": "3D printed high-grade polymer"
+  };
+  const colorMap: Record<string, string> = {
+    "preto fosco com detalhes prateados": "matte black with silver details",
+    "branco perolado com detalhes em LED azul": "pearl white with blue LED accents",
+    "tom de pele realista": "realistic human skin tone",
+    "cromado polido": "highly polished chrome"
+  };
+
+  const engType = typeMap[p.tipo] || p.tipo;
+  const engMat = matMap[p.material] || p.material;
+  const engColor = colorMap[p.cor] || p.cor;
+
   return [
-    `Renderização 3D fotorrealista de uma prótese ${p.tipo}`,
-    `material ${p.material}`,
-    `cor ${p.cor}`,
-    p.tamanho ? `tamanho ${p.tamanho}` : null,
-    "vista em ângulo 3/4, fundo branco neutro, iluminação de estúdio profissional, estilo catálogo médico",
-    "apenas o dispositivo isolado, sem pessoas, sem pele, sem texto",
-  ]
-    .filter(Boolean)
-    .join(", ") + ".";
+    `Minimalist abstract 3D render of a ${engType} prosthesis`,
+    `Made entirely of basic primitive geometric shapes like smooth cylinders, spheres, and simple blocks`,
+    `Very simple, clean, and abstract, resembling a low-poly or primitive 3D model`,
+    `Colors: ${engColor}, with smooth metallic and matte surfaces`,
+    `Aesthetic: extremely simplified, no realistic details, no textures, just smooth primitive shapes connected together`,
+    `Lighting: soft studio lighting, smooth gradients, no harsh shadows`,
+    `Background: solid very dark navy blue background`,
+    `Do not make it photorealistic. Make it look like a very basic CAD software viewport or a minimalist stylized 3D icon`
+  ].join(", ") + ".";
 }
 
 function json(body: unknown, status = 200) {

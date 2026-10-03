@@ -172,7 +172,7 @@ function PatientDashboard() {
                           <p className="text-sm text-muted-foreground">Data</p>
                           <p className="text-foreground">{formatDate(app.created_at)}</p>
                         </div>
-                        {app.status !== "paid" && app.status !== "cancelled" && (
+                        {app.status !== "paid" && app.status !== "cancelled" && (!app.installments_paid || app.installments_paid === 0) && (
                           <div className="flex items-center justify-end sm:col-span-2 lg:col-span-5 mt-2">
                             <Button
                               variant="outline"
@@ -191,25 +191,6 @@ function PatientDashboard() {
                 ))}
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Form area expanded to full width */}
-        <div className="mt-16 w-full bg-muted/20 border-t py-12 px-4 lg:px-12">
-          <div className="mx-auto max-w-[1400px]">
-            <h2 className="text-2xl font-semibold text-foreground text-center">Nova proposta</h2>
-            <p className="mt-2 text-muted-foreground text-center mb-10">
-              Ajuste o valor, configure as parcelas e selecione sua prótese em nosso catálogo.
-            </p>
-            <Card>
-              <CardContent className="p-6 md:p-8">
-                <ProposalForm
-                  onSuccess={() =>
-                    queryClient.invalidateQueries({ queryKey: ["my-loan-applications"] })
-                  }
-                />
-              </CardContent>
-            </Card>
           </div>
         </div>
       </main>
