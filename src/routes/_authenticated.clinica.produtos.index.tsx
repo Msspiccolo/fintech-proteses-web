@@ -8,6 +8,17 @@ import { formatCurrency } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { PROSTHESIS_MODELS, Prosthesis3DPreview } from "@/components/prosthesis-3d-preview";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+
 export const Route = createFileRoute("/_authenticated/clinica/produtos/")({
   component: CatalogoProdutos,
 });
@@ -25,94 +36,120 @@ interface Product {
 
 function CatalogoProdutos() {
   const [produtos, setProdutos] = useState<Product[]>([]);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editForm, setEditForm] = useState({ nome: "", descricao: "", preco: "" });
 
-  useEffect(() => {
-    async function loadProducts() {
-      let bucketFiles: any[] = [];
+  const loadProducts = async () => {
+    let bucketFiles: any[] = [];
+    
+    try {
+      const { data: rootFiles } = await supabase.storage.from("produtos").list();
+      const { data: publicFiles } = await supabase.storage.from("produtos").list("public");
       
-      try {
-        const { data: rootFiles } = await supabase.storage.from("produtos").list();
-        const { data: publicFiles } = await supabase.storage.from("produtos").list("public");
-        
-        bucketFiles = [
-          ...(rootFiles?.map(f => ({ ...f, path: f.name })) || []),
-          ...(publicFiles?.map(f => ({ ...f, path: `public/${f.name}` })) || [])
-        ].filter(f => f.name && f.name !== ".emptyFolderPlaceholder" && f.name !== "public");
-      } catch (err) {
-        console.error("Erro ao buscar arquivos do bucket:", err);
-      }
-
-      // Fallback images for platform models
-      const fallbackImages: Record<string, string> = {
-        "knee": "https://images.unsplash.com/photo-1598046937895-2fe94f57a3e5?w=800&auto=format&fit=crop&q=60",
-        "hip": "https://images.unsplash.com/photo-1579541592065-ad78e47087bc?w=800&auto=format&fit=crop&q=60",
-        "leg": "https://images.unsplash.com/photo-1581594549595-35f6edc7b762?w=800&auto=format&fit=crop&q=60",
-        "foot": "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=800&auto=format&fit=crop&q=60",
-        "hand": "https://images.unsplash.com/photo-1616423640778-28d1b53229bd?w=800&auto=format&fit=crop&q=60",
-        "arm": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&auto=format&fit=crop&q=60",
-      };
-
-      // Mapeia os produtos da plataforma (PROSTHESIS_MODELS) e tenta achar imagens no bucket para eles
-      const platformProducts: Product[] = PROSTHESIS_MODELS.map(model => {
-        // Tenta achar um arquivo no bucket que contenha o ID (ex: knee) ou nome do produto
-        const matchingFile = bucketFiles.find(f => 
-          f.name.toLowerCase().includes(model.id.toLowerCase()) || 
-          f.name.toLowerCase().includes(model.name.toLowerCase())
-        );
-        
-        let imageUrl = null;
-        if (matchingFile) {
-          imageUrl = supabase.storage.from("produtos").getPublicUrl(matchingFile.path).data.publicUrl;
-        }
-
-        return {
-          id: model.id,
-          nome: model.name,
-          descricao: model.description,
-          preco: model.basePrice,
-          categoria: model.category,
-          imagem: imageUrl,
-          is3DModel: !imageUrl, // Se não tiver imagem no bucket, usa o modelo 3D
-          created_at: new Date().toISOString()
-        };
-      });
-
-      const saved = JSON.parse(localStorage.getItem("clinica_produtos") || "[]");
-      
-      // Para os arquivos do bucket que não deram match com nenhum modelo da plataforma, cria produtos genéricos
-      const matchedPaths = new Set(platformProducts.map(p => {
-        if (!p.imagem) return null;
-        // Pega o final da URL para saber o path
-        const parts = p.imagem.split('/');
-        return parts[parts.length - 1];
-      }).filter(Boolean));
-
-      const unmatchedBucketProducts = bucketFiles
-        .filter(f => !matchedPaths.has(f.name))
-        .map(file => {
-          const { data: publicUrlData } = supabase.storage
-            .from("produtos")
-            .getPublicUrl(file.path);
-            
-          return {
-            id: file.id || file.name,
-            nome: file.name.split('.')[0] || "Produto",
-            descricao: "Produto recuperado do bucket",
-            preco: 0,
-            imagem: publicUrlData.publicUrl,
-            created_at: file.created_at || new Date().toISOString()
-          };
-      });
-
-      // Remove duplicados onde a imagem do localStorage já é a mesma do bucket
-      const savedImageUrls = new Set(saved.map((s: any) => s.imagem));
-      const finalBucketProducts = unmatchedBucketProducts.filter(bp => !savedImageUrls.has(bp.imagem));
-      
-      setProdutos([...saved, ...platformProducts, ...finalBucketProducts]);
+      bucketFiles = [
+        ...(rootFiles?.map(f => ({ ...f, path: f.name })) || []),
+        ...(publicFiles?.map(f => ({ ...f, path: `public/${f.name}` })) || [])
+      ].filter(f => f.name && f.name !== ".emptyFolderPlaceholder" && f.name !== "public");
+    } catch (err) {
+      console.error("Erro ao buscar arquivos do bucket:", err);
     }
 
+    const platformProducts: Product[] = PROSTHESIS_MODELS.map(model => {
+      const matchingFile = bucketFiles.find(f => 
+        f.name.toLowerCase().includes(model.id.toLowerCase()) || 
+        f.name.toLowerCase().includes(model.name.toLowerCase())
+      );
+      
+      let imageUrl = null;
+      if (matchingFile) {
+        imageUrl = supabase.storage.from("produtos").getPublicUrl(matchingFile.path).data.publicUrl;
+      }
+
+      return {
+        id: model.id,
+        nome: model.name,
+        descricao: model.description,
+        preco: model.basePrice,
+        categoria: model.category,
+        imagem: imageUrl,
+        is3DModel: !imageUrl,
+        created_at: new Date().toISOString()
+      };
+    });
+
+    const saved = JSON.parse(localStorage.getItem("clinica_produtos") || "[]");
+    
+    // Check if any platform product has been overridden in saved
+    const savedIds = new Set(saved.map((s: any) => s.id));
+    const finalPlatformProducts = platformProducts.filter(p => !savedIds.has(p.id));
+
+    const matchedPaths = new Set(platformProducts.map(p => {
+      if (!p.imagem) return null;
+      const parts = p.imagem.split('/');
+      return parts[parts.length - 1];
+    }).filter(Boolean));
+
+    const unmatchedBucketProducts = bucketFiles
+      .filter(f => !matchedPaths.has(f.name))
+      .map(file => {
+        const { data: publicUrlData } = supabase.storage
+          .from("produtos")
+          .getPublicUrl(file.path);
+          
+        return {
+          id: file.id || file.name,
+          nome: file.name.split('.')[0] || "Produto",
+          descricao: "Produto recuperado do bucket",
+          preco: 0,
+          imagem: publicUrlData.publicUrl,
+          created_at: file.created_at || new Date().toISOString()
+        };
+    });
+
+    const savedImageUrls = new Set(saved.map((s: any) => s.imagem));
+    const finalBucketProducts = unmatchedBucketProducts.filter(bp => !savedImageUrls.has(bp.imagem));
+    
+    setProdutos([...saved, ...finalPlatformProducts, ...finalBucketProducts]);
+  };
+
+  useEffect(() => {
     loadProducts();
   }, []);
+
+  const handleEditClick = (produto: Product) => {
+    setEditingProduct(produto);
+    setEditForm({
+      nome: produto.nome,
+      descricao: produto.descricao,
+      preco: produto.preco.toString(),
+    });
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingProduct) return;
+    
+    const saved = JSON.parse(localStorage.getItem("clinica_produtos") || "[]");
+    const existingIndex = saved.findIndex((p: any) => p.id === editingProduct.id);
+    
+    const updatedProduct = {
+      ...editingProduct,
+      nome: editForm.nome,
+      descricao: editForm.descricao,
+      preco: Number(editForm.preco),
+    };
+
+    if (existingIndex >= 0) {
+      saved[existingIndex] = updatedProduct;
+    } else {
+      saved.push(updatedProduct);
+    }
+    
+    localStorage.setItem("clinica_produtos", JSON.stringify(saved));
+    toast.success("Produto atualizado com sucesso!");
+    setEditingProduct(null);
+    loadProducts();
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
@@ -178,7 +215,7 @@ function CatalogoProdutos() {
                     </p>
                     <div className="flex items-center justify-between mt-auto pt-4 border-t">
                       <span className="font-bold text-lg text-primary">{formatCurrency(produto.preco)}</span>
-                      <Button variant="outline" size="sm">Editar</Button>
+                      <Button variant="outline" size="sm" onClick={() => handleEditClick(produto)}>Editar</Button>
                     </div>
                   </div>
                 </div>
@@ -186,6 +223,43 @@ function CatalogoProdutos() {
             </div>
           )}
         </div>
+
+        <Dialog open={!!editingProduct} onOpenChange={(open) => !open && setEditingProduct(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar Produto</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Nome do Produto</Label>
+                <Input 
+                  value={editForm.nome} 
+                  onChange={e => setEditForm({...editForm, nome: e.target.value})} 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Descrição</Label>
+                <Input 
+                  value={editForm.descricao} 
+                  onChange={e => setEditForm({...editForm, descricao: e.target.value})} 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Valor (R$)</Label>
+                <Input 
+                  type="number" 
+                  step="0.01" 
+                  value={editForm.preco} 
+                  onChange={e => setEditForm({...editForm, preco: e.target.value})} 
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditingProduct(null)}>Cancelar</Button>
+              <Button onClick={handleSaveEdit}>Salvar Alterações</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
       <Footer />
     </div>

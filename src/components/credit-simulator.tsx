@@ -58,47 +58,12 @@ export function CreditSimulator({
       <div className="space-y-4">
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="prosthesisAmount">Prótese e tratamento</Label>
+            <Label htmlFor="prosthesisAmount">Valor da Prótese</Label>
             <span className="text-lg font-semibold text-primary">{formatCurrency(prosthesisAmount)}</span>
           </div>
-          <Slider
-            id="prosthesisAmount"
-            min={1000}
-            max={100000}
-            step={500}
-            value={[prosthesisAmount]}
-            onValueChange={(value) => setProsthesisAmount(value[0])}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="adaptationAmount">Adaptação</Label>
-            <span className="text-lg font-semibold text-primary">{formatCurrency(adaptationAmount)}</span>
-          </div>
-          <Slider
-            id="adaptationAmount"
-            min={0}
-            max={50000}
-            step={100}
-            value={[adaptationAmount]}
-            onValueChange={(value) => setAdaptationAmount(value[0])}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="maintenanceAmount">Manutenção</Label>
-            <span className="text-lg font-semibold text-primary">{formatCurrency(maintenanceAmount)}</span>
-          </div>
-          <Slider
-            id="maintenanceAmount"
-            min={0}
-            max={50000}
-            step={100}
-            value={[maintenanceAmount]}
-            onValueChange={(value) => setMaintenanceAmount(value[0])}
-          />
+          <p className="text-xs text-muted-foreground">
+            O valor da prótese é definido pela clínica ou baseado no modelo selecionado.
+          </p>
         </div>
 
         <div className="flex justify-between items-center rounded-lg bg-primary/5 p-3">

@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useRouter } from "@tanstack/react-router";
 import {
   Prosthesis3DPreview,
   PROSTHESIS_MODELS,
@@ -40,9 +41,12 @@ type ProposalForm = z.infer<typeof proposalSchema>;
 
 interface ProposalFormProps {
   onSuccess?: () => void;
+  defaultAmount?: number;
+  defaultModel?: ProsthesisModelId | null;
 }
 
-export function ProposalForm({ onSuccess }: ProposalFormProps) {
+export function ProposalForm({ onSuccess, defaultAmount, defaultModel }: ProposalFormProps) {
+  const router = useRouter();
   const createApplication = useServerFn(createLoanApplication);
   const fetchClinics = useServerFn(getApprovedClinics);
 
@@ -53,12 +57,12 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
 
   const clinics = clinicsData?.clinics ?? [];
 
-  const [prosthesisAmount, setProsthesisAmount] = useState(15000);
+  const [prosthesisAmount, setProsthesisAmount] = useState(defaultAmount || 15000);
   const [adaptationAmount, setAdaptationAmount] = useState(0);
   const [maintenanceAmount, setMaintenanceAmount] = useState(0);
-  const [downPayment, setDownPayment] = useState(3000);
+  const [downPayment, setDownPayment] = useState(defaultAmount ? Math.floor(defaultAmount * 0.2) : 3000);
   const [installments, setInstallments] = useState(24);
-  const [selectedModel, setSelectedModel] = useState<ProsthesisModelId | null>(null);
+  const [selectedModel, setSelectedModel] = useState<ProsthesisModelId | null>(defaultModel || null);
   const interestRate = 1.99;
 
   const form = useForm<ProposalForm>({
@@ -107,7 +111,12 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
       toast.success("Solicitação enviada para análise!");
       onSuccess?.();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao enviar proposta");
+      if (err instanceof Error && (err.message.includes("Unauthorized") || err.message.includes("Auth session missing"))) {
+        toast.info("Você precisa estar logado para enviar uma proposta.");
+        router.navigate({ to: "/auth" });
+      } else {
+        toast.error(err instanceof Error ? err.message : "Erro ao enviar proposta");
+      }
     }
   }
 
@@ -117,53 +126,12 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
         <div className="space-y-4">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Prótese e tratamento</Label>
+              <Label>Valor da Prótese</Label>
               <span className="text-lg font-semibold text-primary">{formatCurrency(prosthesisAmount)}</span>
             </div>
-            <Slider
-              min={1000}
-              max={100000}
-              step={500}
-              value={[prosthesisAmount]}
-              onValueChange={(value) => {
-                setProsthesisAmount(value[0]);
-                form.setValue("prosthesisAmount", value[0]);
-              }}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Adaptação</Label>
-              <span className="text-lg font-semibold text-primary">{formatCurrency(adaptationAmount)}</span>
-            </div>
-            <Slider
-              min={0}
-              max={50000}
-              step={100}
-              value={[adaptationAmount]}
-              onValueChange={(value) => {
-                setAdaptationAmount(value[0]);
-                form.setValue("adaptationAmount", value[0]);
-              }}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Manutenção</Label>
-              <span className="text-lg font-semibold text-primary">{formatCurrency(maintenanceAmount)}</span>
-            </div>
-            <Slider
-              min={0}
-              max={50000}
-              step={100}
-              value={[maintenanceAmount]}
-              onValueChange={(value) => {
-                setMaintenanceAmount(value[0]);
-                form.setValue("maintenanceAmount", value[0]);
-              }}
-            />
+            <p className="text-xs text-muted-foreground">
+              O valor da prótese é definido pela clínica ou baseado no modelo selecionado abaixo.
+            </p>
           </div>
 
           <div className="flex justify-between items-center rounded-lg bg-primary/5 p-3">
