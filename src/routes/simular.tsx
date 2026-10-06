@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -12,7 +12,7 @@ import { formatCurrency } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/simular")({
-  validateSearch: (search: Record<string, unknown>) => {
+  validateSearch: (search: Record<string, unknown>): { valor?: number; modelo?: string } => {
     return {
       valor: search.valor ? Number(search.valor) : undefined,
       modelo: search.modelo as string | undefined,
@@ -37,9 +37,16 @@ function SimularPage() {
   
   const [selectedModel, setSelectedModel] = useState<any>(undefined);
   const [loading, setLoading] = useState(true);
+  const [imageFailed, setImageFailed] = useState(false);
+
+  const isPlatformId = (id: unknown) =>
+    typeof id === "string" && PROSTHESIS_MODELS.some((m) => m.id === id);
+  const isUsableImage = (src: unknown) =>
+    typeof src === "string" && src.length > 0 && !src.startsWith("blob:");
 
   // Load product similar to produtos.tsx
-  useState(() => {
+  useEffect(() => {
+    setImageFailed(false);
     const loadProduct = async () => {
       if (!modelo) {
         setLoading(false);
@@ -51,7 +58,13 @@ function SimularPage() {
       const saved = JSON.parse(savedStr);
       const savedModel = saved.find((s: any) => s.id === modelo);
       if (savedModel) {
-        setSelectedModel(savedModel);
+        const hasImage = isUsableImage(savedModel.imagem);
+        setSelectedModel({
+          ...savedModel,
+          imagem: hasImage ? savedModel.imagem : null,
+          // Edited platform products without a valid image keep the 3D preview
+          is3DModel: isPlatformId(savedModel.id) && (savedModel.is3DModel || !hasImage),
+        });
         setLoading(false);
         return;
       }
@@ -66,7 +79,7 @@ function SimularPage() {
           preco: platformModel.basePrice,
           categoria: platformModel.category,
           is3DModel: true,
-          imagem: `/images/prosthetics/${platformModel.id}.jpg`
+          imagem: null,
         });
         setLoading(false);
         return;
@@ -97,7 +110,7 @@ function SimularPage() {
     };
     
     loadProduct();
-  });
+  }, [modelo]);
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -118,17 +131,15 @@ function SimularPage() {
               
               <div className="w-full max-w-3xl mx-auto overflow-hidden rounded-xl border bg-card shadow-lg flex flex-col md:flex-row">
                 <div className="w-full md:w-1/2 bg-muted relative aspect-square flex items-center justify-center">
-                  {selectedModel.is3DModel ? (
-                    <Prosthesis3DPreview modelId={selectedModel.id as any} autoRotate={true} className="h-full w-full" />
-                  ) : selectedModel.imagem ? (
+                  {selectedModel.imagem && !imageFailed && !selectedModel.is3DModel ? (
                     <img 
                       src={selectedModel.imagem} 
                       alt={selectedModel.nome} 
                       className="h-full w-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=600&q=80';
-                      }}
+                      onError={() => setImageFailed(true)}
                     />
+                  ) : isPlatformId(selectedModel.id) ? (
+                    <Prosthesis3DPreview modelId={selectedModel.id as any} autoRotate={true} className="h-full w-full" />
                   ) : (
                     <PackageOpen className="h-16 w-16 text-muted-foreground/30" />
                   )}
