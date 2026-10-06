@@ -369,7 +369,10 @@ function ModelMesh({ id }: { id: ProsthesisModelId }) {
   // Check if the actual GLB file exists in the public/models directory
   useEffect(() => {
     fetch(`/models/${id}.glb`, { method: "HEAD" })
-      .then((res) => setModelExists(res.ok))
+      .then((res) => {
+        const contentType = res.headers.get("content-type");
+        setModelExists(res.ok && contentType !== null && !contentType.includes("text/html"));
+      })
       .catch(() => setModelExists(false));
   }, [id]);
 
