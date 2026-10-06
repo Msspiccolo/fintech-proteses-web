@@ -2,11 +2,8 @@ import { useRef, useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-<<<<<<< HEAD
-=======
 import { useServerFn } from "@tanstack/react-start";
 import { reportInstallmentPayment, confirmInstallmentPayment } from "@/lib/loans.functions";
->>>>>>> cb822e4a48025882199f319cb737f38b9afda680
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -601,11 +598,7 @@ export function PatientApplicationExtras({ app }: { app: any }) {
       <ApplicationTimeline status={app.status} createdAt={app.created_at} reviewedAt={app.reviewed_at} hasDocs={docs.length > 0} />
       <ApplicationDocuments applicationId={app.id} canUpload={app.status === "pending"} />
       <FabricationRequest applicationId={app.id} status={app.status} />
-<<<<<<< HEAD
-      <BoletoPreview app={app} />
-=======
       <PatientInvoices app={app} />
->>>>>>> cb822e4a48025882199f319cb737f38b9afda680
       <ApplicationChat applicationId={app.id} />
     </div>
   );

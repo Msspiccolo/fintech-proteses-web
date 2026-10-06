@@ -108,27 +108,6 @@ export const getClinicLoanApplications = createServerFn({ method: "GET" })
       throw new Error(error.message);
     }
 
-<<<<<<< HEAD
-    // Fetch profiles manually
-    const patientIds = [...new Set(data?.map(app => app.patient_id).filter(Boolean) || [])];
-    if (patientIds.length > 0) {
-      const { data: profiles } = await context.supabase
-        .from("profiles")
-        .select("user_id, full_name")
-        .in("user_id", patientIds);
-        
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
-      
-      const applicationsWithProfiles = data?.map(app => ({
-        ...app,
-        profiles: profileMap.get(app.patient_id) || null
-      }));
-      
-      return { applications: applicationsWithProfiles };
-    }
-
-    return { applications: data ?? [] };
-=======
     if (!data || data.length === 0) {
       return { applications: [] };
     }
@@ -158,7 +137,6 @@ export const getClinicLoanApplications = createServerFn({ method: "GET" })
     }));
 
     return { applications };
->>>>>>> cb822e4a48025882199f319cb737f38b9afda680
   });
 
 export const getAllLoanApplications = createServerFn({ method: "GET" })
@@ -194,10 +172,6 @@ export const getAllLoanApplications = createServerFn({ method: "GET" })
       throw new Error(error.message);
     }
 
-<<<<<<< HEAD
-    // Fetch profiles manually
-    const patientIds = [...new Set(data?.map(app => app.patient_id).filter(Boolean) || [])];
-=======
     if (!data || data.length === 0) {
       return { applications: [] };
     }
@@ -206,26 +180,12 @@ export const getAllLoanApplications = createServerFn({ method: "GET" })
     const patientIds = data.map((d: any) => d.patient_id).filter(Boolean);
     let profilesMap: Record<string, string> = {};
 
->>>>>>> cb822e4a48025882199f319cb737f38b9afda680
     if (patientIds.length > 0) {
       const { data: profiles } = await context.supabase
         .from("profiles")
         .select("user_id, full_name")
         .in("user_id", patientIds);
-<<<<<<< HEAD
-        
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
-      
-      const applicationsWithProfiles = data?.map(app => ({
-        ...app,
-        profiles: profileMap.get(app.patient_id) || null
-      }));
-      
-      return { applications: applicationsWithProfiles };
-    }
 
-    return { applications: data ?? [] };
-=======
       if (profiles) {
         profilesMap = profiles.reduce((acc: Record<string, string>, p: any) => ({ ...acc, [p.user_id]: p.full_name }), {});
       }
@@ -237,7 +197,6 @@ export const getAllLoanApplications = createServerFn({ method: "GET" })
     }));
 
     return { applications };
->>>>>>> cb822e4a48025882199f319cb737f38b9afda680
   });
 
 export const updateLoanApplication = createServerFn({ method: "POST" })

@@ -57,17 +57,10 @@ export function ProposalForm({ onSuccess, defaultAmount, defaultModel }: Proposa
 
   const clinics = clinicsData?.clinics ?? [];
 
-<<<<<<< HEAD
-  const [prosthesisAmount, setProsthesisAmount] = useState(0);
-  const [adaptationAmount, setAdaptationAmount] = useState(0);
-  const [maintenanceAmount, setMaintenanceAmount] = useState(0);
-  const [downPayment, setDownPayment] = useState(0);
-=======
   const [prosthesisAmount, setProsthesisAmount] = useState(defaultAmount || 15000);
   const [adaptationAmount, setAdaptationAmount] = useState(0);
   const [maintenanceAmount, setMaintenanceAmount] = useState(0);
   const [downPayment, setDownPayment] = useState(defaultAmount ? Math.floor(defaultAmount * 0.2) : 3000);
->>>>>>> cb822e4a48025882199f319cb737f38b9afda680
   const [installments, setInstallments] = useState(24);
   const [selectedModel, setSelectedModel] = useState<ProsthesisModelId | null>(defaultModel || null);
   const interestRate = 1.99;
@@ -138,29 +131,6 @@ export function ProposalForm({ onSuccess, defaultAmount, defaultModel }: Proposa
         <div className="space-y-4">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-<<<<<<< HEAD
-              <Label>Valor Estimado do Tratamento</Label>
-              <span className="text-lg font-semibold text-primary">
-                {formatCurrency(prosthesisAmount)}
-              </span>
-            </div>
-            <Slider
-              min={1000}
-              max={100000}
-              step={500}
-              value={[prosthesisAmount]}
-              onValueChange={(value) => {
-                setProsthesisAmount(value[0]);
-                form.setValue("prosthesisAmount", value[0]);
-              }}
-            />
-            <p className="text-xs text-muted-foreground">
-              Este valor é apenas uma estimativa para simulação. O valor final será definido pela clínica.
-            </p>
-          </div>
-
-
-=======
               <Label>Valor da Prótese</Label>
               <span className="text-lg font-semibold text-primary">{formatCurrency(prosthesisAmount)}</span>
             </div>
@@ -173,7 +143,6 @@ export function ProposalForm({ onSuccess, defaultAmount, defaultModel }: Proposa
             <span className="text-sm font-medium">Soma Total Estimada:</span>
             <span className="text-lg font-bold text-primary">{formatCurrency(totalAmount)}</span>
           </div>
->>>>>>> cb822e4a48025882199f319cb737f38b9afda680
         </div>
 
         <div className="space-y-2">

@@ -324,25 +324,17 @@ function ClinicDashboard() {
           historicoBoletos: [],
           mensagens: [],
           applicationId: app.id,
-<<<<<<< HEAD
           createdAt: mockCreatedAt,
           vencimentosPersonalizados: {},
-=======
->>>>>>> cb822e4a48025882199f319cb737f38b9afda680
         };
       }
 
       clientsMap[patientId].propostas += 1;
       clientsMap[patientId].valorTotal += app.requested_amount || 0;
-<<<<<<< HEAD
-      clientsMap[patientId].parcelasPagas += pagas;
-      clientsMap[patientId].parcelasRestantes += restantes;
-      clientsMap[patientId].parcelasAtrasadas += atrasadas;
-=======
       clientsMap[patientId].parcelasPagas += app.installments_paid || 0;
       clientsMap[patientId].parcelasReportadas += Math.max(0, (app.installments_reported || 0) - (app.installments_paid || 0));
       clientsMap[patientId].parcelasRestantes += Math.max(0, (app.installments || 0) - (app.installments_paid || 0));
->>>>>>> cb822e4a48025882199f319cb737f38b9afda680
+      clientsMap[patientId].parcelasAtrasadas += atrasadas;
     });
 
     setClients(Object.values(clientsMap));

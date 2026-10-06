@@ -96,21 +96,6 @@ function SimularPage() {
             </div>
 
             <div className="mx-auto max-w-4xl">
-<<<<<<< HEAD
-              <CreditSimulator
-                prosthesisAmount={prosthesisAmount}
-                setProsthesisAmount={setProsthesisAmount}
-                adaptationAmount={adaptationAmount}
-                setAdaptationAmount={setAdaptationAmount}
-                maintenanceAmount={maintenanceAmount}
-                setMaintenanceAmount={setMaintenanceAmount}
-                downPayment={downPayment}
-                setDownPayment={setDownPayment}
-                installments={installments}
-                setInstallments={setInstallments}
-                isFixedValue={!!selectedModel}
-              />
-=======
               <div className="bg-card border rounded-xl p-6 md:p-8 shadow-sm">
                 <ProposalForm 
                   defaultAmount={valor} 
@@ -118,7 +103,6 @@ function SimularPage() {
                   onSuccess={() => router.navigate({ to: "/dashboard" })} 
                 />
               </div>
->>>>>>> cb822e4a48025882199f319cb737f38b9afda680
 
               <div className="mt-8 rounded-xl border border-border bg-card p-6">
                 <h2 className="text-lg font-semibold text-foreground">Atenção: Valores de Demonstração</h2>

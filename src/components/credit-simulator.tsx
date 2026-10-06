@@ -60,24 +60,6 @@ export function CreditSimulator({
       <div className="space-y-4">
         <div className={isFixedValue ? "space-y-2 border-b border-border pb-4" : "space-y-2"}>
           <div className="flex items-center justify-between">
-<<<<<<< HEAD
-            <Label htmlFor="prosthesisAmount">{isFixedValue ? "Valor do Tratamento" : "Valor Estimado do Tratamento"}</Label>
-            <span className="text-lg font-semibold text-primary">{formatCurrency(prosthesisAmount)}</span>
-          </div>
-          {!isFixedValue && (
-            <Slider
-              id="prosthesisAmount"
-              min={1000}
-              max={100000}
-              step={500}
-              value={[prosthesisAmount]}
-              onValueChange={(value) => setProsthesisAmount(value[0])}
-            />
-          )}
-        </div>
-
-
-=======
             <Label htmlFor="prosthesisAmount">Valor da Prótese</Label>
             <span className="text-lg font-semibold text-primary">{formatCurrency(prosthesisAmount)}</span>
           </div>
@@ -90,7 +72,6 @@ export function CreditSimulator({
           <span className="text-sm font-medium">Soma Total Estimada:</span>
           <span className="text-lg font-bold text-primary">{formatCurrency(amount)}</span>
         </div>
->>>>>>> cb822e4a48025882199f319cb737f38b9afda680
       </div>
 
       <div className="space-y-2">
