@@ -15,6 +15,7 @@ interface CreditSimulatorProps {
   installments: number;
   setInstallments: (value: number) => void;
   interestRate?: number;
+  isFixedValue?: boolean;
 }
 
 export function CreditSimulator({
@@ -29,6 +30,7 @@ export function CreditSimulator({
   installments,
   setInstallments,
   interestRate = 1.99,
+  isFixedValue = false,
 }: CreditSimulatorProps) {
   const amount = prosthesisAmount + adaptationAmount + maintenanceAmount;
   const financedAmount = Math.max(0, amount - downPayment);
@@ -56,7 +58,7 @@ export function CreditSimulator({
   return (
     <div className="space-y-6 rounded-xl border border-border bg-card p-6 shadow-sm">
       <div className="space-y-4">
-        <div className="space-y-2">
+        <div className={isFixedValue ? "space-y-2 border-b border-border pb-4" : "space-y-2"}>
           <div className="flex items-center justify-between">
             <Label htmlFor="prosthesisAmount">Valor da Prótese</Label>
             <span className="text-lg font-semibold text-primary">{formatCurrency(prosthesisAmount)}</span>

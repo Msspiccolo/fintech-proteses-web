@@ -185,6 +185,7 @@ export const getAllLoanApplications = createServerFn({ method: "GET" })
         .from("profiles")
         .select("user_id, full_name")
         .in("user_id", patientIds);
+
       if (profiles) {
         profilesMap = profiles.reduce((acc: Record<string, string>, p: any) => ({ ...acc, [p.user_id]: p.full_name }), {});
       }
@@ -308,6 +309,22 @@ export const deleteLoanApplication = createServerFn({ method: "POST" })
     
     if (application.status === "paid" || application.status === "cancelled") {
       throw new Error("Propostas pagas ou canceladas não podem ser excluídas.");
+    }
+
+    // Attempt deletion with supabaseAdmin (service role) to bypass restrictive client RLS safely
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: deletedRows, error: adminDeleteError } = await supabaseAdmin
+        .from("loan_applications")
+        .delete()
+        .eq("id", data.id)
+        .select("id");
+
+      if (!adminDeleteError && deletedRows && deletedRows.length > 0) {
+        return { ok: true };
+      }
+    } catch {
+      // Fallback to client context if admin client is unavailable
     }
 
     // Attempt deletion with supabaseAdmin (service role) to bypass restrictive client RLS safely

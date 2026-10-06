@@ -90,6 +90,11 @@ export function ProposalForm({ onSuccess, defaultAmount, defaultModel }: Proposa
 
   async function onSubmit(values: ProposalForm) {
     try {
+      if (!selectedModel) {
+        toast.error("Por favor, selecione um modelo de prótese abaixo.");
+        return;
+      }
+
       const selected = PROSTHESIS_MODELS.find((m) => m.id === selectedModel);
       const purposeText = [
         values.purpose,

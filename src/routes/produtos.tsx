@@ -80,6 +80,9 @@ function ProdutosPublico() {
 
       const saved = JSON.parse(localStorage.getItem("clinica_produtos") || "[]");
       
+      const savedIds = new Set(saved.map((s: any) => s.id));
+      const finalPlatformProducts = platformProducts.filter(p => !savedIds.has(p.id));
+
       const matchedPaths = new Set(platformProducts.map(p => {
         if (!p.imagem) return null;
         const parts = p.imagem.split('/');
@@ -106,7 +109,7 @@ function ProdutosPublico() {
       const savedImageUrls = new Set(saved.map((s: any) => s.imagem));
       const finalBucketProducts = unmatchedBucketProducts.filter(bp => !savedImageUrls.has(bp.imagem));
       
-      setProdutos([...platformProducts, ...saved, ...finalBucketProducts]);
+      setProdutos([...finalPlatformProducts, ...saved, ...finalBucketProducts]);
     }
 
     loadProducts();
