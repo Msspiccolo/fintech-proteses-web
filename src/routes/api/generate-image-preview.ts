@@ -35,14 +35,14 @@ export function buildProsthesisPrompt(p: z.infer<typeof Input>) {
   const engColor = colorMap[p.cor] || p.cor;
 
   return [
-    `High-quality photorealistic 3D render of a ${engType} prosthesis`,
-    `Professional product photography style, highly detailed and realistic`,
-    `Material: ${engMat}, showing realistic textures, reflections, and physical properties`,
-    `Color and finish: ${engColor}`,
-    `Aesthetic: sleek, modern, advanced medical technology, premium quality`,
-    `Lighting: dramatic studio lighting, soft box reflections, highlighting the curves and mechanics`,
-    `Background: solid dark studio background to make the product stand out`,
-    `Highly detailed mechanical joints, realistic proportions, and cinematic 8k resolution render`
+    `Minimalist abstract 3D render of a ${engType} prosthesis`,
+    `Made entirely of basic primitive geometric shapes like smooth cylinders, spheres, and simple blocks`,
+    `Very simple, clean, and abstract, resembling a low-poly or primitive 3D model`,
+    `Colors: ${engColor}, with smooth metallic and matte surfaces`,
+    `Aesthetic: extremely simplified, no realistic details, no textures, just smooth primitive shapes connected together`,
+    `Lighting: soft studio lighting, smooth gradients, no harsh shadows`,
+    `Background: solid very dark navy blue background`,
+    `Do not make it photorealistic. Make it look like a very basic CAD software viewport or a minimalist stylized 3D icon`
   ].join(", ") + ".";
 }
 

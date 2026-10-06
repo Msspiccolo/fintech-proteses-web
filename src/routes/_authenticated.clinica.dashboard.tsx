@@ -139,41 +139,36 @@ function ClinicDashboard() {
     }
     
     const client = clients.find(c => c.id === clientId);
-    const parcelaAtual = client ? client.parcelasPagas : 0;
+    if (!client) return;
+    
+    const parcelaAtual = client.parcelasPagas;
     const dateFormatted = new Date(newDueDate + "T12:00:00Z").toLocaleDateString("pt-BR");
+    
+    const updatedClient = {
+      ...client,
+      vencimentosPersonalizados: {
+        ...(client.vencimentosPersonalizados || {}),
+        [parcelaAtual]: newDueDate,
+      },
+      historicoBoletos: [
+        ...(client.historicoBoletos || []),
+        { data: new Date().toISOString(), tipo: `Data de vencimento da parcela ${parcelaAtual + 1} alterada para ${dateFormatted}` },
+      ],
+    };
+    
+    // Save to localStorage so it persists
+    const savedClientDataStr = localStorage.getItem("clinica_vencimentos") || "{}";
+    const savedClientData = JSON.parse(savedClientDataStr);
+    savedClientData[clientId] = updatedClient;
+    localStorage.setItem("clinica_vencimentos", JSON.stringify(savedClientData));
 
     setClients((prev) =>
-      prev.map((c) => {
-        if (c.id === clientId) {
-          return {
-            ...c,
-            vencimentosPersonalizados: {
-              ...(c.vencimentosPersonalizados || {}),
-              [parcelaAtual]: newDueDate,
-            },
-            historicoBoletos: [
-              ...c.historicoBoletos,
-              { data: new Date().toISOString(), tipo: `Data de vencimento da parcela ${parcelaAtual + 1} alterada para ${dateFormatted}` },
-            ],
-          };
-        }
-        return c;
-      }),
+      prev.map((c) => (c.id === clientId ? updatedClient : c))
     );
     toast.success(`A data de vencimento foi atualizada com sucesso!`);
     
     if (selectedClient && selectedClient.id === clientId) {
-      setSelectedClient((prev: any) => ({
-        ...prev,
-        vencimentosPersonalizados: {
-          ...(prev.vencimentosPersonalizados || {}),
-          [parcelaAtual]: newDueDate,
-        },
-        historicoBoletos: [
-          ...prev.historicoBoletos,
-          { data: new Date().toISOString(), tipo: `Data de vencimento da parcela ${parcelaAtual + 1} alterada para ${dateFormatted}` },
-        ],
-      }));
+      setSelectedClient(updatedClient);
     }
 
     setNewDueDate("");
@@ -190,51 +185,51 @@ function ClinicDashboard() {
       date: new Date().toISOString()
     };
 
+    const client = clients.find(c => c.id === selectedClient.id);
+    if (!client) return;
+
+    const updatedClient = {
+      ...client,
+      mensagens: [...(client.mensagens || []), newMsg],
+    };
+
+    const savedClientDataStr = localStorage.getItem("clinica_vencimentos") || "{}";
+    const savedClientData = JSON.parse(savedClientDataStr);
+    savedClientData[selectedClient.id] = updatedClient;
+    localStorage.setItem("clinica_vencimentos", JSON.stringify(savedClientData));
+
     setClients((prev) =>
-      prev.map((c) => {
-        if (c.id === selectedClient.id) {
-          return {
-            ...c,
-            mensagens: [...(c.mensagens || []), newMsg],
-          };
-        }
-        return c;
-      })
+      prev.map((c) => (c.id === selectedClient.id ? updatedClient : c))
     );
 
-    setSelectedClient((prev: any) => ({
-      ...prev,
-      mensagens: [...(prev.mensagens || []), newMsg],
-    }));
-
+    setSelectedClient(updatedClient);
     setNewMessage("");
   }
 
   function handleAction(clientId: number, actionType: string, message: string) {
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return;
+
+    const updatedClient = {
+      ...client,
+      historicoBoletos: [
+        ...client.historicoBoletos,
+        { data: new Date().toISOString(), tipo: actionType },
+      ],
+    };
+
+    const savedClientDataStr = localStorage.getItem("clinica_vencimentos") || "{}";
+    const savedClientData = JSON.parse(savedClientDataStr);
+    savedClientData[clientId] = updatedClient;
+    localStorage.setItem("clinica_vencimentos", JSON.stringify(savedClientData));
+
     setClients((prev) =>
-      prev.map((c) => {
-        if (c.id === clientId) {
-          return {
-            ...c,
-            historicoBoletos: [
-              ...c.historicoBoletos,
-              { data: new Date().toISOString(), tipo: actionType },
-            ],
-          };
-        }
-        return c;
-      }),
+      prev.map((c) => (c.id === clientId ? updatedClient : c))
     );
     toast.success(message);
     
     if (selectedClient && selectedClient.id === clientId) {
-      setSelectedClient((prev: any) => ({
-        ...prev,
-        historicoBoletos: [
-          ...prev.historicoBoletos,
-          { data: new Date().toISOString(), tipo: actionType },
-        ],
-      }));
+      setSelectedClient(updatedClient);
     }
   }
 
@@ -337,7 +332,20 @@ function ClinicDashboard() {
       clientsMap[patientId].parcelasAtrasadas += atrasadas;
     });
 
-    setClients(Object.values(clientsMap));
+    const savedClientDataStr = localStorage.getItem("clinica_vencimentos") || "{}";
+    const savedClientData = JSON.parse(savedClientDataStr);
+
+    setClients(Object.values(clientsMap).map((c: any) => {
+      if (savedClientData[c.id]) {
+        return {
+          ...c,
+          vencimentosPersonalizados: savedClientData[c.id].vencimentosPersonalizados || c.vencimentosPersonalizados,
+          historicoBoletos: savedClientData[c.id].historicoBoletos || c.historicoBoletos,
+          mensagens: savedClientData[c.id].mensagens || c.mensagens,
+        };
+      }
+      return c;
+    }));
 
     // Update selectedClient if it is currently open
     setSelectedClient((prev: any) => {
