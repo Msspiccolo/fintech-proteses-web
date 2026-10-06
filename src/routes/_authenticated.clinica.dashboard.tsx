@@ -134,7 +134,45 @@ function ClinicDashboard() {
       toast.error("Selecione uma data válida.");
       return;
     }
-    handleAction(clientId, `Data de vencimento alterada para ${newDueDate}`, `A data de vencimento foi atualizada com sucesso!`);
+    
+    const client = clients.find(c => c.id === clientId);
+    const parcelaAtual = client ? client.parcelasPagas : 0;
+    const dateFormatted = new Date(newDueDate + "T12:00:00Z").toLocaleDateString("pt-BR");
+
+    setClients((prev) =>
+      prev.map((c) => {
+        if (c.id === clientId) {
+          return {
+            ...c,
+            vencimentosPersonalizados: {
+              ...(c.vencimentosPersonalizados || {}),
+              [parcelaAtual]: newDueDate,
+            },
+            historicoBoletos: [
+              ...c.historicoBoletos,
+              { data: new Date().toISOString(), tipo: `Data de vencimento da parcela ${parcelaAtual + 1} alterada para ${dateFormatted}` },
+            ],
+          };
+        }
+        return c;
+      }),
+    );
+    toast.success(`A data de vencimento foi atualizada com sucesso!`);
+    
+    if (selectedClient && selectedClient.id === clientId) {
+      setSelectedClient((prev: any) => ({
+        ...prev,
+        vencimentosPersonalizados: {
+          ...(prev.vencimentosPersonalizados || {}),
+          [parcelaAtual]: newDueDate,
+        },
+        historicoBoletos: [
+          ...prev.historicoBoletos,
+          { data: new Date().toISOString(), tipo: `Data de vencimento da parcela ${parcelaAtual + 1} alterada para ${dateFormatted}` },
+        ],
+      }));
+    }
+
     setNewDueDate("");
   }
 
@@ -247,6 +285,29 @@ function ClinicDashboard() {
       const patientId = app.patient_id;
       if (!patientId) return;
 
+      const createdDate = new Date(app.created_at);
+      const now = new Date();
+      let monthsElapsed = (now.getFullYear() - createdDate.getFullYear()) * 12 + (now.getMonth() - createdDate.getMonth());
+      
+      let pagas = 0;
+      let atrasadas = 0;
+      let mockCreatedAt = app.created_at;
+
+      // Se foi criado há muito pouco tempo (para visualização no protótipo)
+      if (monthsElapsed === 0 && app.status === "approved" && (app.installments || 0) >= 3) {
+         pagas = 2;
+         const pastDate = new Date(app.created_at);
+         pastDate.setMonth(pastDate.getMonth() - 2);
+         mockCreatedAt = pastDate.toISOString();
+      } else if (app.status === "approved") {
+         pagas = Math.min(monthsElapsed, app.installments || 0);
+      } else if (app.status === "rejected") {
+         pagas = Math.max(0, monthsElapsed - 1);
+         atrasadas = Math.min(1, Math.max(1, monthsElapsed));
+      }
+
+      const restantes = Math.max(0, (app.installments || 0) - pagas);
+
       if (!clientsMap[patientId]) {
         clientsMap[patientId] = {
           id: patientId,
@@ -261,12 +322,16 @@ function ClinicDashboard() {
           historicoBoletos: [],
           mensagens: [],
           applicationId: app.id,
+          createdAt: mockCreatedAt,
+          vencimentosPersonalizados: {},
         };
       }
 
       clientsMap[patientId].propostas += 1;
       clientsMap[patientId].valorTotal += app.requested_amount || 0;
-      clientsMap[patientId].parcelasRestantes += app.installments || 0;
+      clientsMap[patientId].parcelasPagas += pagas;
+      clientsMap[patientId].parcelasRestantes += restantes;
+      clientsMap[patientId].parcelasAtrasadas += atrasadas;
     });
 
     setClients(Object.values(clientsMap));
@@ -280,6 +345,13 @@ function ClinicDashboard() {
       (acc: number, curr: any) => acc + Number(curr.requested_amount || 0),
       0,
     );
+
+    let totalAVencer = 0;
+    approvedApps.forEach((app: any) => {
+      const requestedAmount = Number(app.requested_amount || 0);
+      const installments = Number(app.installments || 1);
+      totalAVencer += requestedAmount / installments;
+    });
 
     // Aggregate by month for chart
     const monthlyAcc: Record<string, number> = {};
@@ -320,7 +392,7 @@ function ClinicDashboard() {
       kpis: {
         clientesCadastrados: uniquePatients,
         valoresASeremPagos: totalRevenue,
-        valoresAVencer: totalRevenue, // For now, we mirror totalRevenue since we lack future installment tracking
+        valoresAVencer: totalAVencer,
         clientesInadimplentes: rejectedApps.length,
         protesesVendidas: approvedApps.length,
       },
@@ -834,6 +906,72 @@ function ClinicDashboard() {
                               Gerar 2ª Via
                             </Button>
                           </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <History className="h-5 w-5 text-primary" />
+                          Histórico de Faturas
+                        </CardTitle>
+                        <CardDescription>
+                          Acompanhe o status de todas as parcelas do financiamento.
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="rounded-md border overflow-hidden">
+                          <table className="w-full text-sm">
+                            <thead className="bg-muted/50 text-muted-foreground text-xs uppercase">
+                              <tr>
+                                <th className="px-4 py-3 font-medium text-left">Parcela</th>
+                                <th className="px-4 py-3 font-medium text-left">Vencimento</th>
+                                <th className="px-4 py-3 font-medium text-left">Valor</th>
+                                <th className="px-4 py-3 font-medium text-left">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y">
+                              {Array.from({ length: selectedClient.parcelasPagas + selectedClient.parcelasRestantes || 1 }).map((_, i) => {
+                                const totalParcelas = selectedClient.parcelasPagas + selectedClient.parcelasRestantes || 1;
+                                const valorParcela = selectedClient.valorTotal / totalParcelas;
+                                
+                                let status = "Pendente";
+                                if (i < selectedClient.parcelasPagas) status = "Pago";
+                                else if (i === selectedClient.parcelasPagas && selectedClient.statusPagamento === "Em atraso") status = "Atrasado";
+                                else if (i === selectedClient.parcelasPagas && selectedClient.statusPagamento === "Inadimplente") status = "Inadimplente";
+
+                                let dataStr = "";
+                                if (selectedClient.vencimentosPersonalizados && selectedClient.vencimentosPersonalizados[i]) {
+                                  dataStr = formatDate(selectedClient.vencimentosPersonalizados[i] + "T12:00:00Z");
+                                } else {
+                                  const dataVencimento = new Date(selectedClient.createdAt || Date.now());
+                                  dataVencimento.setMonth(dataVencimento.getMonth() + i + 1);
+                                  dataStr = formatDate(dataVencimento.toISOString());
+                                }
+
+                                return (
+                                  <tr key={i} className="hover:bg-muted/30">
+                                    <td className="px-4 py-3 font-medium">{i + 1}/{totalParcelas}</td>
+                                    <td className="px-4 py-3">{dataStr}</td>
+                                    <td className="px-4 py-3">{formatCurrency(valorParcela)}</td>
+                                    <td className="px-4 py-3">
+                                      <span
+                                        className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border
+                                        ${status === "Pago" ? "bg-green-100 text-green-800 border-green-200" : ""}
+                                        ${status === "Pendente" ? "bg-secondary text-secondary-foreground border-border" : ""}
+                                        ${status === "Atrasado" ? "bg-yellow-100 text-yellow-800 border-yellow-200" : ""}
+                                        ${status === "Inadimplente" ? "bg-red-100 text-red-800 border-red-200" : ""}
+                                      `}
+                                      >
+                                        {status}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
                         </div>
                       </CardContent>
                     </Card>

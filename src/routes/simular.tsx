@@ -112,6 +112,7 @@ function SimularPage() {
                 setDownPayment={setDownPayment}
                 installments={installments}
                 setInstallments={setInstallments}
+                isFixedValue={!!selectedModel}
               />
 
               <div className="mt-8 rounded-xl border border-border bg-card p-6">

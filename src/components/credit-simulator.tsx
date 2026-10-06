@@ -15,6 +15,7 @@ interface CreditSimulatorProps {
   installments: number;
   setInstallments: (value: number) => void;
   interestRate?: number;
+  isFixedValue?: boolean;
 }
 
 export function CreditSimulator({
@@ -29,6 +30,7 @@ export function CreditSimulator({
   installments,
   setInstallments,
   interestRate = 1.99,
+  isFixedValue = false,
 }: CreditSimulatorProps) {
   const amount = prosthesisAmount + adaptationAmount + maintenanceAmount;
   const financedAmount = Math.max(0, amount - downPayment);
@@ -56,55 +58,24 @@ export function CreditSimulator({
   return (
     <div className="space-y-6 rounded-xl border border-border bg-card p-6 shadow-sm">
       <div className="space-y-4">
-        <div className="space-y-2">
+        <div className={isFixedValue ? "space-y-2 border-b border-border pb-4" : "space-y-2"}>
           <div className="flex items-center justify-between">
-            <Label htmlFor="prosthesisAmount">Prótese e tratamento</Label>
+            <Label htmlFor="prosthesisAmount">{isFixedValue ? "Valor do Tratamento" : "Valor Estimado do Tratamento"}</Label>
             <span className="text-lg font-semibold text-primary">{formatCurrency(prosthesisAmount)}</span>
           </div>
-          <Slider
-            id="prosthesisAmount"
-            min={1000}
-            max={100000}
-            step={500}
-            value={[prosthesisAmount]}
-            onValueChange={(value) => setProsthesisAmount(value[0])}
-          />
+          {!isFixedValue && (
+            <Slider
+              id="prosthesisAmount"
+              min={1000}
+              max={100000}
+              step={500}
+              value={[prosthesisAmount]}
+              onValueChange={(value) => setProsthesisAmount(value[0])}
+            />
+          )}
         </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="adaptationAmount">Adaptação</Label>
-            <span className="text-lg font-semibold text-primary">{formatCurrency(adaptationAmount)}</span>
-          </div>
-          <Slider
-            id="adaptationAmount"
-            min={0}
-            max={50000}
-            step={100}
-            value={[adaptationAmount]}
-            onValueChange={(value) => setAdaptationAmount(value[0])}
-          />
-        </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="maintenanceAmount">Manutenção</Label>
-            <span className="text-lg font-semibold text-primary">{formatCurrency(maintenanceAmount)}</span>
-          </div>
-          <Slider
-            id="maintenanceAmount"
-            min={0}
-            max={50000}
-            step={100}
-            value={[maintenanceAmount]}
-            onValueChange={(value) => setMaintenanceAmount(value[0])}
-          />
-        </div>
-
-        <div className="flex justify-between items-center rounded-lg bg-primary/5 p-3">
-          <span className="text-sm font-medium">Soma Total Estimada:</span>
-          <span className="text-lg font-bold text-primary">{formatCurrency(amount)}</span>
-        </div>
       </div>
 
       <div className="space-y-2">
