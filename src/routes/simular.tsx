@@ -3,7 +3,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
-import { CreditSimulator } from "@/components/credit-simulator";
+import { ProposalForm } from "@/components/proposal-form";
+import { useRouter } from "@tanstack/react-router";
 import { ProsthesisGenerator } from "@/components/prosthesis-generator";
 import { PROSTHESIS_MODELS, Prosthesis3DPreview } from "@/components/prosthesis-3d-preview";
 import { ArrowRight, CheckCircle, ChevronDown } from "lucide-react";
@@ -18,7 +19,7 @@ export const Route = createFileRoute("/simular")({
   },
   head: () => ({
     meta: [
-      { title: "Simular e Criar — PrótesePay" },
+      { title: "Simular e Criar — ProMobi" },
       {
         name: "description",
         content:
@@ -31,14 +32,8 @@ export const Route = createFileRoute("/simular")({
 
 function SimularPage() {
   const { valor, modelo } = Route.useSearch();
-  
+  const router = useRouter();
   const selectedModel = modelo ? PROSTHESIS_MODELS.find(m => m.id === modelo) : undefined;
-  
-  const [prosthesisAmount, setProsthesisAmount] = useState(valor || 15000);
-  const [adaptationAmount, setAdaptationAmount] = useState(0);
-  const [maintenanceAmount, setMaintenanceAmount] = useState(0);
-  const [downPayment, setDownPayment] = useState(valor ? Math.floor(valor * 0.2) : 3000);
-  const [installments, setInstallments] = useState(24);
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -94,13 +89,14 @@ function SimularPage() {
           {/* Seção 2: Simulação de Crédito */}
           <div>
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-foreground md:text-4xl">2. Simule seu crédito</h1>
+              <h1 className="text-3xl font-bold text-foreground md:text-4xl">2. Simule e solicite seu crédito</h1>
               <p className="mt-3 text-muted-foreground max-w-2xl mx-auto">
-                Ajuste o valor do tratamento, a entrada e o número de parcelas. Veja o resultado em tempo real.
+                Ajuste a entrada e o número de parcelas, selecione uma clínica parceira e envie sua proposta para análise.
               </p>
             </div>
 
             <div className="mx-auto max-w-4xl">
+<<<<<<< HEAD
               <CreditSimulator
                 prosthesisAmount={prosthesisAmount}
                 setProsthesisAmount={setProsthesisAmount}
@@ -114,6 +110,15 @@ function SimularPage() {
                 setInstallments={setInstallments}
                 isFixedValue={!!selectedModel}
               />
+=======
+              <div className="bg-card border rounded-xl p-6 md:p-8 shadow-sm">
+                <ProposalForm 
+                  defaultAmount={valor} 
+                  defaultModel={modelo as any} 
+                  onSuccess={() => router.navigate({ to: "/dashboard" })} 
+                />
+              </div>
+>>>>>>> cb822e4a48025882199f319cb737f38b9afda680
 
               <div className="mt-8 rounded-xl border border-border bg-card p-6">
                 <h2 className="text-lg font-semibold text-foreground">Atenção: Valores de Demonstração</h2>
@@ -131,13 +136,6 @@ function SimularPage() {
                     <span>As condições reais e o CET serão calculados pelo parceiro financeiro após a análise.</span>
                   </li>
                 </ul>
-                <div className="mt-6">
-                  <Link to="/auth">
-                    <Button size="lg" className="w-full gap-2">
-                      Enviar para análise <ArrowRight size={18} />
-                    </Button>
-                  </Link>
-                </div>
               </div>
             </div>
           </div>

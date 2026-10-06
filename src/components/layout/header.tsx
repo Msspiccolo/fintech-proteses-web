@@ -57,9 +57,7 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
         <Link to="/" className="flex items-center gap-2">
-          <span className="text-xl font-bold tracking-tight text-foreground">
-            Prótese<span className="text-primary">Pay</span>
-          </span>
+          <img src="/promobi-logo.png?v=2" alt="ProMobi" className="h-10 w-auto" />
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
@@ -81,12 +79,14 @@ export function Header() {
               >
                 Como funciona
               </Link>
-              <Link
-                to="/clinicas-parceiras"
-                className="text-sm font-medium text-muted-foreground hover:text-foreground"
-              >
-                Clínicas parceiras
-              </Link>
+              {user && (
+                <Link
+                  to="/clinicas-parceiras"
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground"
+                >
+                  Clínicas parceiras
+                </Link>
+              )}
               <Link
                 to="/produtos"
                 className="text-sm font-medium text-muted-foreground hover:text-foreground flex items-center gap-1"
@@ -186,13 +186,15 @@ export function Header() {
                 >
                   Como funciona?
                 </Link>
-                <Link
-                  to="/clinicas-parceiras"
-                  className="text-sm font-medium text-muted-foreground"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  Clínicas parceiras
-                </Link>
+                {user && (
+                  <Link
+                    to="/clinicas-parceiras"
+                    className="text-sm font-medium text-muted-foreground"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Clínicas parceiras
+                  </Link>
+                )}
                 <Link
                   to="/produtos"
                   className="text-sm font-medium text-muted-foreground flex items-center gap-2"

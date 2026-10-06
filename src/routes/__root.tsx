@@ -79,14 +79,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "ProtesePay — Financiamento de Próteses Ortopédicas" },
+      { title: "ProMobi — Financiamento de Próteses Ortopédicas" },
       {
         name: "description",
         content:
           "Simule e financie próteses ortopédicas com parcelas acessíveis. Crédito rápido para pacientes e clínicas parceiras.",
       },
-      { name: "author", content: "ProtesePay" },
-      { property: "og:title", content: "ProtesePay — Financiamento de Próteses Ortopédicas" },
+      { name: "author", content: "ProMobi" },
+      { property: "og:title", content: "ProMobi — Financiamento de Próteses Ortopédicas" },
       {
         property: "og:description",
         content:

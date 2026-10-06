@@ -1,4 +1,4 @@
--- Fix permissions for delete_own_account so it becomes visible to the API
+﻿-- Fix permissions for delete_own_account so it becomes visible to the API
 create or replace function public.delete_own_account()
 returns void
 language plpgsql

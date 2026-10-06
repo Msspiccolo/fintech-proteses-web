@@ -199,6 +199,58 @@ function LegMesh() {
   );
 }
 
+function SportLegMesh() {
+  const bladeShape = useMemo(() => {
+    const s = new THREE.Shape();
+    // Top connection
+    s.moveTo(-0.1, 0.8);
+    // Outer curve down and back
+    s.bezierCurveTo(-0.1, 0.5, -0.5, 0.2, -0.4, -0.4);
+    // Bottom curve to front
+    s.bezierCurveTo(-0.3, -0.9, 0.1, -1.0, 0.5, -0.9);
+    // Tip thickness
+    s.lineTo(0.5, -0.8);
+    // Inner curve back
+    s.bezierCurveTo(0.2, -0.9, -0.15, -0.8, -0.25, -0.4);
+    // Inner curve up
+    s.bezierCurveTo(-0.35, 0.2, 0.05, 0.5, 0.1, 0.8);
+    return s;
+  }, []);
+
+  return (
+    <group>
+      {/* Socket */}
+      <mesh castShadow position={[0, 0.9, 0]}>
+        <cylinderGeometry args={[0.25, 0.2, 0.4, 32]} />
+        <meshStandardMaterial color={POLYMER} roughness={0.5} />
+      </mesh>
+      
+      {/* Blade */}
+      <mesh castShadow position={[0, 0, -0.075]}>
+        <extrudeGeometry
+          args={[
+            bladeShape,
+            {
+              depth: 0.15,
+              bevelEnabled: true,
+              bevelThickness: 0.02,
+              bevelSize: 0.02,
+              bevelSegments: 3,
+            },
+          ]}
+        />
+        <meshStandardMaterial color="#2d2d2d" metalness={0.6} roughness={0.4} />
+      </mesh>
+      
+      {/* Accent strip */}
+      <mesh castShadow position={[0, 0.72, 0]}>
+        <cylinderGeometry args={[0.21, 0.21, 0.05, 32]} />
+        <meshStandardMaterial color={ACCENT} metalness={0.5} roughness={0.4} />
+      </mesh>
+    </group>
+  );
+}
+
 function FootMesh() {
   const shape = useMemo(() => {
     const s = new THREE.Shape();
@@ -340,11 +392,12 @@ function ModelMesh({ id }: { id: ProsthesisModelId }) {
     case "hip_3":
       return <HipMesh />;
     case "leg":
-    case "leg_2":
     case "leg_3":
       return <LegMesh />;
-    case "foot":
+    case "leg_2":
     case "foot_2":
+      return <SportLegMesh />;
+    case "foot":
       return <FootMesh />;
     case "hand":
     case "hand_2":

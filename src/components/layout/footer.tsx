@@ -27,11 +27,7 @@ export function Footer() {
                   Como funciona?
                 </Link>
               </li>
-              <li>
-                <Link to="/clinicas-parceiras" className="hover:text-foreground">
-                  Clínicas parceiras
-                </Link>
-              </li>
+
               <li>
                 <Link to="/seja-parceiro" className="hover:text-foreground">
                   Seja Parceiro de Crédito
@@ -53,7 +49,7 @@ export function Footer() {
         </div>
 
         <div className="mt-8 border-t border-border pt-8 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} PrótesePay. Todos os direitos reservados.
+          © {new Date().getFullYear()} ProMobi. Todos os direitos reservados.
         </div>
       </div>
     </footer>

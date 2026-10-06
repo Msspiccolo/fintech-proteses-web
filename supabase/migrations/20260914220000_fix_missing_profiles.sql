@@ -1,4 +1,4 @@
--- Função para criar automaticamente um profile e user_role quando um usuário for criado no auth.users
+﻿-- FunÃ§Ã£o para criar automaticamente um profile e user_role quando um usuÃ¡rio for criado no auth.users
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
@@ -23,7 +23,7 @@ begin
 end;
 $$ language plpgsql security definer;
 
--- Remove o trigger se já existir para recriar
+-- Remove o trigger se jÃ¡ existir para recriar
 drop trigger if exists on_auth_user_created on auth.users;
 
 -- Cria o trigger na tabela auth.users
@@ -31,7 +31,7 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
--- Sincroniza usuários antigos que possam estar faltando na tabela profiles
+-- Sincroniza usuÃ¡rios antigos que possam estar faltando na tabela profiles
 insert into public.profiles (user_id, full_name, document, phone, role)
 select 
   id,
@@ -43,7 +43,7 @@ from auth.users
 where id not in (select user_id from public.profiles)
 on conflict (user_id) do nothing;
 
--- Sincroniza usuários antigos que possam estar faltando na tabela user_roles
+-- Sincroniza usuÃ¡rios antigos que possam estar faltando na tabela user_roles
 insert into public.user_roles (user_id, role)
 select 
   id,

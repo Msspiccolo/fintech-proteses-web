@@ -108,6 +108,7 @@ export const getClinicLoanApplications = createServerFn({ method: "GET" })
       throw new Error(error.message);
     }
 
+<<<<<<< HEAD
     // Fetch profiles manually
     const patientIds = [...new Set(data?.map(app => app.patient_id).filter(Boolean) || [])];
     if (patientIds.length > 0) {
@@ -127,6 +128,37 @@ export const getClinicLoanApplications = createServerFn({ method: "GET" })
     }
 
     return { applications: data ?? [] };
+=======
+    if (!data || data.length === 0) {
+      return { applications: [] };
+    }
+
+    // Fetch profiles separately using admin client to bypass RLS
+    const patientIds = data.map((d: any) => d.patient_id).filter(Boolean);
+    let profilesMap: Record<string, string> = {};
+
+    if (patientIds.length > 0) {
+      const { data: profiles, error: profErr } = await context.supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", patientIds);
+
+      console.log("[Loans] patientIds:", patientIds);
+      console.log("[Loans] profiles fetched:", profiles);
+      console.log("[Loans] profile error:", profErr);
+
+      if (profiles) {
+        profilesMap = profiles.reduce((acc: Record<string, string>, p: any) => ({ ...acc, [p.user_id]: p.full_name }), {});
+      }
+    }
+
+    const applications = data.map((app: any) => ({
+      ...app,
+      profiles: { full_name: profilesMap[app.patient_id] || "Paciente Protegido" }
+    }));
+
+    return { applications };
+>>>>>>> cb822e4a48025882199f319cb737f38b9afda680
   });
 
 export const getAllLoanApplications = createServerFn({ method: "GET" })
@@ -162,13 +194,25 @@ export const getAllLoanApplications = createServerFn({ method: "GET" })
       throw new Error(error.message);
     }
 
+<<<<<<< HEAD
     // Fetch profiles manually
     const patientIds = [...new Set(data?.map(app => app.patient_id).filter(Boolean) || [])];
+=======
+    if (!data || data.length === 0) {
+      return { applications: [] };
+    }
+
+    // Fetch profiles separately to avoid FK issues
+    const patientIds = data.map((d: any) => d.patient_id).filter(Boolean);
+    let profilesMap: Record<string, string> = {};
+
+>>>>>>> cb822e4a48025882199f319cb737f38b9afda680
     if (patientIds.length > 0) {
       const { data: profiles } = await context.supabase
         .from("profiles")
         .select("user_id, full_name")
         .in("user_id", patientIds);
+<<<<<<< HEAD
         
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
       
@@ -181,6 +225,19 @@ export const getAllLoanApplications = createServerFn({ method: "GET" })
     }
 
     return { applications: data ?? [] };
+=======
+      if (profiles) {
+        profilesMap = profiles.reduce((acc: Record<string, string>, p: any) => ({ ...acc, [p.user_id]: p.full_name }), {});
+      }
+    }
+
+    const applications = data.map((app: any) => ({
+      ...app,
+      profiles: { full_name: profilesMap[app.patient_id] || "Paciente Protegido" }
+    }));
+
+    return { applications };
+>>>>>>> cb822e4a48025882199f319cb737f38b9afda680
   });
 
 export const updateLoanApplication = createServerFn({ method: "POST" })
@@ -291,8 +348,24 @@ export const deleteLoanApplication = createServerFn({ method: "POST" })
       throw new Error("Unauthorized: you can only delete your own proposals.");
     }
     
-    if (application.status !== "pending") {
-      throw new Error("Only pending proposals can be deleted.");
+    if (application.status === "paid" || application.status === "cancelled") {
+      throw new Error("Propostas pagas ou canceladas não podem ser excluídas.");
+    }
+
+    // Attempt deletion with supabaseAdmin (service role) to bypass restrictive client RLS safely
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: deletedRows, error: adminDeleteError } = await supabaseAdmin
+        .from("loan_applications")
+        .delete()
+        .eq("id", data.id)
+        .select("id");
+
+      if (!adminDeleteError && deletedRows && deletedRows.length > 0) {
+        return { ok: true };
+      }
+    } catch {
+      // Fallback to client context if admin client is unavailable
     }
 
     // Attempt deletion with supabaseAdmin (service role) to bypass restrictive client RLS safely
@@ -324,4 +397,88 @@ export const deleteLoanApplication = createServerFn({ method: "POST" })
     }
 
     return { ok: true };
+  });
+
+export const confirmInstallmentPayment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { data: profile } = await context.supabase
+      .from("profiles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+
+    const { data: roles } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId);
+
+    const metaRole = (context.claims?.user_metadata as any)?.role;
+    const isAdmin =
+      roles?.some((r: any) => r.role === "admin") ||
+      profile?.role === "admin" ||
+      metaRole === "admin";
+      
+    const isClinic =
+      roles?.some((r: any) => r.role === "clinic") ||
+      profile?.role === "clinic" ||
+      metaRole === "clinic";
+      
+    if (!isAdmin && !isClinic) {
+      throw new Error("Forbidden");
+    }
+
+    const { error: rpcError } = await context.supabase.rpc("confirm_installment" as any, {
+      application_id: data.id,
+      clinic_user_id: context.userId
+    });
+
+    if (rpcError) {
+      throw new Error(rpcError.message);
+    }
+
+    return { success: true };
+  });
+
+export const reportInstallmentPayment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: { id: string }) => d)
+  .handler(async ({ data: { id }, context }) => {
+    // Fetch current installments_reported
+    const { data: application, error: fetchError } = await context.supabase
+      .from("loan_applications")
+      .select("installments_reported, installments_paid, patient_id")
+      .eq("id", id)
+      .single();
+
+    if (fetchError || !application) {
+      throw new Error(fetchError?.message || "Application not found");
+    }
+
+    const isAdminOrClinic = async () => {
+      const { data: roles } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
+      if (roles?.some((r: any) => r.role === "admin" || r.role === "clinic")) return true;
+      return false;
+    };
+
+    if (application.patient_id !== context.userId && !(await isAdminOrClinic())) {
+      throw new Error("Forbidden");
+    }
+
+    const currentReported = Math.max(
+      application.installments_reported || 0,
+      application.installments_paid || 0
+    );
+
+    const { error: updateError } = await context.supabase
+      .from("loan_applications")
+      .update({ installments_reported: currentReported + 1 })
+      .eq("id", id);
+
+    if (updateError) {
+      throw new Error(updateError.message);
+    }
+
+    return { success: true };
   });

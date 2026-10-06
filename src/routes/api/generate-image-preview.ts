@@ -8,18 +8,42 @@ const Input = z.object({
   tamanho: z.string().min(1).max(50).optional(),
 });
 
-// Template parametrizável do prompt
 export function buildProsthesisPrompt(p: z.infer<typeof Input>) {
+  const typeMap: Record<string, string> = {
+    "de braço transradial": "transradial arm",
+    "de perna transtibial": "transtibial leg",
+    "de mão biônica": "bionic hand",
+    "de pé dinâmico": "dynamic foot",
+    "de joelho modular": "modular knee",
+    "de quadril": "hip"
+  };
+  const matMap: Record<string, string> = {
+    "fibra de carbono": "carbon fiber",
+    "titânio aeroespacial": "aerospace titanium",
+    "silicone realista": "realistic medical silicone",
+    "polímero impresso em 3D": "3D printed high-grade polymer"
+  };
+  const colorMap: Record<string, string> = {
+    "preto fosco com detalhes prateados": "matte black with silver details",
+    "branco perolado com detalhes em LED azul": "pearl white with blue LED accents",
+    "tom de pele realista": "realistic human skin tone",
+    "cromado polido": "highly polished chrome"
+  };
+
+  const engType = typeMap[p.tipo] || p.tipo;
+  const engMat = matMap[p.material] || p.material;
+  const engColor = colorMap[p.cor] || p.cor;
+
   return [
-    `Renderização 3D fotorrealista de uma prótese ${p.tipo}`,
-    `material ${p.material}`,
-    `cor ${p.cor}`,
-    p.tamanho ? `tamanho ${p.tamanho}` : null,
-    "vista em ângulo 3/4, fundo branco neutro, iluminação de estúdio profissional, estilo catálogo médico",
-    "apenas o dispositivo isolado, sem pessoas, sem pele, sem texto",
-  ]
-    .filter(Boolean)
-    .join(", ") + ".";
+    `Minimalist abstract 3D render of a ${engType} prosthesis`,
+    `Made entirely of basic primitive geometric shapes like smooth cylinders, spheres, and simple blocks`,
+    `Very simple, clean, and abstract, resembling a low-poly or primitive 3D model`,
+    `Colors: ${engColor}, with smooth metallic and matte surfaces`,
+    `Aesthetic: extremely simplified, no realistic details, no textures, just smooth primitive shapes connected together`,
+    `Lighting: soft studio lighting, smooth gradients, no harsh shadows`,
+    `Background: solid very dark navy blue background`,
+    `Do not make it photorealistic. Make it look like a very basic CAD software viewport or a minimalist stylized 3D icon`
+  ].join(", ") + ".";
 }
 
 function json(body: unknown, status = 200) {
@@ -33,9 +57,9 @@ export const Route = createFileRoute("/api/generate-image-preview")({
   server: {
     handlers: {
       POST: async ({ request }: { request: Request }) => {
-        const apiKey = process.env.OPENAI_API_KEY;
+        const apiKey = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY;
         if (!apiKey) {
-          return json({ error: "A chave da OpenAI ainda não foi configurada." }, 500);
+          return json({ error: "A chave da API do Gemini não foi configurada." }, 500);
         }
 
         let params: z.infer<typeof Input>;
@@ -47,41 +71,35 @@ export const Route = createFileRoute("/api/generate-image-preview")({
 
         const prompt = buildProsthesisPrompt(params);
 
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image:generateContent?key=${apiKey}`;
+        
         try {
-          const res = await fetch("https://api.openai.com/v1/images/generations", {
+          const geminiResponse = await fetch(url, {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${apiKey}`,
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              model: "gpt-image-1",
-              prompt,
-              n: 1,
-              size: "1024x1024",
-              quality: "medium",
-            }),
+              contents: [{ parts: [{ text: prompt }] }]
+            })
           });
-
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok) {
-            console.error("OpenAI error", res.status, data);
-            const msg =
-              res.status === 401
-                ? "Chave da OpenAI inválida."
-                : res.status === 429
-                  ? "Limite da OpenAI atingido. Tente novamente em instantes."
-                  : data?.error?.message || `Falha na OpenAI (${res.status}).`;
-            return json({ error: msg }, res.status);
+          
+          if (!geminiResponse.ok) {
+            const errData = await geminiResponse.json();
+            return json({ error: errData.error?.message || "Erro na API Gemini" }, 500);
           }
-
-          const b64 = data?.data?.[0]?.b64_json;
-          if (!b64) return json({ error: "A OpenAI não retornou imagem." }, 502);
-
-          return json({ imageUrl: `data:image/png;base64,${b64}`, prompt });
+          
+          const data = await geminiResponse.json();
+          const part = data.candidates?.[0]?.content?.parts?.[0];
+          
+          if (part?.inlineData) {
+            const b64 = part.inlineData.data;
+            const mime = part.inlineData.mimeType || "image/jpeg";
+            const imageUrl = `data:${mime};base64,${b64}`;
+            return json({ imageUrl, prompt });
+          } else {
+            return json({ error: "A API não retornou uma imagem." }, 500);
+          }
         } catch (e) {
-          console.error(e);
-          return json({ error: "Não foi possível conectar à OpenAI." }, 502);
+          return json({ error: "Erro ao gerar a imagem 3D com IA." }, 500);
         }
       },
     },

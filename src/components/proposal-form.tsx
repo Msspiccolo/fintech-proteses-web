@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useRouter } from "@tanstack/react-router";
 import {
   Prosthesis3DPreview,
   PROSTHESIS_MODELS,
@@ -40,9 +41,12 @@ type ProposalForm = z.infer<typeof proposalSchema>;
 
 interface ProposalFormProps {
   onSuccess?: () => void;
+  defaultAmount?: number;
+  defaultModel?: ProsthesisModelId | null;
 }
 
-export function ProposalForm({ onSuccess }: ProposalFormProps) {
+export function ProposalForm({ onSuccess, defaultAmount, defaultModel }: ProposalFormProps) {
+  const router = useRouter();
   const createApplication = useServerFn(createLoanApplication);
   const fetchClinics = useServerFn(getApprovedClinics);
 
@@ -53,12 +57,19 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
 
   const clinics = clinicsData?.clinics ?? [];
 
+<<<<<<< HEAD
   const [prosthesisAmount, setProsthesisAmount] = useState(0);
   const [adaptationAmount, setAdaptationAmount] = useState(0);
   const [maintenanceAmount, setMaintenanceAmount] = useState(0);
   const [downPayment, setDownPayment] = useState(0);
+=======
+  const [prosthesisAmount, setProsthesisAmount] = useState(defaultAmount || 15000);
+  const [adaptationAmount, setAdaptationAmount] = useState(0);
+  const [maintenanceAmount, setMaintenanceAmount] = useState(0);
+  const [downPayment, setDownPayment] = useState(defaultAmount ? Math.floor(defaultAmount * 0.2) : 3000);
+>>>>>>> cb822e4a48025882199f319cb737f38b9afda680
   const [installments, setInstallments] = useState(24);
-  const [selectedModel, setSelectedModel] = useState<ProsthesisModelId | null>(null);
+  const [selectedModel, setSelectedModel] = useState<ProsthesisModelId | null>(defaultModel || null);
   const interestRate = 1.99;
 
   const form = useForm<ProposalForm>({
@@ -112,7 +123,12 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
       toast.success("Solicitação enviada para análise!");
       onSuccess?.();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao enviar proposta");
+      if (err instanceof Error && (err.message.includes("Unauthorized") || err.message.includes("Auth session missing"))) {
+        toast.info("Você precisa estar logado para enviar uma proposta.");
+        router.navigate({ to: "/auth" });
+      } else {
+        toast.error(err instanceof Error ? err.message : "Erro ao enviar proposta");
+      }
     }
   }
 
@@ -122,6 +138,7 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
         <div className="space-y-4">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
+<<<<<<< HEAD
               <Label>Valor Estimado do Tratamento</Label>
               <span className="text-lg font-semibold text-primary">
                 {formatCurrency(prosthesisAmount)}
@@ -143,6 +160,20 @@ export function ProposalForm({ onSuccess }: ProposalFormProps) {
           </div>
 
 
+=======
+              <Label>Valor da Prótese</Label>
+              <span className="text-lg font-semibold text-primary">{formatCurrency(prosthesisAmount)}</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              O valor da prótese é definido pela clínica ou baseado no modelo selecionado abaixo.
+            </p>
+          </div>
+
+          <div className="flex justify-between items-center rounded-lg bg-primary/5 p-3">
+            <span className="text-sm font-medium">Soma Total Estimada:</span>
+            <span className="text-lg font-bold text-primary">{formatCurrency(totalAmount)}</span>
+          </div>
+>>>>>>> cb822e4a48025882199f319cb737f38b9afda680
         </div>
 
         <div className="space-y-2">

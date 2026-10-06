@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { getAllLoanApplications, updateLoanApplication, updateFabricationOrder } from "@/lib/loans.functions";
+import { getAllLoanApplications, updateLoanApplication, updateFabricationOrder, confirmInstallmentPayment } from "@/lib/loans.functions";
 import { getAllClinicsForAdmin, updateClinicStatus, deleteClinicByAdmin } from "@/lib/clinics.functions";
 import {
   getAllUsersForAdmin,
@@ -33,7 +33,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/_authenticated/admin/dashboard")({
   head: () => ({
     meta: [
-      { title: "Painel Administrativo — ProtesePay" },
+      { title: "Painel Administrativo — ProMobi" },
       {
         name: "description",
         content: "Gerencie e aprove propostas de financiamento de próteses ortopédicas.",
@@ -63,6 +63,18 @@ function AdminDashboard() {
       refetch();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao atualizar status");
+    }
+  }
+
+  const confirmInstallment = useServerFn(confirmInstallmentPayment);
+
+  async function handleConfirmInstallment(id: string) {
+    try {
+      await confirmInstallment({ data: { id } });
+      toast.success("Pagamento de parcela confirmado!");
+      refetch();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao confirmar pagamento");
     }
   }
 
@@ -242,7 +254,6 @@ function AdminDashboard() {
       approvedValue: stats.approvedValue,
       patientsCount: stats.uniquePatients.size,
     }))
-    .filter(c => c.count > 0)
     .sort((a, b) => b.totalValue - a.totalValue);
 
   const totalProposalsValue = clinicStatsArray.reduce((acc, c) => acc + c.totalValue, 0);
@@ -529,6 +540,21 @@ function AdminDashboard() {
                                 >
                                   Reprovar
                                 </Button>
+                              </div>
+                            )}
+                            {(app.status === "approved" || app.status === "paid") && (
+                              <div className="flex flex-col gap-1 items-end">
+                                <p className="text-xs text-muted-foreground">
+                                  Parcelas pagas: {app.installments_paid || 0}/{app.installments || 1}
+                                </p>
+                                {(app.installments_paid || 0) < (app.installments || 1) && (
+                                  <Button size="sm" variant="outline" onClick={() => handleConfirmInstallment(app.id)}>
+                                    Confirmar Parcela
+                                  </Button>
+                                )}
+                                {(app.installments_paid || 0) >= (app.installments || 1) && (
+                                  <span className="text-xs font-medium text-green-600">Totalmente Pago</span>
+                                )}
                               </div>
                             )}
                           </div>

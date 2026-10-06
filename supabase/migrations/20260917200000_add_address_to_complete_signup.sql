@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION public.complete_signup(
+﻿CREATE OR REPLACE FUNCTION public.complete_signup(
   _full_name text,
   _document text,
   _phone text,
