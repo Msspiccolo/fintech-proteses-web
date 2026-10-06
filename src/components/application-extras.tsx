@@ -364,9 +364,19 @@ export function PatientInvoices({ app, isClinicView }: { app: any, isClinicView?
   
   // Calculate due dates starting 1 month after approval
   const approvalDate = new Date(app.reviewed_at || app.created_at);
+  
+  // Read custom dates from localStorage if any
+  const savedClientDataStr = typeof window !== 'undefined' ? localStorage.getItem("clinica_vencimentos") || "{}" : "{}";
+  const savedClientData = JSON.parse(savedClientDataStr);
+  const customDueDates = savedClientData[app.patient_id]?.vencimentosPersonalizados || {};
+
   const invoices = Array.from({ length: totalInstallments }).map((_, i) => {
-    const dueDate = new Date(approvalDate);
+    let dueDate = new Date(approvalDate);
     dueDate.setMonth(dueDate.getMonth() + i + 1);
+    
+    if (customDueDates[i]) {
+      dueDate = new Date(customDueDates[i] + "T12:00:00Z");
+    }
     
     let status = "Futura";
     if (i < paidInstallments) {
