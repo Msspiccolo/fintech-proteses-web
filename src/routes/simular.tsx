@@ -7,8 +7,9 @@ import { ProposalForm } from "@/components/proposal-form";
 import { useRouter } from "@tanstack/react-router";
 import { ProsthesisGenerator } from "@/components/prosthesis-generator";
 import { PROSTHESIS_MODELS, Prosthesis3DPreview } from "@/components/prosthesis-3d-preview";
-import { ArrowRight, CheckCircle, ChevronDown } from "lucide-react";
+import { ArrowRight, CheckCircle, ChevronDown, PackageOpen } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/simular")({
   validateSearch: (search: Record<string, unknown>) => {
@@ -33,7 +34,70 @@ export const Route = createFileRoute("/simular")({
 function SimularPage() {
   const { valor, modelo } = Route.useSearch();
   const router = useRouter();
-  const selectedModel = modelo ? PROSTHESIS_MODELS.find(m => m.id === modelo) : undefined;
+  
+  const [selectedModel, setSelectedModel] = useState<any>(undefined);
+  const [loading, setLoading] = useState(true);
+
+  // Load product similar to produtos.tsx
+  useState(() => {
+    const loadProduct = async () => {
+      if (!modelo) {
+        setLoading(false);
+        return;
+      }
+
+      // Check localStorage first
+      const savedStr = typeof window !== 'undefined' ? localStorage.getItem("clinica_produtos") || "[]" : "[]";
+      const saved = JSON.parse(savedStr);
+      const savedModel = saved.find((s: any) => s.id === modelo);
+      if (savedModel) {
+        setSelectedModel(savedModel);
+        setLoading(false);
+        return;
+      }
+
+      // Check platform models
+      const platformModel = PROSTHESIS_MODELS.find(m => m.id === modelo);
+      if (platformModel) {
+        setSelectedModel({
+          id: platformModel.id,
+          nome: platformModel.name,
+          descricao: platformModel.description,
+          preco: platformModel.basePrice,
+          categoria: platformModel.category,
+          is3DModel: true,
+          imagem: `/images/prosthetics/${platformModel.id}.jpg`
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Check bucket
+      try {
+        const { data: bucketFiles } = await supabase.storage.from("produtos").list();
+        if (bucketFiles) {
+          const file = bucketFiles.find(f => (f.id || f.name) === modelo || f.name.split('.')[0] === modelo);
+          if (file) {
+            const { data: publicUrlData } = supabase.storage.from("produtos").getPublicUrl(file.name);
+            setSelectedModel({
+              id: file.id || file.name,
+              nome: file.name.split('.')[0] || "Produto",
+              descricao: "Produto disponível nas clínicas parceiras.",
+              preco: 0,
+              imagem: publicUrlData.publicUrl,
+              is3DModel: false
+            });
+          }
+        }
+      } catch (e) {
+        console.error("Error loading bucket product", e);
+      }
+      
+      setLoading(false);
+    };
+    
+    loadProduct();
+  });
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -54,17 +118,30 @@ function SimularPage() {
               
               <div className="w-full max-w-3xl mx-auto overflow-hidden rounded-xl border bg-card shadow-lg flex flex-col md:flex-row">
                 <div className="w-full md:w-1/2 bg-muted relative aspect-square flex items-center justify-center">
-                  <Prosthesis3DPreview modelId={selectedModel.id as any} autoRotate={true} className="h-full w-full" />
+                  {selectedModel.is3DModel ? (
+                    <Prosthesis3DPreview modelId={selectedModel.id as any} autoRotate={true} className="h-full w-full" />
+                  ) : selectedModel.imagem ? (
+                    <img 
+                      src={selectedModel.imagem} 
+                      alt={selectedModel.nome} 
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=600&q=80';
+                      }}
+                    />
+                  ) : (
+                    <PackageOpen className="h-16 w-16 text-muted-foreground/30" />
+                  )}
                 </div>
                 <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col justify-center">
                   <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
-                    {selectedModel.category}
+                    {selectedModel.categoria || selectedModel.category || "Produto"}
                   </span>
-                  <h3 className="text-2xl font-bold mb-3">{selectedModel.name}</h3>
-                  <p className="text-muted-foreground mb-6 line-clamp-4">{selectedModel.description}</p>
+                  <h3 className="text-2xl font-bold mb-3">{selectedModel.nome || selectedModel.name}</h3>
+                  <p className="text-muted-foreground mb-6 line-clamp-4">{selectedModel.descricao || selectedModel.description}</p>
                   <div className="mt-auto border-t pt-4">
                     <p className="text-sm text-muted-foreground mb-1">Valor do Produto</p>
-                    <p className="text-3xl font-bold text-primary">{formatCurrency(selectedModel.basePrice)}</p>
+                    <p className="text-3xl font-bold text-primary">{formatCurrency(selectedModel.preco || selectedModel.basePrice || 0)}</p>
                   </div>
                 </div>
               </div>
